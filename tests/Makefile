@@ -1,6 +1,6 @@
-TARGET = tsv_test
 CXX = g++
-CXXFLAGS = -std=c++17 -O3 -Ofast -march=native -flto
+CXXFLAGS = -std=c++17 -Wall -Wextra -O3 -Ofast -march=native -flto -s
+TARGET = tsv_test
 OBJS = $(TARGET).o
 
 $(TARGET): $(OBJS)
@@ -10,6 +10,6 @@ $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -c -o $@ $^
 
 clean:
-	rm $(TARGET) *.o
+	rm -rf $(TARGET) *.o
 
 .PHONY: clean
