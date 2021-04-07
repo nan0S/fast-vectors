@@ -1,29 +1,29 @@
 #include <iostream>
 #include <vector>
 #include <boost/container/static_vector.hpp>
-
 #include <iterator>
-template<class T,uint C> class trivial_static_vector {
+
+template<class T,uint C>
+class trivial_static_vector {
+public:
 	// using tsvsize_t = unsigned int;
 	using tsvsize_t = size_t;
-	tsvsize_t s;
-	T t[C];
-	public:
+
 	trivial_static_vector(): s(0) {}
 	trivial_static_vector(const trivial_static_vector<T,C> &v): s(v.s) {
 		for (tsvsize_t i = 0; i < v.s; i++) t[i] = v.t[i];
 	}
 
-	tsvsize_t size() const {return s;}
-	constexpr tsvsize_t capacity() const {return C;}
-	constexpr tsvsize_t max_size() const {return C;}
+	tsvsize_t size() const { return s; }
+	constexpr tsvsize_t capacity() const { return C; }
+	constexpr tsvsize_t max_size() const { return C; }
 
-	T& operator[](const tsvsize_t i) {return t[i];}
-	T operator[](const tsvsize_t i) const {return t[i];}
-	T& back() {return t[s-1];}
-	T back() const {return t[s-1];}
-	T& front() {return t[0];}
-	T front() const {return t[0];}
+	T& operator[](const tsvsize_t i) { return t[i]; }
+	T operator[](const tsvsize_t i) const { return t[i]; }
+	T& back() { return t[s-1]; }
+	T back() const { return t[s-1]; }
+	T& front() { return t[0]; }
+	T front() const { return t[0]; }
 
 	template<class... Args> void emplace_back(Args&&... args) {
 		if (s != C)
@@ -31,14 +31,15 @@ template<class T,uint C> class trivial_static_vector {
 		else
 			return;
 	}
-	void push_back(const T &e) {t[s++] = e;}
-	void pop_back() {s--;}
-	void resize(tsvsize_t new_size) {s = new_size;}
-	void clear() {s = 0;}
+	void push_back(const T &e) { t[s++] = e; }
+	void pop_back() { s--; }
+	void resize(tsvsize_t new_size) { s = new_size; }
+	void clear() { s = 0; }
 
 	trivial_static_vector& operator=(const trivial_static_vector &v) {
 		s = v.s;
-		for (tsvsize_t i = 0; i < v.s; i++) t[i] = v.t[i];
+		for (tsvsize_t i = 0; i < v.s; i++) 
+			t[i] = v.t[i];
 		return *this;
 	}
 
@@ -47,9 +48,10 @@ template<class T,uint C> class trivial_static_vector {
 		for (tsvsize_t i = 0; i < s; i++) if (!(t[i] == v.t[i])) return false;
 		return true;
 	}
-	bool operator!=(const trivial_static_vector &v) const {return !((*this)==v);}
+	bool operator!=(const trivial_static_vector &v) const { return !((*this) == v); }
 
-	template<bool is_const> class tsv_iterator: public std::iterator<std::random_access_iterator_tag, T> {
+	template<bool is_const>
+	class tsv_iterator: public std::iterator<std::random_access_iterator_tag, T> {
 		using cT = typename std::conditional<is_const, const T*, T*>::type;
 		using iterator_category = std::output_iterator_tag;
 		using value_type = T;
@@ -90,6 +92,10 @@ template<class T,uint C> class trivial_static_vector {
 	tsv_iterator<true> end() const {return tsv_iterator<true>(&t[s]);}
 	tsv_iterator<true> cbegin() const {return tsv_iterator<true>(&t[0]);}
 	tsv_iterator<true> cend() const {return tsv_iterator<true>(&t[s]);}
+
+private:
+	tsvsize_t s;
+	T t[C];
 };
 
 template<class T> class trivial_static_vector<T,1> {
