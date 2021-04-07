@@ -1,0 +1,10 @@
+Okej, przyjrzałem się dlaczego ten if w emplace_back tak spowalnia i doszedłem do czegoś czego kompletnie nie rozumiem.
+static_vector boost'a działa u mnie około 1.0s (dla tych default'owych parametrów, których nigdy nie zmieniam)
+
+Jeśli chodzi o nasz static_vector to zaobserwowałem następujące rzeczy:
+	- if w funkcji (pierwszy screen) - czas działania to około 1.4s niezależnie od tego czy size_type = uint/size_t
+	- throw w funckji z size_type = uint - czas działania to około 0.33s, czyli prawie 3 razy szybciej niż boost
+	- throw w funkcji z size_type = size_t - czas działania to około 1.0s, czyli to samo co boost
+
+O co z tym chodzi? Jakaś intuicja to, że może throw powoduje koniec programu, taki 'return;' w jednej gałęzi if'a nie
+i to coś zmienia. I dlaczego dodanie tego throw'a sprawia, że nagle mamy różnicę pomiędzy size_type'ami?
