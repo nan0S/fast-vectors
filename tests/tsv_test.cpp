@@ -26,10 +26,9 @@ public:
 	T front() const { return t[0]; }
 
 	template<class... Args> void emplace_back(Args&&... args) {
-		if (s != C)
-			t[s++] = T(std::forward<Args>(args)...);
-		else
-			return;
+		if (s == C)
+			throw std::out_of_range("test");
+		t[s++] = T(std::forward<Args>(args)...);
 	}
 	void push_back(const T &e) { t[s++] = e; }
 	void pop_back() { s--; }
@@ -99,8 +98,8 @@ private:
 };
 
 template<class T> class trivial_static_vector<T,1> {
-	// using tsvsize_t = unsigned int;
-	using tsvsize_t = size_t;
+	using tsvsize_t = unsigned int;
+	// using tsvsize_t = size_t;
 	T t;
 	public:
 	constexpr tsvsize_t size() const {return 1;}
