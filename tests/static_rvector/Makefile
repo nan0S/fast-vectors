@@ -1,15 +1,24 @@
-CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -O3 -Ofast -march=native -flto -s -DNDEBUG
-TARGET = main
-OBJS = $(TARGET).o
+CXX := g++
+CXXFLAGS := -std=c++17 -Ofast -march=native -flto -s -DNDEBUG
+WARNING := -Wall -Wextra
 
-$(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+TARGET := main
 
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c -o $@ $^
+SOURCES := main.cpp
+OBJECTS := $(patsubst %.cpp,%.o,$(SOURCES))
+DEPENDS := $(patsubst %.cpp,%.d,$(SOURCES))
+
+.PHONY: all clean
+
+all: $(TARGET)
+
+$(TARGET): $(OBJECTS)
+	$(CXX) $(WARNING) $(CXXFLAGS) -o $@ $^
+
+-include $(DEPENDS)
+
+%.o: %.cpp Makefile
+	$(CXX) $(WARNING) $(CXXFLAGS) -MMD -MP -c -o $@ $<
 
 clean:
-	rm -rf $(TARGET) *.o
-
-.PHONY: clean
+	rm -rf $(TARGET) $(OBJECTS) $(DEPENDS)

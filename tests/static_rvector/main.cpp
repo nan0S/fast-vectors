@@ -13,11 +13,13 @@ template<typename Vector, uint TIMES=C>
 void test(const std::string& name) {
 	auto start = std::chrono::high_resolution_clock::now(); 
 
-	uint sum = 0;
+	size_t sum = 0;
 	for (uint i = 0; i < TIMES; ++i) {
 		Vector v;
-		for (uint i = 0; i < TIMES; ++i)
-			v.emplace_back(i);
+		for (uint j = 0; j < TIMES; ++j) {
+			T jj = j;
+			v.push_back(jj);
+		}
 		for (auto x : v)
 			sum += x;
 	}
@@ -31,7 +33,7 @@ void test(const std::string& name) {
 
 int main() {
 	test<boost::container::static_vector<T, C>>("boost::static_vector");
-	// test<stlpb::static_vector<T, C>>("stlpb::static_vector");
+	test<stlpb::static_vector<T, C>>("stlpb::static_vector");
 	test<static_rvector<T, C>>("static_rvector");
 	// test<std::vector<T>>("std::vector");
 	// test<boost::container::vector<T>>("boost::vector");
