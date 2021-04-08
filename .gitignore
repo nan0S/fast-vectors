@@ -1,3 +1,4 @@
 tsv_test
 *.o
 main
+*.d
