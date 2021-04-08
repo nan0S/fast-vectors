@@ -11,6 +11,7 @@ DEPENDS := $(patsubst %.cpp,%.d,$(SOURCES))
 .PHONY: all clean
 
 all: $(TARGET)
+	./$(TARGET)
 
 $(TARGET): $(OBJECTS)
 	$(CXX) $(WARNING) $(CXXFLAGS) -o $@ $^
