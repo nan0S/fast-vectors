@@ -32,9 +32,9 @@ void test(const std::string& name) {
 }
 
 int main() {
-	test<boost::container::static_vector<T, C>>("boost::static_vector");
+	// test<boost::container::static_vector<T, C>>("boost::static_vector");
 	// test<stlpb::static_vector<T, C>>("stlpb::static_vector");
-	test<static_rvector<T, C>>("static_rvector");
+	// test<static_rvector<T, C>>("static_rvector");
 	// test<std::vector<T>>("std::vector");
 	// test<boost::container::vector<T>>("boost::vector");
 

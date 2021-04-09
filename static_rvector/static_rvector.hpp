@@ -34,6 +34,26 @@ public:
 	const_reverse_iterator crbegin() const noexcept;
 	const_reverse_iterator crend() const noexcept;
 
+	size_type size() const noexcept;
+	constexpr size_type max_size() const noexcept;
+	void resize(size_type n);
+	void resize(size_type n, const value_type& val);
+	constexpr size_type capacity() const noexcept;
+	bool empty() const noexcept;
+	void reserve(size_type n);
+	void shrink_to_fit();
+
+	reference operator[](size_type n);
+	const_reference operator[](size_type n) const;
+	reference at(size_type n);
+	const_reference at(size_type n) const;
+	reference front();
+	const_reference front() const;
+	reference back();
+	const_reference back() const;
+	value_type* data() noexcept;
+	const value_type* data() const noexcept;
+
 	template<typename... Args>
 	void emplace_back(Args&&... args);
 	template<typename... Args>
@@ -127,8 +147,115 @@ static_rvector<T, C>::crend() const noexcept {
 }
 
 template<typename T, uint C>
+typename static_rvector<T, C>::size_type
+static_rvector<T, C>::size() const noexcept {
+	return m_length;
+}
+
+template<typename T, uint C>
+constexpr typename static_rvector<T, C>::size_type
+static_rvector<T, C>::max_size() const noexcept {
+	return C;
+}
+
+template<typename T, uint C>
+void static_rvector<T, C>::resize(size_type n) {
+	// TODO
+}
+
+template<typename T, uint C>
+void static_rvector<T, C>::resize(size_type n, const value_type& val) {
+	// TODO
+}
+
+template<typename T, uint C>
+constexpr typename static_rvector<T, C>::size_type
+static_rvector<T, C>::capacity() const noexcept {
+	return C;
+}
+
+template<typename T, uint C>
+bool static_rvector<T, C>::empty() const noexcept {
+	return m_length == 0;
+}
+
+template<typename T, uint C>
+void static_rvector<T, C>::reserve(size_type n) {
+}
+
+template<typename T, uint C>
+void static_rvector<T, C>::shrink_to_fit() {
+}
+
+template<typename T, uint C>
+typename static_rvector<T, C>::reference
+static_rvector<T, C>::operator[](size_type n) {
+	return m_data[n];
+}
+
+template<typename T, uint C>
+typename static_rvector<T, C>::const_reference
+static_rvector<T, C>::operator[](size_type n) const {
+	return m_data[n];
+}
+
+template<typename T, uint C>
+typename static_rvector<T, C>::reference
+static_rvector<T, C>::at(size_type n) {
+	if (n >= m_length)
+		throw std::out_of_range("Index out of range: " + std::to_string(n));
+	return m_data[n];
+}
+
+template<typename T, uint C>
+typename static_rvector<T, C>::reference
+static_rvector<T, C>::front() {
+	return m_data[0];
+}
+
+template<typename T, uint C>
+typename static_rvector<T, C>::const_reference
+static_rvector<T, C>::front() const {
+	return m_data[0];
+}
+
+template<typename T, uint C>
+typename static_rvector<T, C>::reference
+static_rvector<T, C>::back() {
+	return m_data[m_length - 1];
+}
+
+template<typename T, uint C>
+typename static_rvector<T, C>::const_reference
+static_rvector<T, C>::back() const {
+	return m_data[m_length - 1];
+}
+
+template<typename T, uint C>
+typename static_rvector<T, C>::value_type*
+static_rvector<T, C>::data() noexcept {
+	return m_data;
+}
+
+template<typename T, uint C>
+const typename static_rvector<T, C>::value_type*
+static_rvector<T, C>::data() const noexcept {
+	return m_data;
+}
+
+template<typename T, uint C>
+typename static_rvector<T, C>::const_reference
+static_rvector<T, C>::at(size_type n) const {
+	// TODO: unlikely
+	if (n >= m_length)
+		throw std::out_of_range("Index out of range: " + std::to_string(n));
+	return m_data[n];
+}
+
+template<typename T, uint C>
 template<typename... Args>
 void static_rvector<T, C>::emplace_back(Args&&... args) {
+	// TODO: uncomment
 	// if (m_length == C)
 		// throw std::out_of_range("msg");
 	m_data[m_length++] = value_type(std::forward<Args>(args)...);
@@ -142,6 +269,7 @@ void static_rvector<T, C>::fast_emplace_back(Args&&... args) noexcept {
 
 template<typename T, uint C>
 void static_rvector<T, C>::push_back(const_reference value) {
+	// TODO: uncomment
 	// if (m_length == C)
 		// throw std::out_of_range("msg");
 	m_data[m_length++] = value;
@@ -154,6 +282,7 @@ void static_rvector<T, C>::fast_push_back(const_reference value) noexcept {
 
 template<typename T, uint C>
 void static_rvector<T, C>::push_back(value_type&& value) {
+	// TODO: uncomment
 	// if (m_length == C)
 		// throw std::out_of_range("msg");
 	m_data[m_length++] = std::move(value);
