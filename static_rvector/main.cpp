@@ -1,5 +1,5 @@
 #include "static_rvector.hpp"
-#include "static_vector/include/palotasb/static_vector.hpp"
+// #include "static_vector/include/palotasb/static_vector.hpp"
 #include <boost/container/static_vector.hpp>
 
 #include <iostream>
@@ -37,6 +37,11 @@ int main() {
 	// test<static_rvector<T, C>>("static_rvector");
 	// test<std::vector<T>>("std::vector");
 	// test<boost::container::vector<T>>("boost::vector");
+
+	static_rvector<T, C> v;
+	v.assign(5, 2);
+	for (auto x : v) std::cout << x << " ";
+	std::cout << std::endl;
 
 	return 0;
 }

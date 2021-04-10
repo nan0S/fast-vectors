@@ -2,6 +2,7 @@
 
 #include <cinttypes>
 #include <iterator>
+#include <algorithm>
 
 typedef unsigned int uint;
 
@@ -54,15 +55,21 @@ public:
 	value_type* data() noexcept;
 	const value_type* data() const noexcept;
 
-	template<typename... Args>
-	void emplace_back(Args&&... args);
-	template<typename... Args>
-	void fast_emplace_back(Args&&... args) noexcept;
+	template<typename InputIterator,
+		typename=typename std::iterator_traits<InputIterator>::value_type>
+	void assign(InputIterator first, InputIterator last);
+	void assign(size_type n, const value_type& val);
+	void assign(std::initializer_list<value_type> il);
 
 	void push_back(const T& value);
 	void fast_push_back(const_reference value) noexcept;
 	void push_back(T&& value);
 	void fast_push_back(value_type&& value) noexcept;
+
+	template<typename... Args>
+	void emplace_back(Args&&... args);
+	template<typename... Args>
+	void fast_emplace_back(Args&&... args) noexcept;
 
 private:
 	T m_data[C];
@@ -253,18 +260,21 @@ static_rvector<T, C>::at(size_type n) const {
 }
 
 template<typename T, uint C>
-template<typename... Args>
-void static_rvector<T, C>::emplace_back(Args&&... args) {
-	// TODO: uncomment
-	// if (m_length == C)
-		// throw std::out_of_range("msg");
-	m_data[m_length++] = value_type(std::forward<Args>(args)...);
+template<typename InputIterator, typename>
+void static_rvector<T, C>::assign(InputIterator first, InputIterator last) {
+	auto n = std::distance(first, last);
+	std::copy_n(first, n, m_data);
+	m_length = n;
+}
+template<typename T, uint C>
+void static_rvector<T, C>::assign(size_type n, const value_type& val) {
+	std::fill_n(m_data, n, val);
+	m_length = n;
 }
 
 template<typename T, uint C>
-template<typename... Args>
-void static_rvector<T, C>::fast_emplace_back(Args&&... args) noexcept {
-	m_data[m_length++] = value_type(std::forward<Args>(args)...);
+void static_rvector<T, C>::assign(std::initializer_list<value_type> il) {
+	assign(il.begin(), il.end());
 }
 
 template<typename T, uint C>
@@ -291,4 +301,19 @@ void static_rvector<T, C>::push_back(value_type&& value) {
 template<typename T, uint C>
 void static_rvector<T, C>::fast_push_back(value_type&& value) noexcept {
 	m_data[m_length++] = std::move(value);
+}
+
+template<typename T, uint C>
+template<typename... Args>
+void static_rvector<T, C>::emplace_back(Args&&... args) {
+	// TODO: uncomment
+	// if (m_length == C)
+		// throw std::out_of_range("msg");
+	m_data[m_length++] = value_type(std::forward<Args>(args)...);
+}
+
+template<typename T, uint C>
+template<typename... Args>
+void static_rvector<T, C>::fast_emplace_back(Args&&... args) noexcept {
+	m_data[m_length++] = value_type(std::forward<Args>(args)...);
 }
