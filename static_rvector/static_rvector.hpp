@@ -7,6 +7,15 @@
 typedef unsigned int uint;
 
 template<typename T, uint C>
+class static_rvector;
+
+template<typename T, uint C>
+std::ostream& operator<<(std::ostream& out, const static_rvector<T, C>& v);
+
+template<typename T, uint C>
+void swap(static_rvector<T, C>& x, static_rvector<T, C>& y);
+
+template<typename T, uint C>
 class static_rvector {
 public:
 	using value_type = T;
@@ -19,6 +28,19 @@ public:
 	using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
 	static_rvector();
+	explicit static_rvector(size_type n);
+	static_rvector(size_type n, const value_type& val);
+	template<typename InputIterator,
+		typename = typename std::iterator_traits<InputIterator>::value_type>
+	static_rvector(InputIterator first, InputIterator last);
+	static_rvector(const static_rvector& x);
+	static_rvector(static_rvector&& x);
+	static_rvector(std::initializer_list<T> il);
+	~static_rvector();
+
+	static_rvector& operator=(const static_rvector& other);
+	static_rvector& operator=(static_rvector&& other);
+	static_rvector& operator=(std::initializer_list<value_type> il);
 
 	iterator begin() noexcept;
 	const_iterator begin() const noexcept;
@@ -56,7 +78,7 @@ public:
 	const value_type* data() const noexcept;
 
 	template<typename InputIterator,
-		typename=typename std::iterator_traits<InputIterator>::value_type>
+		typename = typename std::iterator_traits<InputIterator>::value_type>
 	void assign(InputIterator first, InputIterator last);
 	void assign(size_type n, const value_type& val);
 	void assign(std::initializer_list<value_type> il);
@@ -66,91 +88,168 @@ public:
 	void push_back(T&& value);
 	void fast_push_back(value_type&& value) noexcept;
 
+	void pop_back();
+	void safe_pop_back() noexcept;
+	// TODO: insert
+	// TODO: erase
+	void swap(static_rvector& other);
+	// TODO: clear
+	// TODO: emplace
+
 	template<typename... Args>
 	void emplace_back(Args&&... args);
 	template<typename... Args>
 	void fast_emplace_back(Args&&... args) noexcept;
 
+	friend std::ostream& operator<<<T, C>(std::ostream& out, const static_rvector& v);
+
 private:
-	T m_data[C];
+	value_type* data_at(size_type n) noexcept;
+	const value_type* data_at(size_type n) const noexcept;
+
+private:
+	typename std::aligned_storage<sizeof(T), alignof(T)>::type m_data[C];
 	size_type m_length;
 };
 
 template<typename T, uint C>
 static_rvector<T, C>::static_rvector() :
-	m_length(0) {
+	m_length(0)
+{
+}
+
+template<typename T, uint C>
+static_rvector<T, C>::static_rvector(size_type n) :
+	m_length(n)
+{
+	for (size_type i = 0; i < m_length; ++i)
+		new (data_at(i)) value_type();
+}
+
+template<typename T, uint C>
+static_rvector<T, C>::static_rvector(size_type n, const value_type& val) :
+	m_length(n) {
+	std::uninitialized_fill_n(data(), n, val);
+}
+
+template<typename T, uint C>
+template<typename InputIterator, typename>
+static_rvector<T, C>::static_rvector(InputIterator first, InputIterator last) :
+	m_length(std::distance(first, last)) {
+	std::uninitialized_copy(first, last, data());
+}
+
+template<typename T, uint C>
+static_rvector<T, C>::static_rvector(const static_rvector& x) :
+	m_length(x.m_length) {
+	std::uninitialized_copy(x.begin(), x.end(), data());
+}
+
+template<typename T, uint C>
+static_rvector<T, C>::static_rvector(static_rvector&& x) :
+	m_length(x.m_length) {
+	std::uninitialized_move(x.begin(), x.end(), data());
+}
+	
+template<typename T, uint C>
+static_rvector<T, C>::static_rvector(std::initializer_list<T> il) :
+	m_length(il.size()) {
+	std::uninitialized_copy(il.begin(), il.end(), begin());
+}
+
+template<typename T, uint C>
+static_rvector<T, C>::~static_rvector() {
+	std::destroy_n(data(), m_length);
+}
+
+template<typename T, uint C>
+static_rvector<T, C>& static_rvector<T, C>::operator=(const static_rvector<T, C>& other) {
+	// TODO
+	return *this;
+}
+
+template<typename T, uint C>
+static_rvector<T, C>& static_rvector<T, C>::operator=(static_rvector<T, C>&& other) {
+	// TODO
+	return *this;
+}
+
+template<typename T, uint C>
+static_rvector<T, C>& static_rvector<T, C>::operator=(std::initializer_list<value_type> il) {
+	// TODO
+	return *this;
 }
 
 template<typename T, uint C>
 typename static_rvector<T, C>::iterator
 static_rvector<T, C>::begin() noexcept {
-	return m_data;
+	return data();
 }
 
 template<typename T, uint C>
 typename static_rvector<T, C>::const_iterator
 static_rvector<T, C>::begin() const noexcept {
-	return m_data;
+	return data();
 }
 
 template<typename T, uint C>
 typename static_rvector<T, C>::iterator
 static_rvector<T, C>::end() noexcept {
-	return m_data + m_length;
+	return data() + m_length;
 }
 
 template<typename T, uint C>
 typename static_rvector<T, C>::const_iterator
 static_rvector<T, C>::end() const noexcept {
-	return m_data + m_length;
+	return data() + m_length;
 }
 
 template<typename T, uint C>
 typename static_rvector<T, C>::reverse_iterator
 static_rvector<T, C>::rbegin() noexcept {
-	return m_data + m_length;
+	return data() + m_length;
 }
 
 template<typename T, uint C>
 typename static_rvector<T, C>::const_reverse_iterator
 static_rvector<T, C>::rbegin() const noexcept {
-	return m_data + m_length;
+	return data() + m_length;
 }
 
 template<typename T, uint C>
 typename static_rvector<T, C>::reverse_iterator
 static_rvector<T, C>::rend() noexcept {
-	return m_data;
+	return data();
 }
 
 template<typename T, uint C>
 typename static_rvector<T, C>::const_reverse_iterator
 static_rvector<T, C>::rend() const noexcept {
-	return m_data;
+	return data();
 }
 
 template<typename T, uint C>
 typename static_rvector<T, C>::const_iterator
 static_rvector<T, C>::cbegin() const noexcept {
-	return m_data;
+	return data();
 }
 
 template<typename T, uint C>
 typename static_rvector<T, C>::const_iterator
 static_rvector<T, C>::cend() const noexcept {
-	return m_data + m_length;
+	return data() + m_length;
 }
 
 template<typename T, uint C>
 typename static_rvector<T, C>::const_reverse_iterator
 static_rvector<T, C>::crbegin() const noexcept {
-	return m_data + m_length;
+	return data() + m_length;
 }
 
 template<typename T, uint C>
 typename static_rvector<T, C>::const_reverse_iterator
 static_rvector<T, C>::crend() const noexcept {
-	return m_data;
+	return data();
 }
 
 template<typename T, uint C>
@@ -197,13 +296,13 @@ void static_rvector<T, C>::shrink_to_fit() {
 template<typename T, uint C>
 typename static_rvector<T, C>::reference
 static_rvector<T, C>::operator[](size_type n) {
-	return m_data[n];
+	return *data_at(n);
 }
 
 template<typename T, uint C>
 typename static_rvector<T, C>::const_reference
 static_rvector<T, C>::operator[](size_type n) const {
-	return m_data[n];
+	return *data_at(n);
 }
 
 template<typename T, uint C>
@@ -211,43 +310,43 @@ typename static_rvector<T, C>::reference
 static_rvector<T, C>::at(size_type n) {
 	if (n >= m_length)
 		throw std::out_of_range("Index out of range: " + std::to_string(n));
-	return m_data[n];
+	return *data_at(n);
 }
 
 template<typename T, uint C>
 typename static_rvector<T, C>::reference
 static_rvector<T, C>::front() {
-	return m_data[0];
+	return *data_at(0);
 }
 
 template<typename T, uint C>
 typename static_rvector<T, C>::const_reference
 static_rvector<T, C>::front() const {
-	return m_data[0];
+	return *data_at(0);
 }
 
 template<typename T, uint C>
 typename static_rvector<T, C>::reference
 static_rvector<T, C>::back() {
-	return m_data[m_length - 1];
+	return *data_at(m_length - 1);
 }
 
 template<typename T, uint C>
 typename static_rvector<T, C>::const_reference
 static_rvector<T, C>::back() const {
-	return m_data[m_length - 1];
+	return *data_at(m_length - 1);
 }
 
 template<typename T, uint C>
 typename static_rvector<T, C>::value_type*
 static_rvector<T, C>::data() noexcept {
-	return m_data;
+	return data_at(0);
 }
 
 template<typename T, uint C>
 const typename static_rvector<T, C>::value_type*
 static_rvector<T, C>::data() const noexcept {
-	return m_data;
+	return data_at(0);
 }
 
 template<typename T, uint C>
@@ -256,19 +355,20 @@ static_rvector<T, C>::at(size_type n) const {
 	// TODO: unlikely
 	if (n >= m_length)
 		throw std::out_of_range("Index out of range: " + std::to_string(n));
-	return m_data[n];
+	return *data_at(n);
 }
 
 template<typename T, uint C>
 template<typename InputIterator, typename>
 void static_rvector<T, C>::assign(InputIterator first, InputIterator last) {
 	auto n = std::distance(first, last);
-	std::copy_n(first, n, m_data);
+	std::destroy_n(data(), m_length);
+	std::uninitialized_copy(first, last, data());
 	m_length = n;
 }
 template<typename T, uint C>
 void static_rvector<T, C>::assign(size_type n, const value_type& val) {
-	std::fill_n(m_data, n, val);
+	std::fill_n(data(), n, val);
 	m_length = n;
 }
 
@@ -281,26 +381,53 @@ template<typename T, uint C>
 void static_rvector<T, C>::push_back(const_reference value) {
 	// TODO: uncomment
 	// if (m_length == C)
-		// throw std::out_of_range("msg");
-	m_data[m_length++] = value;
+		// throw std::out_of_range("Out of bounds");
+	new (data() + m_length++) value_type(value);
 }
 
 template<typename T, uint C>
 void static_rvector<T, C>::fast_push_back(const_reference value) noexcept {
-	m_data[m_length++] = value;
+	new (data() + m_length++) value_type(value);
 }
 
 template<typename T, uint C>
 void static_rvector<T, C>::push_back(value_type&& value) {
 	// TODO: uncomment
 	// if (m_length == C)
-		// throw std::out_of_range("msg");
-	m_data[m_length++] = std::move(value);
+		// throw std::out_of_range("Out of bounds");
+	new (data() + m_length++) value_type(std::move(value));
 }
 
 template<typename T, uint C>
 void static_rvector<T, C>::fast_push_back(value_type&& value) noexcept {
-	m_data[m_length++] = std::move(value);
+	new (data() + m_length++) value_type(std::move(value));
+}
+
+template<typename T, uint C>
+void static_rvector<T, C>::pop_back() {
+	std::destroy_at(data() + --m_length);
+}
+
+template<typename T, uint C>
+void static_rvector<T, C>::safe_pop_back() noexcept {
+	if (m_length == 0)
+		return;
+	std::destroy_at(data() + --m_length);
+}
+
+template<typename T, uint C>
+void static_rvector<T, C>::swap(static_rvector<T, C>& other) {
+	static_rvector<T, C> *o1 = this, *o2 = &other;
+	size_type min_len = std::min(o1->m_length, o2->m_length);
+	for (size_type i = 0; i < min_len; ++i)
+		std::swap((*this)[i], other[i]);
+
+	if (o1->m_length != min_len)
+		std::swap(o1, o2);
+
+	std::uninitialized_move(o2->begin() + min_len, o2->end(), o1->begin() + min_len);
+	std::destroy(o2->begin() + min_len, o2->end());
+	std::swap(o1->m_length, o2->m_length);
 }
 
 template<typename T, uint C>
@@ -308,12 +435,38 @@ template<typename... Args>
 void static_rvector<T, C>::emplace_back(Args&&... args) {
 	// TODO: uncomment
 	// if (m_length == C)
-		// throw std::out_of_range("msg");
-	m_data[m_length++] = value_type(std::forward<Args>(args)...);
+		// throw std::out_of_range("Out of bounds");
+	new (data() + m_length++) value_type(std::forward<Args>(args)...);
 }
 
 template<typename T, uint C>
 template<typename... Args>
 void static_rvector<T, C>::fast_emplace_back(Args&&... args) noexcept {
-	m_data[m_length++] = value_type(std::forward<Args>(args)...);
+	new (data() + m_length++) value_type(std::forward<Args>(args)...);
+}
+
+template<typename T, uint C>
+typename static_rvector<T, C>::value_type*
+static_rvector<T, C>::data_at(size_type n) noexcept {
+	return reinterpret_cast<value_type*>(&m_data[n]);
+}
+
+template<typename T, uint C>
+const typename static_rvector<T, C>::value_type*
+static_rvector<T, C>::data_at(size_type n) const noexcept {
+	return reinterpret_cast<const value_type*>(&m_data[n]);
+}
+
+template<typename T, uint C>
+std::ostream& operator<<(std::ostream& out, const static_rvector<T, C>& v) {
+	for (typename static_rvector<T, C>::size_type i = 0; i < v.size() - 1; ++i)
+		out << v[i] << ' ';
+	if (!v.empty())
+		out << v.back();
+	return out;
+}
+
+template<typename T, uint C>
+void swap(static_rvector<T, C>& x, static_rvector<T, C>& y) {
+	x.swap(y);
 }

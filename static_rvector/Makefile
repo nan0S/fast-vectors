@@ -4,7 +4,7 @@ WARNING := -Wall -Wextra
 
 TARGET := main
 
-SOURCES := main.cpp
+SOURCES := main.cpp test_type.cpp
 OBJECTS := $(patsubst %.cpp,%.o,$(SOURCES))
 DEPENDS := $(patsubst %.cpp,%.d,$(SOURCES))
 
