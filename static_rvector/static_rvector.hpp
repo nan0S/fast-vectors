@@ -59,12 +59,12 @@ public:
 
 	size_type size() const noexcept;
 	constexpr size_type max_size() const noexcept;
-	void resize(size_type n);
-	void resize(size_type n, const value_type& val);
+	constexpr void resize(size_type n);
+	constexpr void resize(size_type n, const value_type& val);
 	constexpr size_type capacity() const noexcept;
 	bool empty() const noexcept;
-	void reserve(size_type n);
-	void shrink_to_fit();
+	void reserve(size_type n) noexcept;
+	void shrink_to_fit() noexcept;
 
 	reference operator[](size_type n);
 	const_reference operator[](size_type n) const;
@@ -83,9 +83,9 @@ public:
 	void assign(size_type n, const value_type& val);
 	void assign(std::initializer_list<value_type> il);
 
-	void push_back(const T& value);
+	void push_back(const_reference value);
 	void fast_push_back(const_reference value) noexcept;
-	void push_back(T&& value);
+	void push_back(value_type&& value);
 	void fast_push_back(value_type&& value) noexcept;
 
 	void pop_back();
@@ -122,8 +122,7 @@ template<typename T, uint C>
 static_rvector<T, C>::static_rvector(size_type n) :
 	m_length(n)
 {
-	for (size_type i = 0; i < m_length; ++i)
-		new (data_at(i)) value_type();
+	std::uninitialized_default_construct_n(data(), n);
 }
 
 template<typename T, uint C>
@@ -164,19 +163,61 @@ static_rvector<T, C>::~static_rvector() {
 
 template<typename T, uint C>
 static_rvector<T, C>& static_rvector<T, C>::operator=(const static_rvector<T, C>& other) {
-	// TODO
+	auto ptr = data();
+	auto optr = other.data();
+
+	if (other.m_length < m_length) {
+		std::destroy(ptr + other.m_length, ptr + m_length);
+		std::copy_n(optr, other.m_length, ptr);
+	}
+	else {
+		std::copy_n(optr, m_length, ptr);
+		std::uninitialized_copy(optr + m_length, optr + other.m_length, ptr + m_length);
+	}
+
+	m_length = other.m_length;
+
 	return *this;
 }
 
 template<typename T, uint C>
 static_rvector<T, C>& static_rvector<T, C>::operator=(static_rvector<T, C>&& other) {
-	// TODO
+	auto ptr = data();
+	auto optr = other.data();
+
+	if (other.m_length < m_length) {
+		std::destroy(ptr + other.m_length, ptr + m_length);
+		for (size_type i = 0; i < other.m_length; ++i)
+			ptr[i] = std::move(optr[i]);
+	}
+	else {
+		for (size_type i = 0; i < m_length; ++i)
+			ptr[i] = std::move(optr[i]);
+		std::uninitialized_move(optr + m_length, optr + other.m_length, ptr + m_length);
+	}
+
+	m_length = other.m_length;
+
 	return *this;
 }
 
 template<typename T, uint C>
 static_rvector<T, C>& static_rvector<T, C>::operator=(std::initializer_list<value_type> il) {
-	// TODO
+	auto ptr = data();
+	auto optr = il.begin();
+	auto il_len = il.size();
+
+	if (il_len< m_length) {
+		std::destroy(ptr + il_len, ptr + m_length);
+		std::copy_n(optr, il_len, ptr);
+	}
+	else {
+		std::copy_n(optr, m_length, ptr);
+		std::uninitialized_copy(optr + m_length, optr + il_len, ptr + m_length);
+	}
+
+	m_length = il_len;
+
 	return *this;
 }
 
@@ -265,13 +306,31 @@ static_rvector<T, C>::max_size() const noexcept {
 }
 
 template<typename T, uint C>
-void static_rvector<T, C>::resize(size_type n) {
-	// TODO
+constexpr void static_rvector<T, C>::resize(size_type n) {
+	if (n > m_length) {
+		auto ptr = data();
+		std::uninitialized_default_construct(ptr + m_length, ptr + n);
+		m_length = n;
+	}
+	else if (n < m_length) {
+		auto ptr = data();
+		std::destroy(ptr + n, ptr + m_length);
+		m_length = n;
+	}
 }
 
 template<typename T, uint C>
-void static_rvector<T, C>::resize(size_type n, const value_type& val) {
-	// TODO
+constexpr void static_rvector<T, C>::resize(size_type n, const value_type& val) {
+	if (n > m_length) {
+		auto ptr = data();
+		std::uninitialized_fill(ptr + m_length, ptr + n, val);
+		m_length = n;
+	}
+	else if (n < m_length) {
+		auto ptr = data();
+		std::destroy(ptr + n, ptr + m_length);
+		m_length = n;
+	}
 }
 
 template<typename T, uint C>
@@ -286,11 +345,11 @@ bool static_rvector<T, C>::empty() const noexcept {
 }
 
 template<typename T, uint C>
-void static_rvector<T, C>::reserve(size_type n) {
+void static_rvector<T, C>::reserve(size_type n) noexcept {
 }
 
 template<typename T, uint C>
-void static_rvector<T, C>::shrink_to_fit() {
+void static_rvector<T, C>::shrink_to_fit() noexcept {
 }
 
 template<typename T, uint C>
@@ -432,7 +491,7 @@ void static_rvector<T, C>::swap(static_rvector<T, C>& other) {
 
 template<typename T, uint C>
 void static_rvector<T, C>::clear() noexcept {
-	value_type* ptr = data();
+	auto ptr = data();
 	std::destroy(ptr, ptr + m_length);
 	m_length = 0;
 }

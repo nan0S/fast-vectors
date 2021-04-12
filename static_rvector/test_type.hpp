@@ -15,6 +15,8 @@ public:
 	operator int();
 	friend std::ostream& operator<<(std::ostream& out, const test_type& o);
 
+	static int do_print;
+
 private:
 	int a;
 };

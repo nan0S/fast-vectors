@@ -8,14 +8,20 @@
 #include <chrono>
 #include <functional>
 
+#define ON test_type::do_print = true
+#define OFF test_type::do_print = false
+
 template<typename T, uint C>
 using rvector = static_rvector<T, C>;
 
 template<typename T, std::size_t C>
 using bvector = boost::container::static_vector<T, C>;
 
+using rtvector = rvector<test_type, 5>;
+using btvector = bvector<test_type, 5>;
+
 using T = int;
-constexpr uint C = 10000;
+constexpr uint C = 1000000;
 
 void measure(std::function<std::string()> f) {
 	auto start = std::chrono::high_resolution_clock::now(); 
@@ -47,7 +53,7 @@ void test1(const std::string& name) {
 template<typename Vector, uint TIMES=C>
 void test2(const std::string& name) {
 	auto f = [&name] {
-		for (int i = 0; i < TIMES; ++i) {
+		for (uint i = 0; i < TIMES; ++i) {
 			Vector v;
 			int times = TIMES;
 			while (times) {
@@ -70,7 +76,7 @@ void test2(const std::string& name) {
 template<typename Vector, uint TIMES=C>
 void test3(const std::string& name) {
 	auto f = [&name] {
-		for (int i = 0; i < TIMES; ++i) {
+		for (uint i = 0; i < TIMES; ++i) {
 			Vector v1({1, 2, 3, 4, 5, 6, 7});
 			Vector v2({1, 2, 3});
 			int times = TIMES + rand() % 2;
@@ -82,6 +88,22 @@ void test3(const std::string& name) {
 
 	measure(f);
 }
+
+template<typename Vector, uint TIMES=C>
+void test4(const std::string& name) {
+	auto f = [&name] {
+		for (uint i = 0; i < TIMES; ++i) {
+			int s = rand() % 10 + 5;
+			Vector v;
+			v.resize(s);
+			v.resize(rand() % (s - 3));
+		}
+		return name;
+	};
+
+	measure(f);
+}
+
 
 int main() {
 	// test1<boost::container::static_vector<T, C>>("boost::static_vector");
@@ -95,6 +117,10 @@ int main() {
 	// test3<boost::container::static_vector<T, C>>("boost::static_vector");
 	// test3<stlpb::static_vector<T, C>>("stlpb::static_vector");
 	// test3<static_rvector<T, C>>("static_rvector");
+
+	// test4<boost::container::static_vector<T, C>>("boost::static_vector");
+	// test4<stlpb::static_vector<T, C>>("stlpb::static_vector");
+	// test4<static_rvector<T, C>>("static_rvector");
 
 	return 0;
 }
