@@ -21,7 +21,7 @@ using rtvector = rvector<test_type, 5>;
 using btvector = bvector<test_type, 5>;
 
 using T = int;
-constexpr uint C = 1000000;
+constexpr uint C = 50000;
 
 void measure(std::function<std::string()> f) {
 	auto start = std::chrono::high_resolution_clock::now(); 
@@ -106,9 +106,9 @@ void test4(const std::string& name) {
 
 
 int main() {
-	// test1<boost::container::static_vector<T, C>>("boost::static_vector");
+	test1<boost::container::static_vector<T, C>>("boost::static_vector");
 	// test1<stlpb::static_vector<T, C>>("stlpb::static_vector");
-	// test1<static_rvector<T, C>>("static_rvector");
+	test1<static_rvector<T, C>>("static_rvector");
 
 	// test2<boost::container::static_vector<T, C>>("boost::static_vector");
 	// test2<stlpb::static_vector<T, C>>("stlpb::static_vector");

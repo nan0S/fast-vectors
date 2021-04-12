@@ -27,20 +27,20 @@ public:
 	using reverse_iterator = std::reverse_iterator<iterator>;
 	using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-	static_rvector();
-	explicit static_rvector(size_type n);
-	static_rvector(size_type n, const value_type& val);
+	constexpr static_rvector() noexcept;
+	constexpr explicit static_rvector(size_type n);
+	constexpr static_rvector(size_type n, const value_type& val);
 	template<typename InputIterator,
-		typename = typename std::iterator_traits<InputIterator>::value_type>
-	static_rvector(InputIterator first, InputIterator last);
-	static_rvector(const static_rvector& x);
-	static_rvector(static_rvector&& x);
-	static_rvector(std::initializer_list<T> il);
+			 typename = typename std::iterator_traits<InputIterator>::value_type>
+	constexpr static_rvector(InputIterator first, InputIterator last);
+	constexpr static_rvector(const static_rvector& x);
+	constexpr static_rvector(static_rvector&& x) noexcept;
+	constexpr static_rvector(std::initializer_list<T> il);
 	~static_rvector();
 
-	static_rvector& operator=(const static_rvector& other);
-	static_rvector& operator=(static_rvector&& other);
-	static_rvector& operator=(std::initializer_list<value_type> il);
+	constexpr static_rvector& operator=(const static_rvector& other) noexcept;
+	constexpr static_rvector& operator=(static_rvector&& other) noexcept;
+	constexpr static_rvector& operator=(std::initializer_list<value_type> il) noexcept;
 
 	iterator begin() noexcept;
 	const_iterator begin() const noexcept;
@@ -113,45 +113,45 @@ private:
 };
 
 template<typename T, uint C>
-static_rvector<T, C>::static_rvector() :
+constexpr static_rvector<T, C>::static_rvector() noexcept :
 	m_length(0)
 {
 }
 
 template<typename T, uint C>
-static_rvector<T, C>::static_rvector(size_type n) :
+constexpr static_rvector<T, C>::static_rvector(size_type n) :
 	m_length(n)
 {
 	std::uninitialized_default_construct_n(data(), n);
 }
 
 template<typename T, uint C>
-static_rvector<T, C>::static_rvector(size_type n, const value_type& val) :
+constexpr static_rvector<T, C>::static_rvector(size_type n, const value_type& val) :
 	m_length(n) {
 	std::uninitialized_fill_n(data(), n, val);
 }
 
 template<typename T, uint C>
 template<typename InputIterator, typename>
-static_rvector<T, C>::static_rvector(InputIterator first, InputIterator last) :
+constexpr static_rvector<T, C>::static_rvector(InputIterator first, InputIterator last) :
 	m_length(std::distance(first, last)) {
 	std::uninitialized_copy(first, last, data());
 }
 
 template<typename T, uint C>
-static_rvector<T, C>::static_rvector(const static_rvector& x) :
+constexpr static_rvector<T, C>::static_rvector(const static_rvector& x) :
 	m_length(x.m_length) {
 	std::uninitialized_copy(x.begin(), x.end(), data());
 }
 
 template<typename T, uint C>
-static_rvector<T, C>::static_rvector(static_rvector&& x) :
+constexpr static_rvector<T, C>::static_rvector(static_rvector&& x) noexcept :
 	m_length(x.m_length) {
 	std::uninitialized_move(x.begin(), x.end(), data());
 }
 	
 template<typename T, uint C>
-static_rvector<T, C>::static_rvector(std::initializer_list<T> il) :
+constexpr static_rvector<T, C>::static_rvector(std::initializer_list<T> il) :
 	m_length(il.size()) {
 	std::uninitialized_copy(il.begin(), il.end(), begin());
 }
@@ -162,7 +162,7 @@ static_rvector<T, C>::~static_rvector() {
 }
 
 template<typename T, uint C>
-static_rvector<T, C>& static_rvector<T, C>::operator=(const static_rvector<T, C>& other) {
+constexpr static_rvector<T, C>& static_rvector<T, C>::operator=(const static_rvector<T, C>& other) noexcept {
 	auto ptr = data();
 	auto optr = other.data();
 
@@ -181,7 +181,7 @@ static_rvector<T, C>& static_rvector<T, C>::operator=(const static_rvector<T, C>
 }
 
 template<typename T, uint C>
-static_rvector<T, C>& static_rvector<T, C>::operator=(static_rvector<T, C>&& other) {
+constexpr static_rvector<T, C>& static_rvector<T, C>::operator=(static_rvector<T, C>&& other) noexcept {
 	auto ptr = data();
 	auto optr = other.data();
 
@@ -202,7 +202,7 @@ static_rvector<T, C>& static_rvector<T, C>::operator=(static_rvector<T, C>&& oth
 }
 
 template<typename T, uint C>
-static_rvector<T, C>& static_rvector<T, C>::operator=(std::initializer_list<value_type> il) {
+constexpr static_rvector<T, C>& static_rvector<T, C>::operator=(std::initializer_list<value_type> il) noexcept {
 	auto ptr = data();
 	auto optr = il.begin();
 	auto il_len = il.size();
