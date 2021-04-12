@@ -93,7 +93,7 @@ public:
 	// TODO: insert
 	// TODO: erase
 	void swap(static_rvector& other);
-	// TODO: clear
+	void clear() noexcept;
 	// TODO: emplace
 
 	template<typename... Args>
@@ -428,6 +428,13 @@ void static_rvector<T, C>::swap(static_rvector<T, C>& other) {
 	std::uninitialized_move(o2->begin() + min_len, o2->end(), o1->begin() + min_len);
 	std::destroy(o2->begin() + min_len, o2->end());
 	std::swap(o1->m_length, o2->m_length);
+}
+
+template<typename T, uint C>
+void static_rvector<T, C>::clear() noexcept {
+	value_type* ptr = data();
+	std::destroy(ptr, ptr + m_length);
+	m_length = 0;
 }
 
 template<typename T, uint C>

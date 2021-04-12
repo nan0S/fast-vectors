@@ -1,5 +1,5 @@
 #include "static_rvector.hpp"
-#include "static_vector/include/palotasb/static_vector.hpp"
+// #include "static_vector/include/palotasb/static_vector.hpp"
 #include <boost/container/static_vector.hpp>
 #include "test_type.hpp"
 
@@ -95,12 +95,6 @@ int main() {
 	// test3<boost::container::static_vector<T, C>>("boost::static_vector");
 	// test3<stlpb::static_vector<T, C>>("stlpb::static_vector");
 	// test3<static_rvector<T, C>>("static_rvector");
-
-	bvector<test_type, 3> v;
-	v.emplace_back(1);
-	v.emplace_back(2);
-	std::initializer_list<test_type> il {1, 2, 3};
-	v = il;
 
 	return 0;
 }
