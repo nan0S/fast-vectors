@@ -20,10 +20,13 @@ class static_rvector {
 public:
 	using value_type = T;
 	using size_type = uint_fast32_t;
+	using difference_type = ptrdiff_t;
 	using reference = T&;
 	using const_reference = const T&;
-	using iterator = T*;
-	using const_iterator = const T*;
+	using pointer = value_type*;
+	using const_pointer = const value_type*;
+	using iterator = pointer;
+	using const_iterator = const_pointer;
 	using reverse_iterator = std::reverse_iterator<iterator>;
 	using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
@@ -120,8 +123,7 @@ constexpr static_rvector<T, C>::static_rvector() noexcept :
 
 template<typename T, uint C>
 constexpr static_rvector<T, C>::static_rvector(size_type n) :
-	m_length(n)
-{
+	m_length(n) {
 	std::uninitialized_default_construct_n(data(), n);
 }
 
