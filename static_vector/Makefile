@@ -23,5 +23,9 @@ $(TARGET): $(OBJECTS)
 %.o: %.cpp Makefile
 	$(CXX) $(WARNING) $(CXXFLAGS) -MMD -MP -c -o $@ $<
 
+format:
+	@(shopt -s nullglob; \
+	  clang-format -i *.cpp *.hpp *.c *.h)
+
 clean:
 	rm -rf $(TARGET) $(OBJECTS) $(DEPENDS)
