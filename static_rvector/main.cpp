@@ -1,4 +1,4 @@
-#include "static_rvector.hpp"
+#include "static_vector.hpp"
 // #include "static_vector/include/palotasb/static_vector.hpp"
 #include <boost/container/static_vector.hpp>
 #include "test_type.hpp"
@@ -12,13 +12,13 @@
 #define OFF test_type::do_print = false
 
 template<typename T, uint C>
-using rvector = static_rvector<T, C>;
+using uvector = uwr::static_vector<T, C>;
 
 template<typename T, std::size_t C>
 using bvector = boost::container::static_vector<T, C>;
 
-using rtvector = rvector<test_type, 5>;
-using btvector = bvector<test_type, 5>;
+using utvector = uvector<test_type, 4>;
+using btvector = bvector<test_type, 4>;
 
 using T = int;
 constexpr uint C = 50000;
@@ -35,12 +35,12 @@ void measure(std::function<std::string()> f) {
 template<typename Vector, uint TIMES=C>
 void test1(const std::string& name) {
 	auto f = [&name] {
-		size_t sum = 0;
+		T sum = 0;
 		for (uint i = 0; i < TIMES; ++i) {
 			Vector v;
 			for (uint j = 0; j < TIMES; ++j)
-				v.push_back(j);
-			for (auto x : v)
+				v.push_back(T());
+			for (const auto& x : v)
 				sum += x;
 		}
 		std::cout << sum << std::endl;
@@ -108,19 +108,19 @@ void test4(const std::string& name) {
 int main() {
 	test1<boost::container::static_vector<T, C>>("boost::static_vector");
 	// test1<stlpb::static_vector<T, C>>("stlpb::static_vector");
-	test1<static_rvector<T, C>>("static_rvector");
+	test1<uwr::static_vector<T, C>>("uwr::static_vector");
 
 	// test2<boost::container::static_vector<T, C>>("boost::static_vector");
 	// test2<stlpb::static_vector<T, C>>("stlpb::static_vector");
-	// test2<static_rvector<T, C>>("static_rvector");
+	// test2<uwr::static_vector<T, C>>("uwr::static_vector");
 	
 	// test3<boost::container::static_vector<T, C>>("boost::static_vector");
 	// test3<stlpb::static_vector<T, C>>("stlpb::static_vector");
-	// test3<static_rvector<T, C>>("static_rvector");
+	// test3<uwr::static_vector<T, C>>("uwr::static_vector");
 
 	// test4<boost::container::static_vector<T, C>>("boost::static_vector");
 	// test4<stlpb::static_vector<T, C>>("stlpb::static_vector");
-	// test4<static_rvector<T, C>>("static_rvector");
+	// test4<uwr::static_vector<T, C>>("uwr::static_vector");
 
 	return 0;
 }

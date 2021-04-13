@@ -1,5 +1,5 @@
 CXX := g++
-CXXFLAGS := -std=c++17 -Ofast -march=native -flto -s -DNDEBUG
+CXXFLAGS := -std=c++20 -Ofast -march=native -flto -s -DNDEBUG
 WARNING := -Wall -Wextra
 
 TARGET := main
