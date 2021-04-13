@@ -1,5 +1,5 @@
 CXX := g++
-CXXFLAGS := -std=c++20 -Ofast -march=native -flto -s -DNDEBUG
+CXXFLAGS := -std=c++17 -Ofast -march=native -flto -s -DNDEBUG
 WARNING := -Wall -Wextra
 
 TARGET := main
@@ -10,8 +10,10 @@ DEPENDS := $(patsubst %.cpp,%.d,$(SOURCES))
 
 .PHONY: all clean
 
-all: $(TARGET)
+run: all
 	./$(TARGET)
+
+all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
 	$(CXX) $(WARNING) $(CXXFLAGS) -o $@ $^
