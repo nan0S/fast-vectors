@@ -2,4 +2,4 @@ tsv_test
 *.o
 main
 *.d
-static_rvector/static_vector
+static_vector/static_vector
