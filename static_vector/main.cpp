@@ -106,25 +106,25 @@ void test4(const std::string& name) {
 
 
 int main() {
-	// constexpr int TEST1_TIMES = 50000;
-	// test1<boost::container::static_vector<T, C>, TEST1_TIMES>("boost::static_vector");
+	constexpr int TEST1_TIMES = 50000;
+	test1<boost::container::static_vector<T, C>, TEST1_TIMES>("boost::static_vector");
 	// test1<stlpb::static_vector<T, C>, TEST1_TIMES>("stlpb::static_vector");
-	// test1<uwr::static_vector<T, C>, TEST1_TIMES>("uwr::static_vector");
+	test1<uwr::static_vector<T, C>, TEST1_TIMES>("uwr::static_vector");
 
-	// constexpr int TEST2_TIMES = C;
-	// test2<boost::container::static_vector<T, C>, TEST2_TIMES>("boost::static_vector");
+	constexpr int TEST2_TIMES = C;
+	test2<boost::container::static_vector<T, C>, TEST2_TIMES>("boost::static_vector");
 	// test2<stlpb::static_vector<T, C>, TEST2_TIMES>("stlpb::static_vector");
-	// test2<uwr::static_vector<T, C>, TEST2_TIMES>("uwr::static_vector");
+	test2<uwr::static_vector<T, C>, TEST2_TIMES>("uwr::static_vector");
 	
-	// constexpr int TEST3_TIMES = 10000;
-	// test3<boost::container::static_vector<T, C>, TEST3_TIMES>("boost::static_vector");
+	constexpr int TEST3_TIMES = 10000;
+	test3<boost::container::static_vector<T, C>, TEST3_TIMES>("boost::static_vector");
 	// test3<stlpb::static_vector<T, C>, TEST3_TIMES>("stlpb::static_vector");
-	// test3<uwr::static_vector<T, C>, TEST3_TIMES>("uwr::static_vector");
+	test3<uwr::static_vector<T, C>, TEST3_TIMES>("uwr::static_vector");
 
-	// constexpr int TEST4_TIMES = 10000000;
-	// test4<boost::container::static_vector<T, C>, TEST4_TIMES>("boost::static_vector");
+	constexpr int TEST4_TIMES = 10000000;
+	test4<boost::container::static_vector<T, C>, TEST4_TIMES>("boost::static_vector");
 	// test4<stlpb::static_vector<T, C>, TEST4_TIMES>("stlpb::static_vector");
-	// test4<uwr::static_vector<T, C>, TEST4_TIMES>("uwr::static_vector");
+	test4<uwr::static_vector<T, C>, TEST4_TIMES>("uwr::static_vector");
 
 	return 0;
 }
