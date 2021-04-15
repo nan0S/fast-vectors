@@ -75,7 +75,7 @@ public:
 	constexpr explicit static_vector(size_type n);
 	constexpr static_vector(size_type n, const T& val);
 	template<typename InputIterator,
-			 typename = typename std::iterator_traits<InputIterator>::T>
+			 typename = typename std::iterator_traits<InputIterator>::value_type>
 	constexpr static_vector(InputIterator first, InputIterator last);
 	constexpr static_vector(const static_vector& x);
 	constexpr static_vector(static_vector&& x) noexcept;
@@ -126,7 +126,7 @@ public:
 	constexpr const T* data() const noexcept;
 
 	template<typename InputIterator,
-		typename = typename std::iterator_traits<InputIterator>::T>
+		typename = typename std::iterator_traits<InputIterator>::value_type>
 	constexpr void assign(InputIterator first, InputIterator last);
 	constexpr void assign(size_type n, const T& val);
 	constexpr void assign(std::initializer_list<T> ilist);
@@ -493,12 +493,25 @@ constexpr static_vector<T, C>::at(size_type n) const {
 template<typename T, len_t C>
 template<typename InputIterator, typename>
 constexpr void static_vector<T, C>::assign(InputIterator first, InputIterator last) {
-	// std::destroy_n(data(), m_length);
-	destroy(data(), m_length);
-	// std::uninitialized_copy(first, last, data());
-	ucopy(data(), first, last);
-	m_length = std::distance(first, last);
+	auto n = static_cast<len_t>(std::distance(first, last));
+	auto ptr = data();
+
+	if (n < m_length) {
+		// std::destroy(ptr + other.m_length, ptr + m_length);
+		destroy(ptr + n, ptr + m_length);
+		// std::copy_n(optr, other.m_length, ptr);
+		copy(ptr, first, n);
+	}
+	else {
+		// std::copy_n(optr, m_length, ptr);
+		copy(ptr, first, m_length);
+		// std::uninitialized_copy(optr + m_length, optr + other.m_length, ptr + m_length);
+		ucopy(ptr + m_length, first + m_length, last);
+	}
+
+	m_length = n;
 }
+
 template<typename T, len_t C>
 constexpr void static_vector<T, C>::assign(size_type n, const T& val) {
 	// std::fill_n(data(), n, val);
