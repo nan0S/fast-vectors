@@ -104,8 +104,8 @@ void test4(const std::string& name) {
 	measure(f);
 }
 
-
 int main() {
+	#if 0
 	constexpr int TEST1_TIMES = 50000;
 	test1<boost::container::static_vector<T, C>, TEST1_TIMES>("boost::static_vector");
 	// test1<stlpb::static_vector<T, C>, TEST1_TIMES>("stlpb::static_vector");
@@ -125,6 +125,7 @@ int main() {
 	test4<boost::container::static_vector<T, C>, TEST4_TIMES>("boost::static_vector");
 	// test4<stlpb::static_vector<T, C>, TEST4_TIMES>("stlpb::static_vector");
 	test4<uwr::static_vector<T, C>, TEST4_TIMES>("uwr::static_vector");
+	#endif
 
 	return 0;
 }
