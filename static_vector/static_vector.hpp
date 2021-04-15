@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cinttypes>
 #include <iterator>
 #include <algorithm>
 
