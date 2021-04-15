@@ -3,6 +3,7 @@
 #include <cinttypes>
 #include <iterator>
 #include <algorithm>
+#include <iostream>
 
 #include "memory.hpp"
 
@@ -143,11 +144,12 @@ public:
 	template<typename InputIterator>
 	constexpr iterator insert(const_iterator pos, InputIterator first, InputIterator last);
 	constexpr iterator insert(const_iterator pos, std::initializer_list<T> ilist);
-	// TODO: insert
-	// TODO: erase
+	constexpr iterator erase(const_iterator pos);
+	constexpr iterator erase(const_iterator first, const_iterator last);
 	constexpr void swap(static_vector& other);
 	constexpr void clear() noexcept;
-	// TODO: emplace
+	template<typename... Args>
+	constexpr iterator emplace(const_iterator pos, Args&&... args);
 	template<typename... Args>
 	constexpr void emplace_back(Args&&... args);
 	template<typename... Args>
@@ -179,7 +181,7 @@ template<typename T, len_t C>
 constexpr static_vector<T, C>::static_vector(size_type n, const T& val) :
 	m_length(n) {
 	// std::uninitialized_fill_n(data(), n, val);
-	fill(data(), n, val);
+	ufill(data(), n, val);
 }
 
 template<typename T, len_t C>
@@ -397,7 +399,7 @@ constexpr void static_vector<T, C>::resize(size_type n, const T& val) {
 	if (n > m_length) {
 		auto ptr = data();
 		// std::uninitialized_fill(ptr + m_length, ptr + n, val);
-		fill(ptr + m_length, ptr + n, val);
+		ufill(ptr + m_length, ptr + n, val);
 		m_length = n;
 	}
 	else if (n < m_length) {
@@ -567,32 +569,100 @@ constexpr void static_vector<T, C>::safe_pop_back() noexcept {
 template<typename T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, const T& value) {
+	auto position = const_cast<T*>(pos);
+	shiftr(position + 1, position, end());
+	*position = value;
+	++m_length;
 
+	return position;
 }
 
 template<typename T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, T&& value) {
-	// TODO
+	auto position = const_cast<T*>(pos);
+	shiftr(position + 1, position, end());
+	*position = std::move(value);
+	++m_length;
+
+	return position;
 }
 
 template<typename T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, size_type count, const T& value) {
-	// TODO
+	auto position = const_cast<T*>(pos);
+	auto eptr = end();
+	auto rest = static_cast<size_type>(std::distance(position, eptr));
+
+	// TODO: likely?
+	if (count < rest) {
+		shiftr(position + count, position, eptr);
+		fill(position, count, value);
+	}
+	else {
+		umove(position + count, position, eptr);
+		fill(position, rest, value);
+		ufill(eptr, count - rest, value);
+	}
+
+	m_length += count;
+
+	return position;
 }
 
 template<typename T, len_t C>
 template<typename InputIterator>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, InputIterator first, InputIterator last) {
-	// TODO
+	auto position = const_cast<T*>(pos);
+	auto eptr = end();
+	auto count = std::distance(first, last);
+	auto rest = std::distance(position, eptr);
+
+	// TODO: likely?
+	if (count < rest) {
+		shiftr(position + count, position, eptr);
+		copy(position, first, count);
+	}
+	else {
+		umove(position + count, position, eptr);
+		copy(position, first, rest);
+		ucopy(position, first + rest, last);
+	}
+
+	m_length += count;
+
+	return position;
 }
 
 template<typename T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, std::initializer_list<T> ilist) {
-	// TODO
+	return insert(pos, ilist.begin(), ilist.end());
+}
+
+template<typename T, len_t C>
+constexpr typename static_vector<T, C>::iterator
+static_vector<T, C>::erase(const_iterator pos) {
+	auto position = const_cast<T*>(pos);
+	shiftl(position, position + 1, end());
+	pop_back();
+
+	return position;
+}
+
+template<typename T, len_t C>
+constexpr typename static_vector<T, C>::iterator
+static_vector<T, C>::erase(const_iterator first, const_iterator last) {
+	auto f = const_cast<T*>(first);
+	auto l = const_cast<T*>(last);
+	auto e = end();
+	shiftl(f, l, e);
+	destroy(f + (e - l), e);
+	m_length -= l - f;
+
+	return f;
 }
 
 template<typename T, len_t C>
@@ -618,6 +688,13 @@ constexpr void static_vector<T, C>::clear() noexcept {
 	// std::destroy(ptr, ptr + m_length);
 	destroy(data(), m_length);
 	m_length = 0;
+}
+
+template<typename T, len_t C>
+template<typename... Args>
+constexpr typename static_vector<T, C>::iterator
+static_vector<T, C>::emplace(const_iterator pos, Args&&... args) {
+	return insert(pos, std::forward<Args>(args)...);
 }
 
 template<typename T, len_t C>

@@ -2,6 +2,7 @@
 #include "static_vector/include/palotasb/static_vector.hpp"
 #include <boost/container/static_vector.hpp>
 #include "test_type.hpp"
+#include <rvector/rvector.h>
 
 #include <iostream>
 #include <vector>
@@ -17,8 +18,8 @@ using uvector = uwr::static_vector<T, C>;
 template<typename T, std::size_t C>
 using bvector = boost::container::static_vector<T, C>;
 
-using utvector = uvector<test_type, 4>;
-using btvector = bvector<test_type, 4>;
+using utvector = uvector<test_type, 10>;
+using btvector = bvector<test_type, 10>;
 
 using T = int;
 constexpr uint C = 50000;

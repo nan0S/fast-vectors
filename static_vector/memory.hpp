@@ -15,10 +15,17 @@ void construct(T* begin, T* end);
 template<typename T>
 void construct(T* data, len_t n);
 
+/* regular fill */
 template<typename T>
 void fill(T* begin, T* end, const T& val);
 template<typename T>
 void fill(T* data, len_t n, const T& val);
+
+/* uninitialized fill */
+template<typename T>
+void ufill(T* begin, T* end, const T& val);
+template<typename T>
+void ufill(T* data, len_t n, const T& val);
 
 /* regular copy */
 template<typename T, typename InputIterator>
@@ -52,6 +59,17 @@ void destroy(T* data, len_t n);
 template<typename T>
 void destroy_at(T* addr);
 
+/* assumption: dest < begin */
+template<typename T>
+T_Move<T> shiftr(T* dest, T* source, T* end);
+template<typename T>
+NT_Move<T> shiftr(T* dest, T* begin, T* end);
+
+template<typename T>
+T_Move<T> shiftl(T* dest, T* source, T* end);
+template<typename T>
+NT_Move<T> shiftl(T* dest, T* begin, T* end);
+
 template<typename T>
 void construct(T* begin, T* end) {
 	std::uninitialized_default_construct(begin, end);
@@ -64,11 +82,21 @@ void construct(T* data, len_t n) {
 
 template<typename T>
 void fill(T* begin, T* end, const T& val) {
-	std::uninitialized_fill(begin, end, val);
+	std::fill(begin, end, val);
 }
 
 template<typename T>
 void fill(T* data, len_t n, const T& val) {
+	std::fill_n(data, n, val);
+}
+
+template<typename T>
+void ufill(T* begin, T* end, const T& val) {
+	std::uninitialized_fill(begin, end, val);
+}
+
+template<typename T>
+void ufill(T* data, len_t n, const T& val) {
 	std::uninitialized_fill_n(data, n, val);
 }
 
@@ -99,8 +127,7 @@ T_Move<T> move(T* data, InputIterator begin, len_t n) {
 
 template<typename T, typename InputIterator>
 NT_Move<T> move(T* data, InputIterator begin, len_t n) {
-	for (len_t i = 0; i < n; ++i, ++data, ++begin)
-		*data = std::move(*begin);
+	std::move(begin, begin + n, data);
 }
 
 template<typename T, typename InputIterator>
@@ -126,6 +153,28 @@ void destroy(T* data, len_t n) {
 template<typename T>
 void destroy_at(T* addr) {
 	std::destroy_at(addr);
+}
+
+template<typename T>
+T_Move<T> shiftr(T* dest, T* begin, T* end) {
+	std::memmove(dest, begin, (end - begin) * sizeof(T));
+}
+
+template<typename T>
+NT_Move<T> shiftr(T* dest, T* begin, T* end) {
+	T* seg = end - (dest - begin);
+	umove(end, seg, end);
+	std::move_backward(begin, seg, end);
+}
+
+template<typename T>
+T_Move<T> shiftl(T* dest, T* begin, T* end) {
+	std::memmove(dest, begin, (end - begin) * sizeof(T));
+}
+
+template<typename T>
+NT_Move<T> shiftl(T* dest, T* begin, T* end) {
+	std::move(begin, end, dest);
 }
 
 } // namespace uwr
