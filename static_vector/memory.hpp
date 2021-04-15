@@ -25,6 +25,7 @@ template<typename T, typename InputIterator>
 T_Copy<T> copy(T* data, InputIterator begin, len_t n);
 template<typename T, typename InputIterator>
 NT_Copy<T> copy(T* data, InputIterator begin, len_t n);
+
 /* uninitialized copy */
 template<typename T, typename InputIterator>
 T_Copy<T> ucopy(T* data, InputIterator begin, InputIterator end);
@@ -36,6 +37,7 @@ template<typename T, typename InputIterator>
 T_Move<T> move(T* data, InputIterator begin, InputIterator end);
 template<typename T, typename InputIterator>
 NT_Move<T> move(T* data, InputIterator begin, InputIterator end);
+
 /* uninitialized move */
 template<typename T, typename InputIterator>
 T_Move<T> umove(T* data, InputIterator begin, InputIterator end);
