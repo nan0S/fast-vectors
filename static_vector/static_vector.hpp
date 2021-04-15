@@ -3,7 +3,6 @@
 #include <cinttypes>
 #include <iterator>
 #include <algorithm>
-#include <iostream>
 
 #include "memory.hpp"
 
