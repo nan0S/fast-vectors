@@ -58,10 +58,10 @@ void test2(const std::string& name) {
 			Vector v;
 			int times = TIMES;
 			while (times) {
-				int c = rand() % times + 1;
+				uint c = rand() % times + 1;
 				times -= c;
 				if (c > v.size() || (v.size() + c <= v.capacity() && rand() % 2 == 0))
-					for (int j = 0; j < c; ++j)
+					for (uint j = 0; j < c; ++j)
 						v.push_back(j);
 				else
 					while (c--)
@@ -106,7 +106,7 @@ void test4(const std::string& name) {
 }
 
 int main() {
-	#if 0
+	#if 1
 	constexpr int TEST1_TIMES = 50000;
 	test1<boost::container::static_vector<T, C>, TEST1_TIMES>("boost::static_vector");
 	// test1<stlpb::static_vector<T, C>, TEST1_TIMES>("stlpb::static_vector");
