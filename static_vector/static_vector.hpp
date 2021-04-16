@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <iterator>
@@ -8,52 +7,7 @@
 
 namespace uwr {	
 
-#define CPP_ABOVE_17 __cplusplus > 201703L
-
-template<typename T, len_t C>
-class static_vector;
-
-template<typename T, len_t C>
-constexpr inline bool operator==(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs);
-template<typename T, len_t C>
-constexpr inline bool operator!=(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs);
-template<typename T, len_t C>
-constexpr inline bool operator<(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs);
-template<typename T, len_t C>
-constexpr inline bool operator<=(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs);
-template<typename T, len_t C>
-constexpr inline bool operator>(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs);
-template<typename T, len_t C>
-constexpr inline bool operator>=(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs);
-template<typename T, len_t C>
-constexpr std::ostream& operator<<(std::ostream& out, const static_vector<T, C>& v);
-
-#if CPP_ABOVE_17
-inline constexpr struct synth_three_way_t {
-	template<typename T, std::totally_ordered_with<T> U>
-	auto operator()(const T& lhs, const U& rhs) {
-		if constexpr (std::three_way_comparable_with<T, U>)
-			return lhs <=> rhs;
-		else {
-			if (lhs == rhs)
-				return std::strong_ordering::equal;
-			else if (lhs < rhs)
-				return std::strong_ordering::less;
-			else
-				return std::strong_ordering::greater;
-		}
-	}
-} synth_three_way;
-
-template<typename T, len_t C>
-constexpr inline auto operator<=>(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs);
-#endif /* CPP_ABOVE_17 */
-
-template<typename T, len_t C>
-constexpr void swap(static_vector<T, C>& x, static_vector<T, C>& y);
-
 static_assert(std::is_same_v<len_t, uint>, "static_vector template type has to be the same as len_t!");
-
 /* template type is uint insted of len_t clarity reasons
    (not to lookup what len_t is) */
 template<typename T, uint C>
@@ -685,6 +639,32 @@ constexpr const T* static_vector<T, C>::data_at(size_type n) const noexcept {
 	return reinterpret_cast<const T*>(&m_data[n]);
 }
 
+/* non-member operators  */
+#define CPP_ABOVE_17 __cplusplus > 201703L
+
+template<typename T, len_t C>
+constexpr inline bool operator==(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs);
+template<typename T, len_t C>
+constexpr inline bool operator!=(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs);
+template<typename T, len_t C>
+constexpr inline bool operator<(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs);
+template<typename T, len_t C>
+constexpr inline bool operator<=(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs);
+template<typename T, len_t C>
+constexpr inline bool operator>(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs);
+template<typename T, len_t C>
+constexpr inline bool operator>=(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs);
+template<typename T, len_t C>
+constexpr std::ostream& operator<<(std::ostream& out, const static_vector<T, C>& v);
+
+#if CPP_ABOVE_17
+
+template<typename T, len_t C>
+constexpr inline auto operator<=>(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs);
+
+#endif
+
+/* non-member operators' implementations */
 template<typename T, len_t C>
 constexpr bool operator==(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
 	if (lhs.size() != rhs.size())
@@ -717,15 +697,6 @@ constexpr bool operator>=(const static_vector<T, C>& lhs, const static_vector<T,
 	return !(lhs < rhs);
 }
 
-#if CPP_ABOVE_17
-template<typename T, len_t C>
-constexpr auto operator<=>(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
-	return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(),
-												  rhs.begin(), rhs.end(),
-												  synth_three_way);
-}
-#endif
-
 template<typename T, len_t C>
 constexpr std::ostream& operator<<(std::ostream& out, const static_vector<T, C>& v) {
 	for (typename static_vector<T, C>::size_type i = 0; i < v.size() - 1; ++i)
@@ -735,9 +706,84 @@ constexpr std::ostream& operator<<(std::ostream& out, const static_vector<T, C>&
 	return out;
 }
 
+#if CPP_ABOVE_17
+
+inline constexpr struct synth_three_way_t {
+	template<typename T, std::totally_ordered_with<T> U>
+	auto operator()(const T& lhs, const U& rhs) {
+		if constexpr (std::three_way_comparable_with<T, U>)
+			return lhs <=> rhs;
+		else {
+			if (lhs == rhs)
+				return std::strong_ordering::equal;
+			else if (lhs < rhs)
+				return std::strong_ordering::less;
+			else
+				return std::strong_ordering::greater;
+		}
+	}
+} synth_three_way;
+
 template<typename T, len_t C>
-constexpr void swap(static_vector<T, C>& x, static_vector<T, C>& y) {
+constexpr auto operator<=>(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
+	return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(),
+												  rhs.begin(), rhs.end(),
+												  synth_three_way);
+}
+
+#endif // CPP_ABOVE_17
+
+} // namespace uwr
+
+
+namespace std {
+
+/* non-member functions */
+template<typename T, uwr::len_t C>
+constexpr void swap(uwr::static_vector<T, C>& x, uwr::static_vector<T, C>& y);
+
+#if CPP_ABOVE_17
+
+template<typename T, uwr::len_t C, typename U>
+constexpr typename uwr::static_vector<T, C>::size_type
+erase(uwr::static_vector<T, C>& c, const U& value);
+
+template<typename T, uwr::len_t C, typename Pred>
+constexpr typename uwr::static_vector<T, C>::size_type
+erase_if(uwr::static_vector<T, C>& c, Pred pred);
+
+#endif
+
+/* non-member functions' implementations */
+template<typename T, uwr::len_t C>
+constexpr void swap(uwr::static_vector<T, C>& x, uwr::static_vector<T, C>& y) {
 	x.swap(y);
 }
 
-} // namespace uwr
+#if CPP_ABOVE_17
+
+template<typename T, uwr::len_t C, typename U>
+constexpr typename uwr::static_vector<T, C>::size_type
+erase(uwr::static_vector<T, C>& c, const U& value) {
+	// TODO: possible optimizations?
+	auto it = std::remove(c.begin(), c.end(), value);
+	auto r = std::distance(it, c.end());
+	c.erase(it, c.end());
+
+	return r;
+}
+
+template<typename T, uwr::len_t C, typename Pred>
+constexpr typename uwr::static_vector<T, C>::size_type
+erase_if(uwr::static_vector<T, C>& c, Pred pred) {
+	// TODO: possible optimizations?
+	auto it = std::remove_if(c.begin(), c.end(), pred);
+	auto r = std::distance(it, c.end());
+	c.erase(it, c.end());
+
+	return r;
+}
+
+#endif // CPP_ABOVE_17
+
+} // namespace std
