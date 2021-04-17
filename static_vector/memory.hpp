@@ -59,14 +59,15 @@ void destroy(T* data, len_t n);
 template<typename T>
 void destroy_at(T* addr);
 
-/* assumption: dest < begin */
+/* assumption: begin < dest <= end and addresses >= end are uninitialized*/
 template<typename T>
-T_Move<T> shiftr(T* dest, T* source, T* end);
+T_Move<T> shiftr(T* dest, T* begin, T* end);
 template<typename T>
 NT_Move<T> shiftr(T* dest, T* begin, T* end);
 
+/* assumption: dest < begin */
 template<typename T>
-T_Move<T> shiftl(T* dest, T* source, T* end);
+T_Move<T> shiftl(T* dest, T* begin, T* end);
 template<typename T>
 NT_Move<T> shiftl(T* dest, T* begin, T* end);
 
