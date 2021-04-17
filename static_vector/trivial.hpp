@@ -71,7 +71,7 @@ using T_Move =
 template<typename T>
 using NT_Move =
 	std::enable_if_t<!is_trivially_moveable_v<T>>;
-	
+
 template<typename T>
 using T_Copy_C =
 	std::enable_if_t<is_trivially_copy_constructible_v<T>>;

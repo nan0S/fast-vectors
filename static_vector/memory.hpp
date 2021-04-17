@@ -2,7 +2,7 @@
 
 #include "trivial.hpp"
 
-#include <memory>
+#include <algorithm>
 #include <cstring>
 
 namespace uwr {
