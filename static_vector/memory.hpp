@@ -8,7 +8,9 @@
 namespace uwr {
 
 typedef unsigned int uint;
-using len_t = uint;
+// TODO: restore to uint
+// using len_t = uint;
+using len_t = size_t;
 
 template<typename T>
 void construct(T* begin, T* end);

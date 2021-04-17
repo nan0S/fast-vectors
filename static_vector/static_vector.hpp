@@ -7,14 +7,18 @@
 
 namespace uwr {	
 
-static_assert(std::is_same_v<len_t, uint>, "static_vector template type has to be the same as len_t!");
+// TODO: restore to uint
+static_assert(std::is_same_v<len_t, size_t>, "static_vector template type has to be the same as len_t!");
 /* template type is uint insted of len_t clarity reasons
    (not to lookup what len_t is) */
-template<typename T, uint C>
+// TODO: restore to uint
+template<typename T, size_t C>
 class static_vector {
 public:
 	using value_type = T;
-	using size_type = uint_fast32_t;
+	// TODO: restore to uint...
+	// using size_type = uint_fast32_t;
+	using size_type = size_t;
 	using difference_type = ptrdiff_t;
 	using reference = T&;
 	using const_reference = const T&;
@@ -457,8 +461,8 @@ constexpr void static_vector<T, C>::assign(std::initializer_list<T> ilist) {
 template<typename T, len_t C>
 constexpr void static_vector<T, C>::push_back(const_reference value) {
 	// TODO: uncomment
-	// if (m_length == C)
-		// throw std::out_of_range("Out of bounds");
+	if (m_length == C)
+		throw std::out_of_range("Out of bounds");
 	new (data() + m_length++) T(value);
 }
 
@@ -470,8 +474,8 @@ constexpr void static_vector<T, C>::fast_push_back(const_reference value) noexce
 template<typename T, len_t C>
 constexpr void static_vector<T, C>::push_back(T&& value) {
 	// TODO: uncomment
-	// if (m_length == C)
-		// throw std::out_of_range("Out of bounds");
+	if (m_length == C)
+		throw std::out_of_range("Out of bounds");
 	new (data() + m_length++) T(std::move(value));
 }
 
@@ -624,8 +628,8 @@ template<typename T, len_t C>
 template<typename... Args>
 constexpr void static_vector<T, C>::emplace_back(Args&&... args) {
 	// TODO: uncomment
-	// if (m_length == C)
-		// throw std::out_of_range("Out of bounds");
+	if (m_length == C)
+		throw std::out_of_range("Out of bounds");
 	new (data() + m_length++) T(std::forward<Args>(args)...);
 }
 
