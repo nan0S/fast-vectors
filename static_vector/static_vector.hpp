@@ -616,7 +616,8 @@ template<typename T, len_t C>
 template<typename... Args>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::emplace(const_iterator pos, Args&&... args) {
-	return insert(pos, std::forward<Args>(args)...);
+	// TODO: improve when pos == end()
+	return insert(pos, T(std::forward<Args>(args)...));
 }
 
 template<typename T, len_t C>
