@@ -1,7 +1,7 @@
 CXX := g++
-CXXFLAGS := -std=c++17 -Ofast -march=native -flto -s
+CXXFLAGS := -std=c++17 -Ofast -march=native -flto -s -DNDEBUG
 # check c++20, but write for at least c++17 compatibility
-# CXXFLAGS := -std=c++20 -Ofast -march=native -flto -s
+# CXXFLAGS := -std=c++20 -Ofast -march=native -flto -s -DNDEBUG
 WARNING := -Wall -Wextra
 
 TARGET := main
