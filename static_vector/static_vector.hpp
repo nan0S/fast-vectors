@@ -89,18 +89,23 @@ public:
 	constexpr void fast_push_back(const T& value) noexcept;
 	constexpr void push_back(T&& value);
 	constexpr void fast_push_back(T&& value) noexcept;
+
 	constexpr void pop_back();
 	constexpr void safe_pop_back() noexcept;
+
 	constexpr iterator insert(const_iterator pos, const T& value);
 	constexpr iterator insert(const_iterator pos, T&& value);
 	constexpr iterator insert(const_iterator pos, size_type count, const T& value);
 	template<typename InputIterator>
 	constexpr iterator insert(const_iterator pos, InputIterator first, InputIterator last);
 	constexpr iterator insert(const_iterator pos, std::initializer_list<T> ilist);
+
 	constexpr iterator erase(const_iterator pos);
 	constexpr iterator erase(const_iterator first, const_iterator last);
+
 	constexpr void swap(static_vector& other);
 	constexpr void clear() noexcept;
+	
 	template<typename... Args>
 	constexpr iterator emplace(const_iterator pos, Args&&... args);
 	template<typename... Args>
