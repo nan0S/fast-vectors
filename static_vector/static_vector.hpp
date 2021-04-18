@@ -358,7 +358,7 @@ constexpr bool static_vector<T, C>::empty() const noexcept {
 }
 
 template<typename T, len_t C>
-constexpr void static_vector<T, C>::reserve(size_type n) noexcept {
+constexpr void static_vector<T, C>::reserve(size_type) noexcept {
 }
 
 template<typename T, len_t C>
