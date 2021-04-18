@@ -159,12 +159,12 @@ void destroy_at(T* addr) {
 }
 
 template<typename T>
-T_Move_C<T> shiftr(T* dest, T* begin, T* end) {
+T_Move<T> shiftr(T* dest, T* begin, T* end) {
 	std::memmove(dest, begin, (end - begin) * sizeof(T));
 }
 
 template<typename T>
-NT_Move_C<T> shiftr(T* dest, T* begin, T* end) {
+NT_Move<T> shiftr(T* dest, T* begin, T* end) {
 	T* seg = end - (dest - begin);
 	umove(end, seg, end);
 	std::move_backward(begin, seg, end);
