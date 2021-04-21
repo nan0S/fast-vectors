@@ -3,7 +3,7 @@
 #include <iterator>
 #include <common/memory.hpp>
 
-namespace uwr {	
+namespace uwr {
 
 // TODO: restore to uint
 static_assert(std::is_same_v<len_t, size_t>, "static_vector template type has to be the same as len_t!");
@@ -127,8 +127,7 @@ private:
 
 template<class T, len_t C>
 constexpr static_vector<T, C>::static_vector() noexcept :
-	m_length(0)
-{
+	m_length(0) {
 }
 
 template<class T, len_t C>
