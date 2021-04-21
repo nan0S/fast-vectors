@@ -1,8 +1,6 @@
 #pragma once
 
 #include <common/trivial.hpp>
-// #include "trivial.hpp"
-
 #include <algorithm>
 #include <cstring>
 
