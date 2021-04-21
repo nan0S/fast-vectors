@@ -11,7 +11,7 @@ static_assert(std::is_same_v<len_t, size_t>, "static_vector template type has to
 /* template type is uint insted of len_t clarity reasons
    (not to lookup what len_t is) */
 // TODO: restore to uint
-template<typename T, size_t C>
+template<class T, size_t C>
 class static_vector {
 public:
 	using value_type = T;
@@ -31,8 +31,8 @@ public:
 	constexpr static_vector() noexcept;
 	constexpr explicit static_vector(size_type n);
 	constexpr static_vector(size_type n, const T& val);
-	template<typename InputIterator,
-			 typename = typename std::iterator_traits<InputIterator>::value_type>
+	template<class InputIterator,
+			 class = typename std::iterator_traits<InputIterator>::value_type>
 	constexpr static_vector(InputIterator first, InputIterator last);
 	constexpr static_vector(const static_vector& x);
 	constexpr static_vector(static_vector&& x) noexcept;
@@ -82,8 +82,8 @@ public:
 	constexpr T* data() noexcept;
 	constexpr const T* data() const noexcept;
 
-	template<typename InputIterator,
-		typename = typename std::iterator_traits<InputIterator>::value_type>
+	template<class InputIterator,
+		class = typename std::iterator_traits<InputIterator>::value_type>
 	constexpr void assign(InputIterator first, InputIterator last);
 	constexpr void assign(size_type n, const T& val);
 	constexpr void assign(std::initializer_list<T> ilist);
@@ -99,7 +99,8 @@ public:
 	constexpr iterator insert(const_iterator pos, const T& value);
 	constexpr iterator insert(const_iterator pos, T&& value);
 	constexpr iterator insert(const_iterator pos, size_type count, const T& value);
-	template<typename InputIterator>
+	template<class InputIterator,
+		class = typename std::iterator_traits<InputIterator>::value_type>
 	constexpr iterator insert(const_iterator pos, InputIterator first, InputIterator last);
 	constexpr iterator insert(const_iterator pos, std::initializer_list<T> ilist);
 
@@ -109,11 +110,11 @@ public:
 	constexpr void swap(static_vector& other);
 	constexpr void clear() noexcept;
 	
-	template<typename... Args>
+	template<class... Args>
 	constexpr iterator emplace(const_iterator pos, Args&&... args);
-	template<typename... Args>
+	template<class... Args>
 	constexpr void emplace_back(Args&&... args);
-	template<typename... Args>
+	template<class... Args>
 	constexpr void fast_emplace_back(Args&&... args) noexcept;
 
 private:
@@ -125,50 +126,50 @@ private:
 	size_type m_length;
 };
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr static_vector<T, C>::static_vector() noexcept :
 	m_length(0)
 {
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr static_vector<T, C>::static_vector(size_type n) :
 	m_length(n) {
 	construct(data(), n);
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr static_vector<T, C>::static_vector(size_type n, const T& val) :
 	m_length(n) {
 	ufill(data(), n, val);
 }
 
-template<typename T, len_t C>
-template<typename InputIterator, typename>
+template<class T, len_t C>
+template<class InputIterator, class>
 constexpr static_vector<T, C>::static_vector(InputIterator first, InputIterator last) :
 	m_length(std::distance(first, last)) {
 	ucopy(data(), first, last);
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr static_vector<T, C>::static_vector(const static_vector& x) :
 	m_length(x.m_length) {
 	ucopy(data(), x.begin(), x.end());
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr static_vector<T, C>::static_vector(static_vector&& x) noexcept :
 	m_length(x.m_length) {
 	umove(data(), x.begin(), x.end());
 }
 	
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr static_vector<T, C>::static_vector(std::initializer_list<T> ilist) :
 	m_length(ilist.size()) {
 	ucopy(data(), ilist.begin(), ilist.end());
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 #if CPP_ABOVE_17
 constexpr
 #endif
@@ -176,7 +177,7 @@ static_vector<T, C>::~static_vector() {
 	destroy(data(), m_length);
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr static_vector<T, C>& static_vector<T, C>::operator=(const static_vector<T, C>& other) noexcept {
 	auto ptr = data();
 	auto optr = other.data();
@@ -195,7 +196,7 @@ constexpr static_vector<T, C>& static_vector<T, C>::operator=(const static_vecto
 	return *this;
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr static_vector<T, C>& static_vector<T, C>::operator=(static_vector<T, C>&& other) noexcept {
 	auto ptr = data();
 	auto optr = other.data();
@@ -214,7 +215,7 @@ constexpr static_vector<T, C>& static_vector<T, C>::operator=(static_vector<T, C
 	return *this;
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr static_vector<T, C>& static_vector<T, C>::operator=(std::initializer_list<T> ilist) noexcept {
 	auto ptr = data();
 	auto optr = ilist.begin();
@@ -234,91 +235,91 @@ constexpr static_vector<T, C>& static_vector<T, C>::operator=(std::initializer_l
 	return *this;
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 typename static_vector<T, C>::iterator
 constexpr static_vector<T, C>::begin() noexcept {
 	return data();
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 typename static_vector<T, C>::const_iterator
 constexpr static_vector<T, C>::begin() const noexcept {
 	return data();
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 typename static_vector<T, C>::iterator
 constexpr static_vector<T, C>::end() noexcept {
 	return data() + m_length;
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 typename static_vector<T, C>::const_iterator
 constexpr static_vector<T, C>::end() const noexcept {
 	return data() + m_length;
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 typename static_vector<T, C>::reverse_iterator
 constexpr static_vector<T, C>::rbegin() noexcept {
 	return data() + m_length;
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 typename static_vector<T, C>::const_reverse_iterator
 constexpr static_vector<T, C>::rbegin() const noexcept {
 	return data() + m_length;
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 typename static_vector<T, C>::reverse_iterator
 constexpr static_vector<T, C>::rend() noexcept {
 	return data();
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 typename static_vector<T, C>::const_reverse_iterator
 constexpr static_vector<T, C>::rend() const noexcept {
 	return data();
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 typename static_vector<T, C>::const_iterator
 constexpr static_vector<T, C>::cbegin() const noexcept {
 	return data();
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 typename static_vector<T, C>::const_iterator
 constexpr static_vector<T, C>::cend() const noexcept {
 	return data() + m_length;
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 typename static_vector<T, C>::const_reverse_iterator
 constexpr static_vector<T, C>::crbegin() const noexcept {
 	return data() + m_length;
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 typename static_vector<T, C>::const_reverse_iterator
 constexpr static_vector<T, C>::crend() const noexcept {
 	return data();
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 typename static_vector<T, C>::size_type
 constexpr static_vector<T, C>::size() const noexcept {
 	return m_length;
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr typename static_vector<T, C>::size_type
 static_vector<T, C>::max_size() const noexcept {
 	return C;
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr void static_vector<T, C>::resize(size_type n) {
 	if (n > m_length) {
 		auto ptr = data();
@@ -332,7 +333,7 @@ constexpr void static_vector<T, C>::resize(size_type n) {
 	}
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr void static_vector<T, C>::resize(size_type n, const T& val) {
 	if (n > m_length) {
 		auto ptr = data();
@@ -346,38 +347,38 @@ constexpr void static_vector<T, C>::resize(size_type n, const T& val) {
 	}
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr typename static_vector<T, C>::size_type
 static_vector<T, C>::capacity() const noexcept {
 	return C;
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr bool static_vector<T, C>::empty() const noexcept {
 	return m_length == 0;
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr void static_vector<T, C>::reserve(size_type) noexcept {
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr void static_vector<T, C>::shrink_to_fit() noexcept {
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 typename static_vector<T, C>::reference
 constexpr static_vector<T, C>::operator[](size_type n) {
 	return *data_at(n);
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 typename static_vector<T, C>::const_reference
 constexpr static_vector<T, C>::operator[](size_type n) const {
 	return *data_at(n);
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr typename static_vector<T, C>::reference
 static_vector<T, C>::at(size_type n) {
 	if (n >= m_length)
@@ -385,41 +386,41 @@ static_vector<T, C>::at(size_type n) {
 	return *data_at(n);
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 typename static_vector<T, C>::reference
 constexpr static_vector<T, C>::front() {
 	return *data_at(0);
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 typename static_vector<T, C>::const_reference
 constexpr static_vector<T, C>::front() const {
 	return *data_at(0);
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 typename static_vector<T, C>::reference
 constexpr static_vector<T, C>::back() {
 	return *data_at(m_length - 1);
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 typename static_vector<T, C>::const_reference
 constexpr static_vector<T, C>::back() const {
 	return *data_at(m_length - 1);
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr T* static_vector<T, C>::data() noexcept {
 	return data_at(0);
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr const T* static_vector<T, C>::data() const noexcept {
 	return data_at(0);
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 typename static_vector<T, C>::const_reference
 constexpr static_vector<T, C>::at(size_type n) const {
 	// TODO: unlikely
@@ -428,8 +429,8 @@ constexpr static_vector<T, C>::at(size_type n) const {
 	return *data_at(n);
 }
 
-template<typename T, len_t C>
-template<typename InputIterator, typename>
+template<class T, len_t C>
+template<class InputIterator, class>
 constexpr void static_vector<T, C>::assign(InputIterator first, InputIterator last) {
 	auto n = static_cast<len_t>(std::distance(first, last));
 	auto ptr = data();
@@ -446,18 +447,18 @@ constexpr void static_vector<T, C>::assign(InputIterator first, InputIterator la
 	m_length = n;
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr void static_vector<T, C>::assign(size_type n, const T& val) {
 	fill(data(), n, val);
 	m_length = n;
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr void static_vector<T, C>::assign(std::initializer_list<T> ilist) {
 	assign(ilist.begin(), ilist.end());
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr void static_vector<T, C>::push_back(const_reference value) {
 	// TODO: uncomment
 	if (m_length == C)
@@ -465,12 +466,12 @@ constexpr void static_vector<T, C>::push_back(const_reference value) {
 	new (data() + m_length++) T(value);
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr void static_vector<T, C>::fast_push_back(const_reference value) noexcept {
 	new (data() + m_length++) T(value);
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr void static_vector<T, C>::push_back(T&& value) {
 	// TODO: uncomment
 	if (m_length == C)
@@ -478,24 +479,24 @@ constexpr void static_vector<T, C>::push_back(T&& value) {
 	new (data() + m_length++) T(std::move(value));
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr void static_vector<T, C>::fast_push_back(T&& value) noexcept {
 	new (data() + m_length++) T(std::move(value));
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr void static_vector<T, C>::pop_back() {
 	destroy_at(data() + --m_length);
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr void static_vector<T, C>::safe_pop_back() noexcept {
 	if (m_length == 0)
 		return;
 	destroy_at(data() + --m_length);
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, const T& value) {
 	auto position = const_cast<T*>(pos);
@@ -506,7 +507,7 @@ static_vector<T, C>::insert(const_iterator pos, const T& value) {
 	return position;
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, T&& value) {
 	auto position = const_cast<T*>(pos);
@@ -517,7 +518,7 @@ static_vector<T, C>::insert(const_iterator pos, T&& value) {
 	return position;
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, size_type count, const T& value) {
 	auto position = const_cast<T*>(pos);
@@ -540,8 +541,8 @@ static_vector<T, C>::insert(const_iterator pos, size_type count, const T& value)
 	return position;
 }
 
-template<typename T, len_t C>
-template<typename InputIterator>
+template<class T, len_t C>
+template<class InputIterator, class>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, InputIterator first, InputIterator last) {
 	auto position = const_cast<T*>(pos);
@@ -565,13 +566,13 @@ static_vector<T, C>::insert(const_iterator pos, InputIterator first, InputIterat
 	return position;
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, std::initializer_list<T> ilist) {
 	return insert(pos, ilist.begin(), ilist.end());
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::erase(const_iterator pos) {
 	auto position = const_cast<T*>(pos);
@@ -581,7 +582,7 @@ static_vector<T, C>::erase(const_iterator pos) {
 	return position;
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::erase(const_iterator first, const_iterator last) {
 	auto f = const_cast<T*>(first);
@@ -594,7 +595,7 @@ static_vector<T, C>::erase(const_iterator first, const_iterator last) {
 	return f;
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr void static_vector<T, C>::swap(static_vector<T, C>& other) {
 	static_vector<T, C> *o1 = this, *o2 = &other;
 	size_type min_len = std::min(o1->m_length, o2->m_length);
@@ -609,22 +610,22 @@ constexpr void static_vector<T, C>::swap(static_vector<T, C>& other) {
 	std::swap(o1->m_length, o2->m_length);
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr void static_vector<T, C>::clear() noexcept {
 	destroy(data(), m_length);
 	m_length = 0;
 }
 
-template<typename T, len_t C>
-template<typename... Args>
+template<class T, len_t C>
+template<class... Args>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::emplace(const_iterator pos, Args&&... args) {
 	// TODO: improve when pos == end()
 	return insert(pos, T(std::forward<Args>(args)...));
 }
 
-template<typename T, len_t C>
-template<typename... Args>
+template<class T, len_t C>
+template<class... Args>
 constexpr void static_vector<T, C>::emplace_back(Args&&... args) {
 	// TODO: uncomment
 	if (m_length == C)
@@ -632,18 +633,18 @@ constexpr void static_vector<T, C>::emplace_back(Args&&... args) {
 	new (data() + m_length++) T(std::forward<Args>(args)...);
 }
 
-template<typename T, len_t C>
-template<typename... Args>
+template<class T, len_t C>
+template<class... Args>
 constexpr void static_vector<T, C>::fast_emplace_back(Args&&... args) noexcept {
 	new (data() + m_length++) T(std::forward<Args>(args)...);
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr T* static_vector<T, C>::data_at(size_type n) noexcept {
 	return reinterpret_cast<T*>(&m_data[n]);
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr const T* static_vector<T, C>::data_at(size_type n) const noexcept {
 	return reinterpret_cast<const T*>(&m_data[n]);
 }
@@ -651,62 +652,62 @@ constexpr const T* static_vector<T, C>::data_at(size_type n) const noexcept {
 /* non-member operators  */
 #define CPP_ABOVE_17 __cplusplus > 201703L
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr inline bool operator==(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs);
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr inline bool operator!=(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs);
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr inline bool operator<(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs);
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr inline bool operator<=(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs);
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr inline bool operator>(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs);
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr inline bool operator>=(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs);
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr std::ostream& operator<<(std::ostream& out, const static_vector<T, C>& v);
 
 #if CPP_ABOVE_17
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr inline auto operator<=>(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs);
 
 #endif
 
 /* non-member operators' implementations */
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr bool operator==(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
 	if (lhs.size() != rhs.size())
 		return false;
 	return std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr bool operator!=(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
 	return !(lhs == rhs);
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr bool operator<(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
 	return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr bool operator<=(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
 	return !(rhs < lhs);
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr bool operator>(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
 	return rhs < lhs;
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr bool operator>=(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
 	return !(lhs < rhs);
 }
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr std::ostream& operator<<(std::ostream& out, const static_vector<T, C>& v) {
 	for (typename static_vector<T, C>::size_type i = 0; i < v.size() - 1; ++i)
 		out << v[i] << ' ';
@@ -718,7 +719,7 @@ constexpr std::ostream& operator<<(std::ostream& out, const static_vector<T, C>&
 #if CPP_ABOVE_17
 
 inline constexpr struct synth_three_way_t {
-	template<typename T, std::totally_ordered_with<T> U>
+	template<class T, std::totally_ordered_with<T> U>
 	auto operator()(const T& lhs, const U& rhs) {
 		if constexpr (std::three_way_comparable_with<T, U>)
 			return lhs <=> rhs;
@@ -733,7 +734,7 @@ inline constexpr struct synth_three_way_t {
 	}
 } synth_three_way;
 
-template<typename T, len_t C>
+template<class T, len_t C>
 constexpr auto operator<=>(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
 	return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(),
 												  rhs.begin(), rhs.end(),
@@ -748,30 +749,30 @@ constexpr auto operator<=>(const static_vector<T, C>& lhs, const static_vector<T
 namespace std {
 
 /* non-member functions */
-template<typename T, uwr::len_t C>
+template<class T, uwr::len_t C>
 constexpr void swap(uwr::static_vector<T, C>& x, uwr::static_vector<T, C>& y);
 
 #if CPP_ABOVE_17
 
-template<typename T, uwr::len_t C, typename U>
+template<class T, uwr::len_t C, class U>
 constexpr typename uwr::static_vector<T, C>::size_type
 erase(uwr::static_vector<T, C>& c, const U& value);
 
-template<typename T, uwr::len_t C, typename Pred>
+template<class T, uwr::len_t C, class Pred>
 constexpr typename uwr::static_vector<T, C>::size_type
 erase_if(uwr::static_vector<T, C>& c, Pred pred);
 
 #endif
 
 /* non-member functions' implementations */
-template<typename T, uwr::len_t C>
+template<class T, uwr::len_t C>
 constexpr void swap(uwr::static_vector<T, C>& x, uwr::static_vector<T, C>& y) {
 	x.swap(y);
 }
 
 #if CPP_ABOVE_17
 
-template<typename T, uwr::len_t C, typename U>
+template<class T, uwr::len_t C, class U>
 constexpr typename uwr::static_vector<T, C>::size_type
 erase(uwr::static_vector<T, C>& c, const U& value) {
 	// TODO: possible optimizations?
@@ -782,7 +783,7 @@ erase(uwr::static_vector<T, C>& c, const U& value) {
 	return r;
 }
 
-template<typename T, uwr::len_t C, typename Pred>
+template<class T, uwr::len_t C, class Pred>
 constexpr typename uwr::static_vector<T, C>::size_type
 erase_if(uwr::static_vector<T, C>& c, Pred pred) {
 	// TODO: possible optimizations?

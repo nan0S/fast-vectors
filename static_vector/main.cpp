@@ -12,10 +12,10 @@
 #define ON test_type::do_print = true
 #define OFF test_type::do_print = false
 
-template<typename T, uint C>
+template<class T, uint C>
 using uvector = uwr::static_vector<T, C>;
 
-template<typename T, std::size_t C>
+template<class T, std::size_t C>
 using bvector = boost::container::static_vector<T, C>;
 
 using utvector = uvector<test_type, 10>;
@@ -33,7 +33,7 @@ void measure(std::function<std::string()> f) {
 	std::cout << name << ": " << elapsed * 1000 << "ms" << std::endl;
 }
 
-template<typename Vector, uint TIMES=C>
+template<class Vector, uint TIMES=C>
 void test1(const std::string& name) {
 	auto f = [&name] {
 		T sum = 0;
@@ -51,7 +51,7 @@ void test1(const std::string& name) {
 	measure(f);
 }
 
-template<typename Vector, uint TIMES=C>
+template<class Vector, uint TIMES=C>
 void test2(const std::string& name) {
 	auto f = [&name] {
 		for (uint i = 0; i < TIMES; ++i) {
@@ -74,7 +74,7 @@ void test2(const std::string& name) {
 	measure(f);
 }
 
-template<typename Vector, uint TIMES=C>
+template<class Vector, uint TIMES=C>
 void test3(const std::string& name) {
 	auto f = [&name] {
 		for (uint i = 0; i < TIMES; ++i) {
@@ -90,7 +90,7 @@ void test3(const std::string& name) {
 	measure(f);
 }
 
-template<typename Vector, uint TIMES=C>
+template<class Vector, uint TIMES=C>
 void test4(const std::string& name) {
 	auto f = [&name] {
 		for (uint i = 0; i < TIMES; ++i) {
