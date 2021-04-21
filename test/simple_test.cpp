@@ -1,6 +1,5 @@
-#include "static_vector.hpp"
-// #include "static_vector/include/palotasb/static_vector.hpp"
-#include "test_type.hpp"
+#include <static_vector.hpp>
+#include <test_type/test_type.hpp>
 #include <boost/container/static_vector.hpp>
 #include <rvector/rvector.h>
 

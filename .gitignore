@@ -1,5 +1,2 @@
-tsv_test
-*.o
-main
-*.d
-static_vector/static_vector
+build/*
+bin/*
