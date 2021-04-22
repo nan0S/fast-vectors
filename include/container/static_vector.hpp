@@ -6,18 +6,18 @@
 namespace uwr {
 
 // TODO: restore to uint
-static_assert(std::is_same_v<len_t, size_t>, "static_vector template type has to be the same as len_t!");
+static_assert(std::is_same_v<len_t, std::size_t>, "static_vector template type has to be the same as len_t!");
 /* template type is uint insted of len_t clarity reasons
    (not to lookup what len_t is) */
 // TODO: restore to uint
-template<class T, size_t C>
+template<class T, std::size_t C>
 class static_vector {
 public:
 	using value_type = T;
 	// TODO: restore to uint...
 	// using size_type = uint_fast32_t;
-	using size_type = size_t;
-	using difference_type = ptrdiff_t;
+	using size_type = std::size_t;
+	using difference_type = std::ptrdiff_t;
 	using reference = T&;
 	using const_reference = const T&;
 	using pointer = T*;

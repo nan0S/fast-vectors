@@ -18,11 +18,13 @@ DEPENDS := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.d,$(SOURCES))
 
 TESTS := $(shell find $(TEST_DIR) -name '*.cpp')
 TARGETS := $(patsubst $(TEST_DIR)/%.cpp,$(TARGET_DIR)/%,$(TESTS))
+DEPENDS += $(patsubst $(TEST_DIR)/%.cpp,$(BUILD_DIR)/%.d,$(TESTS))
 
 .PHONY: run all format clean
 .SILENT: run
 
 run: all
+	@echo $(DEPENDS)
 	for target in $(TARGETS); do \
 		./$$target; \
 	done
@@ -39,7 +41,7 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp Makefile
 
 $(TARGET_DIR)/%: $(TEST_DIR)/%.cpp Makefile
 	mkdir -p $(shell dirname $@)
-	$(CXX) $(CXXFLAGS) -o $@ $<
+	$(CXX) $(CXXFLAGS) -MMD -MP -o $@ $<
 
 format:
 	@(shopt -s nullglob; \
