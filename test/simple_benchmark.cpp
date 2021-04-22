@@ -27,7 +27,6 @@ void measure(std::function<std::string()> f) {
 	auto start = std::chrono::high_resolution_clock::now(); 
 	auto name = f();
 	auto end = std::chrono::high_resolution_clock::now();
-	auto delta = end - start;
 	auto elapsed = std::chrono::duration<double>(end - start).count();
 	std::cout << name << ": " << elapsed * 1000 << "ms" << std::endl;
 }

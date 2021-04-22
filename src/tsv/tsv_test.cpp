@@ -180,24 +180,24 @@ static constexpr uint COUNT = 50000;
 // using Vector = boost::container::vector<int>;
 using Vector = trivial_static_vector<uint, COUNT>;
 
-int main() {
-	uint sum = 0;
-	for (uint i = 0; i < COUNT; i++) {
-		Vector v;
-		for (uint i = 0; i < COUNT; i++) v.emplace_back(i);
+// int main() {
+	// uint sum = 0;
+	// for (uint i = 0; i < COUNT; i++) {
+		// Vector v;
+		// for (uint i = 0; i < COUNT; i++) v.emplace_back(i);
 
-		for (auto x: v) sum += x;// Way 1
-		// for (uint i = 0; i < v.size(); i++) sum += v[i]; // Way 2
+		// for (auto x: v) sum += x;// Way 1
+		// // for (uint i = 0; i < v.size(); i++) sum += v[i]; // Way 2
 
-		/*
-		   for (auto x: v) sum += x;
-		   for (auto it = v.begin(); it != v.end(); it++) sum += *it;
-		   for (auto it = v.cbegin(); it != v.cend(); it++) sum += *it;
-		   auto const &w = v;
-		   for (auto x: w) sum += x;
-		   for (auto it = w.begin(); it != w.end(); it++) sum += *it;
-		   for (auto it = w.cbegin(); it != w.cend(); it++) sum += *it;
-		   */
-	}
-	std::cout << sum << std::endl;
-}
+		// [>
+		   // for (auto x: v) sum += x;
+		   // for (auto it = v.begin(); it != v.end(); it++) sum += *it;
+		   // for (auto it = v.cbegin(); it != v.cend(); it++) sum += *it;
+		   // auto const &w = v;
+		   // for (auto x: w) sum += x;
+		   // for (auto it = w.begin(); it != w.end(); it++) sum += *it;
+		   // for (auto it = w.cbegin(); it != w.cend(); it++) sum += *it;
+		   // */
+	// }
+	// std::cout << sum << std::endl;
+// }
