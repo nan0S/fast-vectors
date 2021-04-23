@@ -133,38 +133,38 @@ constexpr static_vector<T, C>::static_vector() noexcept :
 template<class T, len_t C>
 constexpr static_vector<T, C>::static_vector(size_type n) :
 	m_length(n) {
-	construct(data(), n);
+	uwr::construct(data(), n);
 }
 
 template<class T, len_t C>
 constexpr static_vector<T, C>::static_vector(size_type n, const T& val) :
 	m_length(n) {
-	ufill(data(), n, val);
+	uwr::ufill(data(), n, val);
 }
 
 template<class T, len_t C>
 template<class InputIterator, class>
 constexpr static_vector<T, C>::static_vector(InputIterator first, InputIterator last) :
 	m_length(std::distance(first, last)) {
-	ucopy(data(), first, last);
+	uwr::ucopy(data(), first, last);
 }
 
 template<class T, len_t C>
 constexpr static_vector<T, C>::static_vector(const static_vector& x) :
 	m_length(x.m_length) {
-	ucopy(data(), x.begin(), x.end());
+	uwr::ucopy(data(), x.begin(), x.end());
 }
 
 template<class T, len_t C>
 constexpr static_vector<T, C>::static_vector(static_vector&& x) noexcept :
 	m_length(x.m_length) {
-	umove(data(), x.begin(), x.end());
+	uwr::umove(data(), x.begin(), x.end());
 }
 	
 template<class T, len_t C>
 constexpr static_vector<T, C>::static_vector(std::initializer_list<T> ilist) :
 	m_length(ilist.size()) {
-	ucopy(data(), ilist.begin(), ilist.end());
+	uwr::ucopy(data(), ilist.begin(), ilist.end());
 }
 
 template<class T, len_t C>
@@ -172,7 +172,7 @@ template<class T, len_t C>
 constexpr
 #endif
 static_vector<T, C>::~static_vector() {
-	destroy(data(), m_length);
+	uwr::destroy(data(), m_length);
 }
 
 template<class T, len_t C>
@@ -181,12 +181,12 @@ constexpr static_vector<T, C>& static_vector<T, C>::operator=(const static_vecto
 	auto optr = other.data();
 
 	if (other.m_length < m_length) {
-		destroy(ptr + other.m_length, ptr + m_length);
-		copy(ptr, optr, other.m_length);
+		uwr::destroy(ptr + other.m_length, ptr + m_length);
+		uwr::copy(ptr, optr, other.m_length);
 	}
 	else {
-		copy(ptr, optr, m_length);
-		ucopy(ptr + m_length, optr + m_length, optr + other.m_length);
+		uwr::copy(ptr, optr, m_length);
+		uwr::ucopy(ptr + m_length, optr + m_length, optr + other.m_length);
 	}
 
 	m_length = other.m_length;
@@ -200,12 +200,12 @@ constexpr static_vector<T, C>& static_vector<T, C>::operator=(static_vector<T, C
 	auto optr = other.data();
 
 	if (other.m_length < m_length) {
-		destroy(ptr + other.m_length, ptr + m_length);
-		move(ptr, optr, other.m_length);
+		uwr::destroy(ptr + other.m_length, ptr + m_length);
+		uwr::move(ptr, optr, other.m_length);
 	}
 	else {
-		move(ptr, optr, m_length);
-		umove(ptr + m_length, optr + m_length, optr + other.m_length);
+		uwr::move(ptr, optr, m_length);
+		uwr::umove(ptr + m_length, optr + m_length, optr + other.m_length);
 	}
 
 	m_length = other.m_length;
@@ -220,12 +220,12 @@ constexpr static_vector<T, C>& static_vector<T, C>::operator=(std::initializer_l
 	auto ilist_len = ilist.size();
 
 	if (ilist_len < m_length) {
-		destroy(ptr + ilist_len, ptr + m_length);
-		copy(ptr, optr, ilist_len);
+		uwr::destroy(ptr + ilist_len, ptr + m_length);
+		uwr::copy(ptr, optr, ilist_len);
 	}
 	else {
-		copy(ptr, optr, m_length);
-		ucopy(ptr + m_length, optr + m_length, optr + ilist_len);
+		uwr::copy(ptr, optr, m_length);
+		uwr::ucopy(ptr + m_length, optr + m_length, optr + ilist_len);
 	}
 
 	m_length = ilist_len;
@@ -321,12 +321,12 @@ template<class T, len_t C>
 constexpr void static_vector<T, C>::resize(size_type n) {
 	if (n > m_length) {
 		auto ptr = data();
-		construct(ptr + m_length, ptr + n);
+		uwr::construct(ptr + m_length, ptr + n);
 		m_length = n;
 	}
 	else if (n < m_length) {
 		auto ptr = data();
-		destroy(ptr + n, ptr + m_length);
+		uwr::destroy(ptr + n, ptr + m_length);
 		m_length = n;
 	}
 }
@@ -335,12 +335,12 @@ template<class T, len_t C>
 constexpr void static_vector<T, C>::resize(size_type n, const T& val) {
 	if (n > m_length) {
 		auto ptr = data();
-		ufill(ptr + m_length, ptr + n, val);
+		uwr::ufill(ptr + m_length, ptr + n, val);
 		m_length = n;
 	}
 	else if (n < m_length) {
 		auto ptr = data();
-		destroy(ptr + n, ptr + m_length);
+		uwr::destroy(ptr + n, ptr + m_length);
 		m_length = n;
 	}
 }
@@ -434,12 +434,12 @@ constexpr void static_vector<T, C>::assign(InputIterator first, InputIterator la
 	auto ptr = data();
 
 	if (n < m_length) {
-		destroy(ptr + n, ptr + m_length);
-		copy(ptr, first, n);
+		uwr::destroy(ptr + n, ptr + m_length);
+		uwr::copy(ptr, first, n);
 	}
 	else {
-		copy(ptr, first, m_length);
-		ucopy(ptr + m_length, first + m_length, last);
+		uwr::copy(ptr, first, m_length);
+		uwr::ucopy(ptr + m_length, first + m_length, last);
 	}
 
 	m_length = n;
@@ -447,7 +447,7 @@ constexpr void static_vector<T, C>::assign(InputIterator first, InputIterator la
 
 template<class T, len_t C>
 constexpr void static_vector<T, C>::assign(size_type n, const T& val) {
-	fill(data(), n, val);
+	uwr::fill(data(), n, val);
 	m_length = n;
 }
 
@@ -484,21 +484,21 @@ constexpr void static_vector<T, C>::fast_push_back(T&& value) noexcept {
 
 template<class T, len_t C>
 constexpr void static_vector<T, C>::pop_back() {
-	destroy_at(data() + --m_length);
+	uwr::destroy_at(data() + --m_length);
 }
 
 template<class T, len_t C>
 constexpr void static_vector<T, C>::safe_pop_back() noexcept {
 	if (m_length == 0)
 		return;
-	destroy_at(data() + --m_length);
+	uwr::destroy_at(data() + --m_length);
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, const T& value) {
 	auto position = const_cast<T*>(pos);
-	shiftr(position + 1, position, end());
+	uwr::shiftr(position + 1, position, end());
 	*position = value;
 	++m_length;
 
@@ -509,7 +509,7 @@ template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, T&& value) {
 	auto position = const_cast<T*>(pos);
-	shiftr(position + 1, position, end());
+	uwr::shiftr(position + 1, position, end());
 	*position = std::move(value);
 	++m_length;
 
@@ -525,13 +525,13 @@ static_vector<T, C>::insert(const_iterator pos, size_type count, const T& value)
 
 	// TODO: likely?
 	if (count < rest) {
-		shiftr(position + count, position, eptr);
-		fill(position, count, value);
+		uwr::shiftr(position + count, position, eptr);
+		uwr::fill(position, count, value);
 	}
 	else {
-		umove(position + count, position, eptr);
-		fill(position, rest, value);
-		ufill(eptr, count - rest, value);
+		uwr::umove(position + count, position, eptr);
+		uwr::fill(position, rest, value);
+		uwr::ufill(eptr, count - rest, value);
 	}
 
 	m_length += count;
@@ -550,13 +550,13 @@ static_vector<T, C>::insert(const_iterator pos, InputIterator first, InputIterat
 
 	// TODO: likely?
 	if (count < rest) {
-		shiftr(position + count, position, eptr);
-		copy(position, first, count);
+		uwr::shiftr(position + count, position, eptr);
+		uwr::copy(position, first, count);
 	}
 	else {
-		umove(position + count, position, eptr);
-		copy(position, first, rest);
-		ucopy(position, first + rest, last);
+		uwr::umove(position + count, position, eptr);
+		uwr::copy(position, first, rest);
+		uwr::ucopy(position, first + rest, last);
 	}
 
 	m_length += count;
@@ -574,7 +574,7 @@ template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::erase(const_iterator pos) {
 	auto position = const_cast<T*>(pos);
-	shiftl(position, position + 1, end());
+	uwr::shiftl(position, position + 1, end());
 	pop_back();
 
 	return position;
@@ -586,8 +586,8 @@ static_vector<T, C>::erase(const_iterator first, const_iterator last) {
 	auto f = const_cast<T*>(first);
 	auto l = const_cast<T*>(last);
 	auto e = end();
-	shiftl(f, l, e);
-	destroy(f + (e - l), e);
+	uwr::shiftl(f, l, e);
+	uwr::destroy(f + (e - l), e);
 	m_length -= l - f;
 
 	return f;
@@ -603,14 +603,14 @@ constexpr void static_vector<T, C>::swap(static_vector<T, C>& other) {
 	if (o1->m_length != min_len)
 		std::swap(o1, o2);
 
-	umove(o1->begin() + min_len, o2->begin() + min_len, o2->end());
-	destroy(o2->begin() + min_len, o2->end());
+	uwr::umove(o1->begin() + min_len, o2->begin() + min_len, o2->end());
+	uwr::destroy(o2->begin() + min_len, o2->end());
 	std::swap(o1->m_length, o2->m_length);
 }
 
 template<class T, len_t C>
 constexpr void static_vector<T, C>::clear() noexcept {
-	destroy(data(), m_length);
+	uwr::destroy(data(), m_length);
 	m_length = 0;
 }
 
