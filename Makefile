@@ -5,6 +5,7 @@ CXX := g++ -std=c++17
 OFLAGS := -Ofast -march=native -flto -fomit-frame-pointer -s -DNDEBUG
 WFLAGS := -Wall -Wextra
 IFLAGS := -I include -I src -I include/container
+DFLAGS := -ggdb -fsanitize=address
 CXXFLAGS := $(IFLAGS) $(OFLAGS) $(WFLAGS)
 
 SRC_DIR := src
@@ -18,6 +19,7 @@ DEPENDS := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.d,$(SOURCES))
 
 TESTS := $(shell find $(TEST_DIR) -name '*.cpp')
 TARGETS := $(patsubst $(TEST_DIR)/%.cpp,$(TARGET_DIR)/%,$(TESTS))
+DEPENDS += $(patsubst $(TEST_DIR)/%.cpp,$(TARGET_DIR)/%.d,$(TESTS))
 
 .PHONY: run all format clean
 .SILENT: run
@@ -38,7 +40,7 @@ test: $(TARGETS)
 
 $(TARGET_DIR)/%: $(TEST_DIR)/%.cpp $(OBJECTS) Makefile
 	mkdir -p $(shell dirname $@)
-	$(CXX) $(CXXFLAGS) -o $@ $< $(OBJECTS)
+	$(CXX) $(CXXFLAGS) -MMD -MP -o $@ $< $(OBJECTS)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp Makefile
 	@mkdir -p $(shell dirname $@)
