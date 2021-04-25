@@ -6,9 +6,9 @@
 #include <test_type/test_type.hpp>
 
 template<template<class> class V, class... Ts>
-class vector_env {
+class static_vector_env {
 public:
-	vector_env(int seed) :
+	static_vector_env(int seed) :
 		gen(seed) {}
 
 	void run_simulation(int iters=1000) {
@@ -36,20 +36,16 @@ private:
 
 	template<class T>
 	void dispatch_action(int i) {
-		using namespace std::placeholders;
-		std::function<void(int)> fs[] = {
-			std::bind(&vector_env<V, Ts...>::construct_action<T>, this, _1),
-			std::bind(&vector_env<V, Ts...>::destroy_action<T>, this, _1),
-			std::bind(&vector_env<V, Ts...>::push_back_action<T>, this, _1),
-			std::bind(&vector_env<V, Ts...>::pop_back_action<T>, this, _1),
-			std::bind(&vector_env<V, Ts...>::copy_action<T>, this, _1),
-			std::bind(&vector_env<V, Ts...>::insert_action<T>, this, _1),
-			std::bind(&vector_env<V, Ts...>::erase_action<T>, this, _1),
-		};
-
-		int fs_count = sizeof(fs) / sizeof(fs[0]);
-		int chosen = random(0, fs_count - 1);
-		fs[chosen](i);
+		// TODO: maybe add probability distribution other than uniform
+		switch (random(1, 7)) {
+			case 1: construct_action<T>(i); break;
+			case 2: destroy_action<T>(i); break;
+			case 3: push_back_action<T>(i); break;
+			case 4: pop_back_action<T>(i); break;
+			case 5: copy_action<T>(i); break;
+			case 6: insert_action<T>(i); break;
+			case 7: erase_action<T>(i); break;
+		}
 	}
 
 	template<class T>
@@ -261,7 +257,7 @@ void experiment(std::string test_name, int iters=1000, int repeat=10) {
 	constexpr int seed = 12345512;
 
 	for (int r = 0; r < repeat; ++r) {
-		vector_env<V, Ts...> v_env(seed + r);
+		static_vector_env<V, Ts...> v_env(seed + r);
 		v_env.run_simulation(iters);
 		std::cout << boost::format("repeat: %d/%d\n") % (r + 1) % repeat;
 	}
@@ -279,8 +275,9 @@ using ustatic_vector = uwr::static_vector<T, C>;
 template<class T>
 using bstatic_vector = boost::container::static_vector<T, C>;
 
-
 int main() {
+	test_type::do_print = false;
+
 	// push_back_benchmark<bstatic_vector<int>>(
 		// "boost::static_vector", C, 1000);
 	// push_back_benchmark<ustatic_vector<int>>(
@@ -296,11 +293,20 @@ int main() {
 	experiment<ustatic_vector, std::string>(
 		"uwr::static_vector<std::string>", 1000, 10);
 
-	test_type::do_print = false;
 	experiment<bstatic_vector, test_type>(
 		"boost::static_vector<test_type>", 1000, 10);
 	experiment<ustatic_vector, test_type>(
 		"uwr::static_vector<test_type>", 1000, 10);
+
+	experiment<bstatic_vector, int, std::string>(
+		"boost::static_vector<int, std::string>", 1000, 10);
+	experiment<ustatic_vector, int, std::string>(
+		"uwr::static_vector<int, std::string>", 1000, 10);
+
+	experiment<bstatic_vector, int, std::string, std::array<int, 10>>(
+		"boost::static_vector<int, std::string, std::array<int, 10>>", 1000, 10);
+	experiment<ustatic_vector, int, std::string, std::array<int, 10>>(
+		"uwr::static_vector<int, std::string, std::array<int, 10>>", 1000, 10);
 
 	return 0;
 }
