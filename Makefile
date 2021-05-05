@@ -21,7 +21,7 @@ TESTS := $(shell find $(TEST_DIR) -name '*.cpp')
 TARGETS := $(patsubst $(TEST_DIR)/%.cpp,$(TARGET_DIR)/%,$(TESTS))
 DEPENDS += $(patsubst $(TEST_DIR)/%.cpp,$(TARGET_DIR)/%.d,$(TESTS))
 
-.PHONY: run all format clean
+.PHONY: run all format clean install uninstall
 .SILENT: run
 
 run: all
@@ -39,12 +39,23 @@ test: $(TARGETS)
 -include $(DEPENDS)
 
 $(TARGET_DIR)/%: $(TEST_DIR)/%.cpp $(OBJECTS) Makefile
-	mkdir -p $(shell dirname $@)
+	@mkdir -p $(shell dirname $@)
 	$(CXX) $(CXXFLAGS) -MMD -MP -o $@ $< $(OBJECTS)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp Makefile
 	@mkdir -p $(shell dirname $@)
 	$(CXX) $(CXXFLAGS) -MMD -MP -c -o $@ $<
+
+install:
+	@echo Installing ...
+	@rm -rf /usr/local/include/uwr
+	@cp -r include /usr/local/include/uwr
+	@echo Done
+
+uninstall:
+	@echo Uninstalling ...
+	@rm -rf /usr/local/include/uwr
+	@echo Done
 
 format:
 	@(shopt -s nullglob; \
