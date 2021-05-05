@@ -21,6 +21,8 @@ TESTS := $(shell find $(TEST_DIR) -name '*.cpp')
 TARGETS := $(patsubst $(TEST_DIR)/%.cpp,$(TARGET_DIR)/%,$(TESTS))
 DEPENDS += $(patsubst $(TEST_DIR)/%.cpp,$(TARGET_DIR)/%.d,$(TESTS))
 
+INSTALLDIR := /usr/local/include
+
 .PHONY: run all format clean install uninstall
 .SILENT: run
 
@@ -48,13 +50,13 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp Makefile
 
 install:
 	@echo Installing ...
-	@rm -rf /usr/local/include/uwr
-	@cp -r include /usr/local/include/uwr
+	@rm -rf $(INSTALLDIR)/uwr
+	@cp -r include $(INSTALLDIR)/uwr
 	@echo Done
 
 uninstall:
 	@echo Uninstalling ...
-	@rm -rf /usr/local/include/uwr
+	@rm -rf $(INSTALLDIR)/uwr
 	@echo Done
 
 format:
