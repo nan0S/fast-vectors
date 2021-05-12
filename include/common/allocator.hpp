@@ -28,7 +28,7 @@ namespace uwr {
     void change_capacity(T*& data, len_t length, len_t& capacity, len_t n);
     template<class T>
     void grow(T*& data, len_t length, len_t& capacity);
-    
+
     template<class T>
     T* allocate(len_t n) {
         if (n > map_threshold<T>)
@@ -41,7 +41,7 @@ namespace uwr {
     }
 
     template<class T>
-    void deallocate(T* p, len_t n) { 
+    void deallocate(T* p, len_t n) {
         if (n > map_threshold<T>)
             munmap(p, n * sizeof(T));
         else
@@ -100,7 +100,7 @@ namespace uwr {
         if (UNLIKELY(new_capacity < map_threshold<T> &&
                     capacity > map_threshold<T>))
             return;
-        
+
         if (data)
             data = realloc(data, length, capacity, new_capacity);
         else
