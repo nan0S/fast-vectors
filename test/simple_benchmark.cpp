@@ -2,6 +2,7 @@
 #include <test_type/test_type.hpp>
 #include <boost/container/static_vector.hpp>
 #include <rvector/rvector.h>
+#include <utils/utils.hpp>
 
 #include <iostream>
 #include <vector>
@@ -28,7 +29,8 @@ void measure(std::function<std::string()> f) {
 	auto name = f();
 	auto end = std::chrono::high_resolution_clock::now();
 	auto elapsed = std::chrono::duration<double>(end - start).count();
-	std::cout << name << ": " << elapsed * 1000 << "ms" << std::endl;
+
+    info(name + ": " + std::to_string(elapsed * 1000) + "ms", 2);
 }
 
 template<class Vector, uint TIMES=C>
@@ -42,7 +44,6 @@ void test1(const std::string& name) {
 			for (const auto& x : v)
 				sum += x;
 		}
-		std::cout << sum << std::endl;
 		return name;
 	};
 
@@ -104,26 +105,32 @@ void test4(const std::string& name) {
 }
 
 int main() {
+    info("simple benchmark:", 0);
+
 	#if 1
 	constexpr int TEST1_TIMES = 50000;
-	test1<boost::container::static_vector<T, C>, TEST1_TIMES>("boost::static_vector");
+    info("push_back:", 1);
+    test1<boost::container::static_vector<T, C>, TEST1_TIMES>("boost::static_vector");
+    test1<uwr::static_vector<T, C>, TEST1_TIMES>("uwr::static_vector");
 	// test1<stlpb::static_vector<T, C>, TEST1_TIMES>("stlpb::static_vector");
-	test1<uwr::static_vector<T, C>, TEST1_TIMES>("uwr::static_vector");
 
 	constexpr int TEST2_TIMES = C;
-	test2<boost::container::static_vector<T, C>, TEST2_TIMES>("boost::static_vector");
+    info("push_back/pop_back interlaced:", 1);
+    test2<boost::container::static_vector<T, C>, TEST2_TIMES>("boost::static_vector");
+    test2<uwr::static_vector<T, C>, TEST2_TIMES>("uwr::static_vector");
 	// test2<stlpb::static_vector<T, C>, TEST2_TIMES>("stlpb::static_vector");
-	test2<uwr::static_vector<T, C>, TEST2_TIMES>("uwr::static_vector");
 	
 	constexpr int TEST3_TIMES = 10000;
-	test3<boost::container::static_vector<T, C>, TEST3_TIMES>("boost::static_vector");
+    info("two vectors swap:", 1);
+    test3<boost::container::static_vector<T, C>, TEST3_TIMES>("boost::static_vector");
+    test3<uwr::static_vector<T, C>, TEST3_TIMES>("uwr::static_vector");
 	// test3<stlpb::static_vector<T, C>, TEST3_TIMES>("stlpb::static_vector");
-	test3<uwr::static_vector<T, C>, TEST3_TIMES>("uwr::static_vector");
 
 	constexpr int TEST4_TIMES = 10000000;
-	test4<boost::container::static_vector<T, C>, TEST4_TIMES>("boost::static_vector");
+    info("resize:", 1);
+    test4<boost::container::static_vector<T, C>, TEST4_TIMES>("boost::static_vector");
+    test4<uwr::static_vector<T, C>, TEST4_TIMES>("uwr::static_vector");
 	// test4<stlpb::static_vector<T, C>, TEST4_TIMES>("stlpb::static_vector");
-	test4<uwr::static_vector<T, C>, TEST4_TIMES>("uwr::static_vector");
 	#endif
 
 	return 0;

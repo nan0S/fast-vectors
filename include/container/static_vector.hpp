@@ -459,9 +459,9 @@ constexpr void static_vector<T, C>::assign(std::initializer_list<T> ilist) {
 template<class T, len_t C>
 constexpr void static_vector<T, C>::push_back(const_reference value) {
 	// TODO: uncomment
-	if (m_length == C)
-		throw std::out_of_range("Out of bounds");
-	new (data() + m_length++) T(value);
+    if (m_length == C)
+        throw std::out_of_range("Out of bounds");
+    new (data() + m_length++) T(value);
 }
 
 template<class T, len_t C>
@@ -472,9 +472,9 @@ constexpr void static_vector<T, C>::fast_push_back(const_reference value) noexce
 template<class T, len_t C>
 constexpr void static_vector<T, C>::push_back(T&& value) {
 	// TODO: uncomment
-	if (m_length == C)
-		throw std::out_of_range("Out of bounds");
-	new (data() + m_length++) T(std::move(value));
+    if (m_length == C)
+        throw std::out_of_range("Out of bounds");
+    new (data() + m_length++) T(std::move(value));
 }
 
 template<class T, len_t C>

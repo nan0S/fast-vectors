@@ -4,6 +4,7 @@
 #include <boost/container/static_vector.hpp>
 #include <boost/format.hpp>
 #include <test_type/test_type.hpp>
+#include <utils/utils.hpp>
 
 template<template<class> class V, class... Ts>
 class static_vector_env {
@@ -259,13 +260,14 @@ void experiment(std::string test_name, int iters=1000, int repeat=10) {
 	for (int r = 0; r < repeat; ++r) {
 		static_vector_env<V, Ts...> v_env(seed + r);
 		v_env.run_simulation(iters);
-		std::cout << boost::format("repeat: %d/%d\n") % (r + 1) % repeat;
+        info(boost::format("in progress: %d%%") % ((r + 1) * 100 / repeat), 2, true);
+        std::cout.flush();
 	}
 
 	auto end = std::chrono::high_resolution_clock::now();
 	auto delta = std::chrono::duration<double>(end - begin).count();
 
-	std::cout << test_name << ": " << delta * 1000 << "ms" << std::endl;
+    info(boost::format("%s: %dms\n") % test_name % (delta * 1000), 2, true);
 }
 
 static constexpr uint C = 500000;
@@ -278,35 +280,42 @@ using bstatic_vector = boost::container::static_vector<T, C>;
 int main() {
 	test_type::do_print = false;
 
+    info("benchmark:", 0);
+
 	// push_back_benchmark<bstatic_vector<int>>(
 		// "boost::static_vector", C, 1000);
 	// push_back_benchmark<ustatic_vector<int>>(
 		// "uwr::static_vector", C, 1000);
-	
+
+    info("<int>", 1);
 	experiment<bstatic_vector, int>(
-		"boost::static_vector<int>", 1000, 10);
+		"boost::static_vector", 1000, 10);
 	experiment<ustatic_vector, int>(
-		"uwr::static_vector<int>", 1000, 10);
+		"uwr::static_vector", 1000, 10);
 
+    info("<std::string>", 1);
 	experiment<bstatic_vector, std::string>(
-		"boost::static_vector<std::string>", 1000, 10);
+		"boost::static_vector", 1000, 10);
 	experiment<ustatic_vector, std::string>(
-		"uwr::static_vector<std::string>", 1000, 10);
+		"uwr::static_vector", 1000, 10);
 
+    info("<test_type>", 1);
 	experiment<bstatic_vector, test_type>(
-		"boost::static_vector<test_type>", 1000, 10);
+		"boost::static_vector", 1000, 10);
 	experiment<ustatic_vector, test_type>(
-		"uwr::static_vector<test_type>", 1000, 10);
+		"uwr::static_vector", 1000, 10);
 
+    info("<int, std::string>", 1);
 	experiment<bstatic_vector, int, std::string>(
-		"boost::static_vector<int, std::string>", 1000, 10);
+		"boost::static_vector", 1000, 10);
 	experiment<ustatic_vector, int, std::string>(
-		"uwr::static_vector<int, std::string>", 1000, 10);
+		"uwr::static_vector", 1000, 10);
 
+    info("<int, std::string, std::array<int, 10>>", 1);
 	experiment<bstatic_vector, int, std::string, std::array<int, 10>>(
-		"boost::static_vector<int, std::string, std::array<int, 10>>", 1000, 10);
+		"boost::static_vector>", 1000, 10);
 	experiment<ustatic_vector, int, std::string, std::array<int, 10>>(
-		"uwr::static_vector<int, std::string, std::array<int, 10>>", 1000, 10);
+		"uwr::static_vector>", 1000, 10);
 
 	return 0;
 }
