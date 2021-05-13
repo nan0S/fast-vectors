@@ -69,7 +69,7 @@ namespace uwr {
 
             default:
                 T* new_data = allocate<T>(n);
-                move(new_data, data, length);
+                umove(new_data, data, length);
                 deallocate(data, capacity);
                 return new_data;
         }
@@ -97,6 +97,7 @@ namespace uwr {
     template<class T>
     void change_capacity(T*& data, len_t length, len_t& capacity, len_t n) {
         len_t new_capacity = fix_capacity<T>(n);
+        // TODO: do we shrink capacity (?)
         if (UNLIKELY(new_capacity < map_threshold<T> &&
                     capacity > map_threshold<T>))
             return;
