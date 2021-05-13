@@ -272,25 +272,25 @@ static_vector<T, C>::end() const noexcept {
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::reverse_iterator
 static_vector<T, C>::rbegin() noexcept {
-    return data() + m_length;
+    return reverse_iterator(data() + m_length);
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::const_reverse_iterator
 static_vector<T, C>::rbegin() const noexcept {
-    return data() + m_length;
+    return const_reverse_iterator(data() + m_length);
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::reverse_iterator
 static_vector<T, C>::rend() noexcept {
-    return data();
+    return reverse_iterator(data());
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::const_reverse_iterator
 static_vector<T, C>::rend() const noexcept {
-    return data();
+    return const_reverse_iterator(data());
 }
 
 template<class T, len_t C>
@@ -308,13 +308,13 @@ constexpr static_vector<T, C>::cend() const noexcept {
 template<class T, len_t C>
 typename static_vector<T, C>::const_reverse_iterator
 constexpr static_vector<T, C>::crbegin() const noexcept {
-    return data() + m_length;
+    return const_reverse_iterator(data() + m_length);
 }
 
 template<class T, len_t C>
 typename static_vector<T, C>::const_reverse_iterator
 constexpr static_vector<T, C>::crend() const noexcept {
-    return data();
+    return const_reverse_iterator(data());
 }
 
 template<class T, len_t C>

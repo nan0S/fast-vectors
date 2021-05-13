@@ -8,9 +8,6 @@
 #include <chrono>
 #include <functional>
 
-#define ON test_type::do_print = true
-#define OFF test_type::do_print = false
-
 template<class T, uint C>
 using uvector = uwr::static_vector<T, C>;
 

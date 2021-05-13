@@ -128,18 +128,18 @@ template<class T>
 constexpr
 vector<T>::vector(size_type n)
     : m_length(n),
-      m_capacity(mm::fix_capacity<T>(n)),
-      m_data(mm::allocate<T>(m_capacity)) {
-    mm::construct(m_data, n);
+      m_capacity(mem::fix_capacity<T>(n)),
+      m_data(mem::allocate<T>(m_capacity)) {
+    mem::construct(m_data, n);
 }
 
 template<class T>
 constexpr
 vector<T>::vector(size_type n, const T& val)
     : m_length(n),
-      m_capacity(fix_capacity<T>(n)),
-      m_data(allocate<T>(n)) {
-    uwr::ufill(m_data, n, val);
+      m_capacity(mem::fix_capacity<T>(n)),
+      m_data(mem::allocate<T>(m_capacity)) {
+    mem::ufill(m_data, n, val);
 }
 
 template<class T>
@@ -147,34 +147,38 @@ template<class InputIterator, class>
 constexpr
 vector<T>::vector(InputIterator first, InputIterator last)
     : m_length(std::distance(first, last)),
-      m_capacity(uwr::fix_capacity)
-
-template<class T>
-template<class InputIterator, class>
-constexpr vector<T>::vector(InputIterator first, InputIterator last)
-    : m_length(std::distance(first, last)) {
-    ucopy(data(), first, last);
+      m_capacity(mem::fix_capacity<T>(m_length)),
+      m_data(mem::allocate<T>(m_capacity)) {
+    mem::ucopy(m_data, first, last);
 }
 
 template<class T>
 constexpr
-vector<T>::vector(const vector& x) :
-    m_length(x.m_length) {
-    ucopy(data(), x.begin(), x.end());
+vector<T>::vector(const vector& x)
+    : m_length(x.m_length),
+      m_capacity(x.m_capacity),
+      m_data(mem::allocate<T>(m_capacity)) {
+    mem::ucopy(m_data, x.begin(), x.end());
 }
 
 template<class T>
 constexpr
-vector<T>::vector(vector&& x) noexcept :
-    m_length(x.m_length) {
-    umove(data(), x.begin(), x.end());
+vector<T>::vector(vector&& x) noexcept
+    : m_length(x.m_length),
+      m_capacity(x.m_capacity),
+      m_data(x.m_data) {
+    x.m_length = 0;
+    x.m_capacity = 0;
+    x.m_data = nullptr;
 }
 
 template<class T>
 constexpr
-vector<T>::vector(std::initializer_list<T> ilist) :
-    m_length(ilist.size()) {
-    ucopy(data(), ilist.begin(), ilist.end());
+vector<T>::vector(std::initializer_list<T> ilist)
+    : m_length(ilist.size()),
+      m_capacity(mem::fix_capacity<T>(m_length)),
+      m_data(mem::allocate<T>(m_capacity)) {
+    mem::ucopy(m_data, ilist.begin(), ilist.end());
 }
 
 template<class T>
@@ -182,29 +186,27 @@ template<class T>
 constexpr
 #endif
 vector<T>::~vector() {
-    destroy(data(), m_length);
+    mem::destroy(m_data, m_length);
+    mem::deallocate(m_data, m_capacity);
 }
 
+// TODO: fix
 template<class T>
 constexpr
 vector<T>& vector<T>::operator=(const vector<T>& other) noexcept {
-    auto ptr = data();
-    auto optr = other.data();
+    if (UNLIKELY(this == std::addressof(other)))
+        return *this;
+    if (other.m_length > m_length)
+        mem::change_capacity(m_data, m_length, m_capacity, other.m_capacity);
 
-    if (other.m_length < m_length) {
-        destroy(ptr + other.m_length, ptr + m_length);
-        copy(ptr, optr, other.m_length);
-    }
-    else {
-        copy(ptr, optr, m_length);
-        ucopy(ptr + m_length, optr + m_length, optr + other.m_length);
-    }
-
+    mem::destroy(m_data, m_length);
+    mem::ucopy(m_data, other.begin(), other.end());
     m_length = other.m_length;
 
     return *this;
 }
 
+// TODO: fix
 template<class T>
 constexpr
 vector<T>& vector<T>::operator=(vector<T>&& other) noexcept {
@@ -225,6 +227,7 @@ vector<T>& vector<T>::operator=(vector<T>&& other) noexcept {
     return *this;
 }
 
+// TODO: fix
 template<class T>
 constexpr
 vector<T>& vector<T>::operator=(std::initializer_list<T> ilist) noexcept {
@@ -249,73 +252,73 @@ vector<T>& vector<T>::operator=(std::initializer_list<T> ilist) noexcept {
 template<class T>
 constexpr typename vector<T>::iterator
 vector<T>::begin() noexcept {
-    return data();
+    return m_data;
 }
 
 template<class T>
 constexpr typename vector<T>::const_iterator
 vector<T>::begin() const noexcept {
-    return data();
+    return m_data;
 }
 
 template<class T>
 constexpr typename vector<T>::iterator
 vector<T>::end() noexcept {
-    return data() + m_length;
+    return m_data + m_length;
 }
 
 template<class T>
 constexpr typename vector<T>::const_iterator
 vector<T>::end() const noexcept {
-    return data() + m_length;
+    return m_data + m_length;
 }
 
 template<class T>
 constexpr typename vector<T>::reverse_iterator
 vector<T>::rbegin() noexcept {
-    return data() + m_length;
+    return reverse_iterator(m_data + m_length);
 }
 
 template<class T>
 constexpr typename vector<T>::const_reverse_iterator
 vector<T>::rbegin() const noexcept {
-    return data() + m_length;
+    return const_reverse_iterator(m_data + m_length);
 }
 
 template<class T>
 constexpr typename vector<T>::reverse_iterator
 vector<T>::rend() noexcept {
-    return data();
+    return reverse_iterator(m_data);
 }
 
 template<class T>
 constexpr typename vector<T>::const_reverse_iterator
 vector<T>::rend() const noexcept {
-    return data();
+    return const_reverse_iterator(m_data);
 }
 
 template<class T>
 constexpr typename vector<T>::const_iterator
 vector<T>::cbegin() const noexcept {
-    return data();
+    return m_data;
 }
 
 template<class T>
 constexpr typename vector<T>::const_iterator
 vector<T>::cend() const noexcept {
-    return data() + m_length;
+    return m_data + m_length;
 }
 
 template<class T>
 constexpr typename vector<T>::const_reverse_iterator
 vector<T>::crbegin() const noexcept {
-    return data() + m_length;
+    return const_reverse_iterator(m_data + m_length);
 }
 
 template<class T>
 constexpr typename vector<T>::const_reverse_iterator
 vector<T>::crend() const noexcept {
-    return data();
+    return const_reverse_iterator(m_data);
 }
 
 template<class T>
@@ -327,7 +330,7 @@ vector<T>::size() const noexcept {
 template<class T>
 constexpr typename vector<T>::size_type
 vector<T>::max_size() const noexcept {
-    return C;
+    return std::numeric_limits<size_type>::max() / sizeof(T);
 }
 
 template<class T>

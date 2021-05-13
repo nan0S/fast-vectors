@@ -2,6 +2,9 @@
 
 #include <iostream>
 
+#define ON test_type::do_print = true
+#define OFF test_type::do_print = false
+
 class test_type {
 public:
     test_type();
