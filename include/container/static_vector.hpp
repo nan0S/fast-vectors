@@ -126,44 +126,51 @@ private:
 };
 
 template<class T, len_t C>
-constexpr static_vector<T, C>::static_vector() noexcept :
-    m_length(0) {
+constexpr
+static_vector<T, C>::static_vector() noexcept
+    : m_length(0) {
 }
 
 template<class T, len_t C>
-constexpr static_vector<T, C>::static_vector(size_type n) :
-    m_length(n) {
+constexpr
+static_vector<T, C>::static_vector(size_type n)
+    : m_length(n) {
     uwr::construct(data(), n);
 }
 
 template<class T, len_t C>
-constexpr static_vector<T, C>::static_vector(size_type n, const T& val) :
-    m_length(n) {
+constexpr
+static_vector<T, C>::static_vector(size_type n, const T& val)
+    : m_length(n) {
     uwr::ufill(data(), n, val);
 }
 
 template<class T, len_t C>
 template<class InputIterator, class>
-constexpr static_vector<T, C>::static_vector(InputIterator first, InputIterator last) :
-    m_length(std::distance(first, last)) {
+constexpr
+static_vector<T, C>::static_vector(InputIterator first, InputIterator last)
+    : m_length(std::distance(first, last)) {
     uwr::ucopy(data(), first, last);
 }
 
 template<class T, len_t C>
-constexpr static_vector<T, C>::static_vector(const static_vector& x) :
-    m_length(x.m_length) {
+constexpr
+static_vector<T, C>::static_vector(const static_vector& x)
+    : m_length(x.m_length) {
     uwr::ucopy(data(), x.begin(), x.end());
 }
 
 template<class T, len_t C>
-constexpr static_vector<T, C>::static_vector(static_vector&& x) noexcept :
-    m_length(x.m_length) {
+constexpr
+static_vector<T, C>::static_vector(static_vector&& x) noexcept
+    : m_length(x.m_length) {
     uwr::umove(data(), x.begin(), x.end());
 }
 
 template<class T, len_t C>
-constexpr static_vector<T, C>::static_vector(std::initializer_list<T> ilist) :
-    m_length(ilist.size()) {
+constexpr
+static_vector<T, C>::static_vector(std::initializer_list<T> ilist)
+    : m_length(ilist.size()) {
     uwr::ucopy(data(), ilist.begin(), ilist.end());
 }
 
@@ -176,7 +183,8 @@ static_vector<T, C>::~static_vector() {
 }
 
 template<class T, len_t C>
-constexpr static_vector<T, C>& static_vector<T, C>::operator=(const static_vector<T, C>& other) noexcept {
+constexpr static_vector<T, C>&
+static_vector<T, C>::operator=(const static_vector<T, C>& other) noexcept {
     auto ptr = data();
     auto optr = other.data();
 
@@ -195,7 +203,8 @@ constexpr static_vector<T, C>& static_vector<T, C>::operator=(const static_vecto
 }
 
 template<class T, len_t C>
-constexpr static_vector<T, C>& static_vector<T, C>::operator=(static_vector<T, C>&& other) noexcept {
+constexpr static_vector<T, C>&
+static_vector<T, C>::operator=(static_vector<T, C>&& other) noexcept {
     auto ptr = data();
     auto optr = other.data();
 
@@ -214,7 +223,8 @@ constexpr static_vector<T, C>& static_vector<T, C>::operator=(static_vector<T, C
 }
 
 template<class T, len_t C>
-constexpr static_vector<T, C>& static_vector<T, C>::operator=(std::initializer_list<T> ilist) noexcept {
+constexpr static_vector<T, C>&
+static_vector<T, C>::operator=(std::initializer_list<T> ilist) noexcept {
     auto ptr = data();
     auto optr = ilist.begin();
     auto ilist_len = ilist.size();
@@ -234,56 +244,56 @@ constexpr static_vector<T, C>& static_vector<T, C>::operator=(std::initializer_l
 }
 
 template<class T, len_t C>
-typename static_vector<T, C>::iterator
-constexpr static_vector<T, C>::begin() noexcept {
+constexpr typename static_vector<T, C>::iterator
+static_vector<T, C>::begin() noexcept {
     return data();
 }
 
 template<class T, len_t C>
-typename static_vector<T, C>::const_iterator
-constexpr static_vector<T, C>::begin() const noexcept {
+constexpr typename static_vector<T, C>::const_iterator
+static_vector<T, C>::begin() const noexcept {
     return data();
 }
 
 template<class T, len_t C>
-typename static_vector<T, C>::iterator
-constexpr static_vector<T, C>::end() noexcept {
+constexpr typename static_vector<T, C>::iterator
+static_vector<T, C>::end() noexcept {
     return data() + m_length;
 }
 
 template<class T, len_t C>
-typename static_vector<T, C>::const_iterator
-constexpr static_vector<T, C>::end() const noexcept {
+constexpr typename static_vector<T, C>::const_iterator
+static_vector<T, C>::end() const noexcept {
     return data() + m_length;
 }
 
 template<class T, len_t C>
-typename static_vector<T, C>::reverse_iterator
-constexpr static_vector<T, C>::rbegin() noexcept {
+constexpr typename static_vector<T, C>::reverse_iterator
+static_vector<T, C>::rbegin() noexcept {
     return data() + m_length;
 }
 
 template<class T, len_t C>
-typename static_vector<T, C>::const_reverse_iterator
-constexpr static_vector<T, C>::rbegin() const noexcept {
+constexpr typename static_vector<T, C>::const_reverse_iterator
+static_vector<T, C>::rbegin() const noexcept {
     return data() + m_length;
 }
 
 template<class T, len_t C>
-typename static_vector<T, C>::reverse_iterator
-constexpr static_vector<T, C>::rend() noexcept {
+constexpr typename static_vector<T, C>::reverse_iterator
+static_vector<T, C>::rend() noexcept {
     return data();
 }
 
 template<class T, len_t C>
-typename static_vector<T, C>::const_reverse_iterator
-constexpr static_vector<T, C>::rend() const noexcept {
+constexpr typename static_vector<T, C>::const_reverse_iterator
+static_vector<T, C>::rend() const noexcept {
     return data();
 }
 
 template<class T, len_t C>
-typename static_vector<T, C>::const_iterator
-constexpr static_vector<T, C>::cbegin() const noexcept {
+constexpr typename static_vector<T, C>::const_iterator
+static_vector<T, C>::cbegin() const noexcept {
     return data();
 }
 
@@ -306,8 +316,8 @@ constexpr static_vector<T, C>::crend() const noexcept {
 }
 
 template<class T, len_t C>
-typename static_vector<T, C>::size_type
-constexpr static_vector<T, C>::size() const noexcept {
+constexpr typename static_vector<T, C>::size_type
+static_vector<T, C>::size() const noexcept {
     return m_length;
 }
 
@@ -318,7 +328,8 @@ static_vector<T, C>::max_size() const noexcept {
 }
 
 template<class T, len_t C>
-constexpr void static_vector<T, C>::resize(size_type n) {
+constexpr void
+static_vector<T, C>::resize(size_type n) {
     if (n > m_length) {
         auto ptr = data();
         uwr::construct(ptr + m_length, ptr + n);
@@ -332,7 +343,8 @@ constexpr void static_vector<T, C>::resize(size_type n) {
 }
 
 template<class T, len_t C>
-constexpr void static_vector<T, C>::resize(size_type n, const T& val) {
+constexpr void
+static_vector<T, C>::resize(size_type n, const T& val) {
     if (n > m_length) {
         auto ptr = data();
         uwr::ufill(ptr + m_length, ptr + n, val);
@@ -352,21 +364,24 @@ static_vector<T, C>::capacity() const noexcept {
 }
 
 template<class T, len_t C>
-constexpr bool static_vector<T, C>::empty() const noexcept {
+constexpr bool
+static_vector<T, C>::empty() const noexcept {
     return m_length == 0;
 }
 
 template<class T, len_t C>
-constexpr void static_vector<T, C>::reserve(size_type) noexcept {
+constexpr void
+static_vector<T, C>::reserve(size_type) noexcept {
 }
 
 template<class T, len_t C>
-constexpr void static_vector<T, C>::shrink_to_fit() noexcept {
+constexpr void
+static_vector<T, C>::shrink_to_fit() noexcept {
 }
 
 template<class T, len_t C>
-typename static_vector<T, C>::reference
-constexpr static_vector<T, C>::operator[](size_type n) {
+constexpr typename static_vector<T, C>::reference
+static_vector<T, C>::operator[](size_type n) {
     return *data_at(n);
 }
 
@@ -385,14 +400,14 @@ static_vector<T, C>::at(size_type n) {
 }
 
 template<class T, len_t C>
-typename static_vector<T, C>::reference
-constexpr static_vector<T, C>::front() {
+constexpr typename static_vector<T, C>::reference
+static_vector<T, C>::front() {
     return *data_at(0);
 }
 
 template<class T, len_t C>
-typename static_vector<T, C>::const_reference
-constexpr static_vector<T, C>::front() const {
+constexpr typename static_vector<T, C>::const_reference
+static_vector<T, C>::front() const {
     return *data_at(0);
 }
 
@@ -409,18 +424,20 @@ constexpr static_vector<T, C>::back() const {
 }
 
 template<class T, len_t C>
-constexpr T* static_vector<T, C>::data() noexcept {
+constexpr T*
+static_vector<T, C>::data() noexcept {
     return data_at(0);
 }
 
 template<class T, len_t C>
-constexpr const T* static_vector<T, C>::data() const noexcept {
+constexpr const T*
+static_vector<T, C>::data() const noexcept {
     return data_at(0);
 }
 
 template<class T, len_t C>
-typename static_vector<T, C>::const_reference
-constexpr static_vector<T, C>::at(size_type n) const {
+constexpr typename static_vector<T, C>::const_reference
+static_vector<T, C>::at(size_type n) const {
     // TODO: unlikely
     if (n >= m_length)
         throw std::out_of_range("Index out of range: " + std::to_string(n));
@@ -429,7 +446,8 @@ constexpr static_vector<T, C>::at(size_type n) const {
 
 template<class T, len_t C>
 template<class InputIterator, class>
-constexpr void static_vector<T, C>::assign(InputIterator first, InputIterator last) {
+constexpr void
+static_vector<T, C>::assign(InputIterator first, InputIterator last) {
     auto n = static_cast<len_t>(std::distance(first, last));
     auto ptr = data();
 
@@ -446,18 +464,21 @@ constexpr void static_vector<T, C>::assign(InputIterator first, InputIterator la
 }
 
 template<class T, len_t C>
-constexpr void static_vector<T, C>::assign(size_type n, const T& val) {
+constexpr void
+static_vector<T, C>::assign(size_type n, const T& val) {
     uwr::fill(data(), n, val);
     m_length = n;
 }
 
 template<class T, len_t C>
-constexpr void static_vector<T, C>::assign(std::initializer_list<T> ilist) {
+constexpr void
+static_vector<T, C>::assign(std::initializer_list<T> ilist) {
     assign(ilist.begin(), ilist.end());
 }
 
 template<class T, len_t C>
-constexpr void static_vector<T, C>::push_back(const_reference value) {
+constexpr void
+static_vector<T, C>::push_back(const_reference value) {
     // TODO: uncomment
     if (m_length == C)
         throw std::out_of_range("Out of bounds");
@@ -465,7 +486,8 @@ constexpr void static_vector<T, C>::push_back(const_reference value) {
 }
 
 template<class T, len_t C>
-constexpr void static_vector<T, C>::fast_push_back(const_reference value) noexcept {
+constexpr void
+static_vector<T, C>::fast_push_back(const_reference value) noexcept {
     new (data() + m_length++) T(value);
 }
 
@@ -478,17 +500,20 @@ constexpr void static_vector<T, C>::push_back(T&& value) {
 }
 
 template<class T, len_t C>
-constexpr void static_vector<T, C>::fast_push_back(T&& value) noexcept {
+constexpr void
+static_vector<T, C>::fast_push_back(T&& value) noexcept {
     new (data() + m_length++) T(std::move(value));
 }
 
 template<class T, len_t C>
-constexpr void static_vector<T, C>::pop_back() {
+constexpr void
+static_vector<T, C>::pop_back() {
     uwr::destroy_at(data() + --m_length);
 }
 
 template<class T, len_t C>
-constexpr void static_vector<T, C>::safe_pop_back() noexcept {
+constexpr void
+static_vector<T, C>::safe_pop_back() noexcept {
     if (m_length == 0)
         return;
     uwr::destroy_at(data() + --m_length);
@@ -594,7 +619,8 @@ static_vector<T, C>::erase(const_iterator first, const_iterator last) {
 }
 
 template<class T, len_t C>
-constexpr void static_vector<T, C>::swap(static_vector<T, C>& other) {
+constexpr void
+static_vector<T, C>::swap(static_vector<T, C>& other) {
     static_vector<T, C> *o1 = this, *o2 = &other;
     size_type min_len = std::min(o1->m_length, o2->m_length);
     for (size_type i = 0; i < min_len; ++i)
@@ -609,7 +635,8 @@ constexpr void static_vector<T, C>::swap(static_vector<T, C>& other) {
 }
 
 template<class T, len_t C>
-constexpr void static_vector<T, C>::clear() noexcept {
+constexpr void
+static_vector<T, C>::clear() noexcept {
     uwr::destroy(data(), m_length);
     m_length = 0;
 }
@@ -624,7 +651,8 @@ static_vector<T, C>::emplace(const_iterator pos, Args&&... args) {
 
 template<class T, len_t C>
 template<class... Args>
-constexpr void static_vector<T, C>::emplace_back(Args&&... args) {
+constexpr void
+static_vector<T, C>::emplace_back(Args&&... args) {
     // TODO: uncomment
     if (m_length == C)
         throw std::out_of_range("Out of bounds");
@@ -633,17 +661,20 @@ constexpr void static_vector<T, C>::emplace_back(Args&&... args) {
 
 template<class T, len_t C>
 template<class... Args>
-constexpr void static_vector<T, C>::fast_emplace_back(Args&&... args) noexcept {
+constexpr void
+static_vector<T, C>::fast_emplace_back(Args&&... args) noexcept {
     new (data() + m_length++) T(std::forward<Args>(args)...);
 }
 
 template<class T, len_t C>
-constexpr T* static_vector<T, C>::data_at(size_type n) noexcept {
+constexpr T*
+static_vector<T, C>::data_at(size_type n) noexcept {
     return reinterpret_cast<T*>(&m_data[n]);
 }
 
 template<class T, len_t C>
-constexpr const T* static_vector<T, C>::data_at(size_type n) const noexcept {
+constexpr const T*
+static_vector<T, C>::data_at(size_type n) const noexcept {
     return reinterpret_cast<const T*>(&m_data[n]);
 }
 
@@ -674,39 +705,46 @@ constexpr inline auto operator<=>(const static_vector<T, C>& lhs, const static_v
 
 /* non-member operators' implementations */
 template<class T, len_t C>
-constexpr bool operator==(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
+constexpr bool
+operator==(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
     if (lhs.size() != rhs.size())
         return false;
     return std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
 template<class T, len_t C>
-constexpr bool operator!=(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
+constexpr bool
+operator!=(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
     return !(lhs == rhs);
 }
 
 template<class T, len_t C>
-constexpr bool operator<(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
+constexpr bool
+operator<(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
     return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
 }
 
 template<class T, len_t C>
-constexpr bool operator<=(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
+constexpr bool
+operator<=(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
     return !(rhs < lhs);
 }
 
 template<class T, len_t C>
-constexpr bool operator>(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
+constexpr bool
+operator>(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
     return rhs < lhs;
 }
 
 template<class T, len_t C>
-constexpr bool operator>=(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
+constexpr bool
+operator>=(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
     return !(lhs < rhs);
 }
 
 template<class T, len_t C>
-constexpr std::ostream& operator<<(std::ostream& out, const static_vector<T, C>& v) {
+constexpr std::ostream&
+operator<<(std::ostream& out, const static_vector<T, C>& v) {
     for (typename static_vector<T, C>::size_type i = 0; i < v.size() - 1; ++i)
         out << v[i] << ' ';
     if (!v.empty())
@@ -716,7 +754,7 @@ constexpr std::ostream& operator<<(std::ostream& out, const static_vector<T, C>&
 
 #if CPP_ABOVE_17
 
-inline constexpr struct synth_three_way_t {
+constexpr inline struct synth_three_way_t {
     template<class T, std::totally_ordered_with<T> U>
     auto operator()(const T& lhs, const U& rhs) {
         if constexpr (std::three_way_comparable_with<T, U>)
@@ -733,7 +771,8 @@ inline constexpr struct synth_three_way_t {
 } synth_three_way;
 
 template<class T, len_t C>
-constexpr auto operator<=>(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
+constexpr auto
+operator<=>(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
     return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(),
                                                   rhs.begin(), rhs.end(),
                                                   synth_three_way);
@@ -764,7 +803,8 @@ erase_if(uwr::static_vector<T, C>& c, Pred pred);
 
 /* non-member functions' implementations */
 template<class T, uwr::len_t C>
-constexpr void swap(uwr::static_vector<T, C>& x, uwr::static_vector<T, C>& y) {
+constexpr void
+swap(uwr::static_vector<T, C>& x, uwr::static_vector<T, C>& y) {
     x.swap(y);
 }
 
