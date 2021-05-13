@@ -128,9 +128,9 @@ template<class T>
 constexpr
 vector<T>::vector(size_type n)
     : m_length(n),
-      m_capacity(fix_capacity<T>(n)),
-      m_data(allocate<T>(m_capacity)) {
-    uwr::construct(m_data, n);
+      m_capacity(mm::fix_capacity<T>(n)),
+      m_data(mm::allocate<T>(m_capacity)) {
+    mm::construct(m_data, n);
 }
 
 template<class T>
@@ -147,7 +147,7 @@ template<class InputIterator, class>
 constexpr
 vector<T>::vector(InputIterator first, InputIterator last)
     : m_length(std::distance(first, last)),
-      m_capacity()
+      m_capacity(uwr::fix_capacity)
 
 template<class T>
 template<class InputIterator, class>

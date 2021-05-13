@@ -7,7 +7,7 @@
 // TODO: make sure sys instead of linux
 #include <sys/mman.h>
 
-namespace uwr {
+namespace uwr::mem {
     template<class T>
     constexpr len_t map_threshold = 4096 / sizeof(T);
 

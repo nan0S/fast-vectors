@@ -2,7 +2,7 @@
 
 #include <type_traits>
 
-namespace uwr {
+namespace uwr::mem {
 
 template<class T>
 struct is_trivially_copyable {

@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <cstring>
 
-namespace uwr {
+namespace uwr::mem {
 
 typedef unsigned int uint;
 // TODO: restore to uint

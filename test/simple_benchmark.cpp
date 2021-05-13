@@ -1,7 +1,6 @@
 #include <static_vector.hpp>
 #include <test_type/test_type.hpp>
 #include <boost/container/static_vector.hpp>
-#include <rvector/rvector.h>
 #include <utils/utils.hpp>
 
 #include <iostream>
@@ -112,25 +111,21 @@ int main() {
     info("push_back:", 1);
     test1<boost::container::static_vector<T, C>, TEST1_TIMES>("boost::static_vector");
     test1<uwr::static_vector<T, C>, TEST1_TIMES>("uwr::static_vector");
-    // test1<stlpb::static_vector<T, C>, TEST1_TIMES>("stlpb::static_vector");
 
     constexpr int TEST2_TIMES = C;
     info("push_back/pop_back interlaced:", 1);
     test2<boost::container::static_vector<T, C>, TEST2_TIMES>("boost::static_vector");
     test2<uwr::static_vector<T, C>, TEST2_TIMES>("uwr::static_vector");
-    // test2<stlpb::static_vector<T, C>, TEST2_TIMES>("stlpb::static_vector");
 
     constexpr int TEST3_TIMES = 10000;
     info("two vectors swap:", 1);
     test3<boost::container::static_vector<T, C>, TEST3_TIMES>("boost::static_vector");
     test3<uwr::static_vector<T, C>, TEST3_TIMES>("uwr::static_vector");
-    // test3<stlpb::static_vector<T, C>, TEST3_TIMES>("stlpb::static_vector");
 
     constexpr int TEST4_TIMES = 10000000;
     info("resize:", 1);
     test4<boost::container::static_vector<T, C>, TEST4_TIMES>("boost::static_vector");
     test4<uwr::static_vector<T, C>, TEST4_TIMES>("uwr::static_vector");
-    // test4<stlpb::static_vector<T, C>, TEST4_TIMES>("stlpb::static_vector");
     #endif
 
     return 0;
