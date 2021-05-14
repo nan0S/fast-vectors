@@ -41,25 +41,25 @@ run-benchmarks: $(BENCHMARKS)
 	
 run-tests: $(TESTS)
 	@for test in $(TESTS); do \
-		./$$test; \
+		./$$test --gtest_color=yes; \
 	done
 
 run-%: $(BIN_DIR)/benchmarks/%
 	@./$<
 run-%: $(BIN_DIR)/tests/%
-	@./$<
+	@./$< --gtest_color=yes
 
 -include $(DEPENDS)
 
-$(BIN_DIR)/tests/%: $(BUILD_DIR)/$(TEST_DIR)/tests/%.o $(OBJECTS)
+$(BIN_DIR)/tests/%: $(BUILD_DIR)/$(TEST_DIR)/tests/%.o $(OBJECTS) Makefile
 	@mkdir -p $(shell dirname $@)
 	$(CXX) $(CXXFLAGS) -lgtest -MMD -MP $< $(OBJECTS) -o $@
 
-$(BIN_DIR)/benchmarks/%: $(BUILD_DIR)/$(TEST_DIR)/benchmarks/%.o $(OBJECTS) 
+$(BIN_DIR)/benchmarks/%: $(BUILD_DIR)/$(TEST_DIR)/benchmarks/%.o $(OBJECTS) Makefile
 	@mkdir -p $(shell dirname $@)
 	$(CXX) $(CXXFLAGS) -MMD -MP $< $(OBJECTS) -o $@
 
-$(BUILD_DIR)/%.o: %.cpp 
+$(BUILD_DIR)/%.o: %.cpp Makefile
 	@mkdir -p $(shell dirname $@)
 	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 
