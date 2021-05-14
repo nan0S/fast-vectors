@@ -31,6 +31,8 @@ BENCHMARKS := $(filter $(BIN_DIR)/benchmarks/%, $(TARGETS))
 
 all: $(TARGETS)
 
+run-all: run-benchmarks run-tests
+
 run-benchmarks: $(BENCHMARKS)
 	@for benchmark in $(BENCHMARKS); do \
 		./$$benchmark; \
