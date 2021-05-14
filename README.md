@@ -17,7 +17,7 @@ Besides container implementations, repository containts different benchmarks and
 - `make uninstall` - uninstall code locally
 - `make all` - compile all sources
 - `make run-all` - compile and run all tests and benchmarks
-- `make run-benchmarks` - compile run all benchmarks one after another
+- `make run-benchmarks` - compile run all benchmarks one after another (warning: increase stack limit size with e.g. `ulimit -s unlimited`)
 - `make run-tests` - compile and run all tests one after another
 - `make run-bench_name` - compile and run only benchmark named `bench_name` (e.g. `make run-simple_benchmark`)
 - `make run-test_name` - compile and run only test named `test_name` (e.g. `make run-simple_test`)
