@@ -16,6 +16,8 @@ public:
     ~test_type();
 
     operator int();
+
+    friend bool operator==(const test_type& x, const test_type& y);
     friend std::ostream& operator<<(std::ostream& out, const test_type& o);
 
 public:
@@ -23,5 +25,5 @@ public:
     static int instances;
 
 private:
-    int a;
+    int val;
 };

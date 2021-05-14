@@ -78,12 +78,14 @@ NT_Move_A<T> shiftl(T* dest, T* begin, T* end);
 
 template<class T>
 void construct(T* begin, T* end) {
-    std::uninitialized_default_construct(begin, end);
+    while (begin != end)
+        new (begin++) T();
 }
 
 template<class T>
 void construct(T* data, len_t n) {
-    std::uninitialized_default_construct_n(data, n);
+    while (n--)
+        new (data++) T();
 }
 
 template<class T>
