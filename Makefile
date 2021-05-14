@@ -12,54 +12,64 @@ SRC_DIR := src
 BUILD_DIR := build
 BIN_DIR := bin
 TEST_DIR := test
+INSTALL_DIR := /usr/local/include
 
 SOURCES := $(shell find $(SRC_DIR) -name '*.cpp')
-OBJECTS := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SOURCES))
-DEPENDS := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.d,$(SOURCES))
+TSOURCES := $(shell find $(TEST_DIR) -name '*.cpp')
 
-TESTS := $(shell find $(TEST_DIR) -name '*.cpp')
-TARGETS := $(patsubst $(TEST_DIR)/%.cpp,$(BIN_DIR)/%,$(TESTS))
-DEPENDS += $(patsubst $(TEST_DIR)/%.cpp,$(BIN_DIR)/%.d,$(TESTS))
+OBJECTS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(SOURCES))
+TARGETS := $(patsubst $(TEST_DIR)/%.cpp,$(BIN_DIR)/%,$(TSOURCES))
 
-INSTALLDIR := /usr/local/include
+DEPENDS := $(patsubst %.cpp,$(BUILD_DIR)/%.d,$(SOURCES))
+DEPENDS += $(patsubst %.cpp,$(BUILD_DIR)/%.d,$(TSOURCES))
 
-.PHONY: run all format clean install uninstall
-# .SILENT: run
+TESTS := $(filter $(BIN_DIR)/tests/%,$(TARGETS))
+BENCHMARKS := $(filter $(BIN_DIR)/benchmarks/%, $(TARGETS))
 
-# run: all
-	# for target in $(TARGETS); do \
-		# ./$$target; \
-	# done
+.PHONY: clean
+.SECONDARY: $(patsubst %.d,%.o,$(DEPENDS)) # do not remove %.o files
 
-# run-%: $(BIN_DIR)/%
-	# ./$<
+all: $(TARGETS)
 
-all: test
-test: $(TARGETS)
+run-benchmarks: $(BENCHMARKS)
+	@for benchmark in $(BENCHMARKS); do \
+		./$$benchmark; \
+		echo; \
+	done
+	
+run-tests: $(TESTS)
+	@for test in $(TESTS); do \
+		./$$test; \
+	done
+
+run-%: $(BIN_DIR)/benchmarks/%
+	@./$<
+run-%: $(BIN_DIR)/tests/%
+	@./$<
 
 -include $(DEPENDS)
 
-$(BIN_DIR)/tests/%: $(TEST_DIR)/tests/%.cpp $(OBJECTS) Makefile
+$(BIN_DIR)/tests/%: $(BUILD_DIR)/$(TEST_DIR)/tests/%.o $(OBJECTS)
 	@mkdir -p $(shell dirname $@)
 	$(CXX) $(CXXFLAGS) -lgtest -MMD -MP $< $(OBJECTS) -o $@
 
-$(BIN_DIR)/benchmarks/%: $(TEST_DIR)/benchmarks/%.cpp $(OBJECTS) Makefile
+$(BIN_DIR)/benchmarks/%: $(BUILD_DIR)/$(TEST_DIR)/benchmarks/%.o $(OBJECTS) 
 	@mkdir -p $(shell dirname $@)
 	$(CXX) $(CXXFLAGS) -MMD -MP $< $(OBJECTS) -o $@
 
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp Makefile
+$(BUILD_DIR)/%.o: %.cpp 
 	@mkdir -p $(shell dirname $@)
 	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 
 install:
 	@echo Installing ...
-	@rm -rf $(INSTALLDIR)/uwr
-	@cp -r include $(INSTALLDIR)/uwr
+	@rm -rf $(INSTALL_DIR)/uwr
+	@cp -r include $(INSTALL_DIR)/uwr
 	@echo Done
 
 uninstall:
 	@echo Uninstalling ...
-	@rm -rf $(INSTALLDIR)/uwr
+	@rm -rf $(INSTALL_DIR)/uwr
 	@echo Done
 
 format:
