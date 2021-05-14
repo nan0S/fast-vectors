@@ -25,6 +25,7 @@ DEPENDS += $(patsubst %.cpp,$(BUILD_DIR)/%.d,$(TSOURCES))
 
 TESTS := $(filter $(BIN_DIR)/tests/%,$(TARGETS))
 BENCHMARKS := $(filter $(BIN_DIR)/benchmarks/%, $(TARGETS))
+TESTS := $(filter-out $(BIN_DIR)/tests/temp_tests, $(TESTS)) # custom - filter out scratchpad test
 
 .PHONY: clean
 .SECONDARY: $(patsubst %.d,%.o,$(DEPENDS)) # do not remove %.o files
