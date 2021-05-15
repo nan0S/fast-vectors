@@ -322,12 +322,57 @@ TYPED_TEST(StaticVectorTests, RangeAssign) {
         EXPECT_EQ(v[i], a[i]);
 }
 
-TYPED_TEST(StaticVectorTests, RangeFill) {
+TYPED_TEST(StaticVectorTests, FillAssign) {
     auto v = this->GetVectorOfSize(3);
     const auto val = this->GetValue(rand());
+    typename TestFixture::size_type size = 5;
     
+    v.assign(size, val);
 
-    v.assign()
+    EXPECT_EQ(v.size(), size);
+    for (const auto& x : v)
+        EXPECT_EQ(x, val);
+}
+
+TYPED_TEST(StaticVectorTests, InitializerListAssign) {
+    static_vector<TypeParam, this->C> v(2);
+    std::initializer_list<TypeParam> il {
+        this->GetValue(0), this->GetValue(13), this->GetValue(3)
+    };
+    
+    v.assign(il);
+
+    EXPECT_EQ(v.size(), il.size());
+    for (typename TestFixture::size_type i = 0; i < v.size(); ++i)
+        EXPECT_EQ(v[i], il.begin()[i]);
+}
+
+TYPED_TEST(StaticVectorTests, PushBackByCopy) {
+    static_vector<TypeParam, this->C> v(2);
+    const auto initial_size = v.size();
+
+    for (int i = 0; i < 5; ++i) {
+        int id = rand();
+        const auto val = this->GetValue(id);
+        v.push_back(val);
+
+        EXPECT_EQ(v.size(), initial_size + i + 1);
+        EXPECT_EQ(v.back(), val);
+        EXPECT_EQ(val, this->GetValue(id));
+    }
+}
+
+TYPED_TEST(StaticVectorTests, PushBackByMove) {
+    static_vector<TypeParam, this->C> v(3);
+    const auto initial_size = v.size();
+
+    for (int i = 0; i < 3; ++i) {
+        int id = rand();
+        v.push_back(this->GetValue(id));
+
+        EXPECT_EQ(v.size(), initial_size + i + 1);
+        EXPECT_EQ(v.back(), this->GetValue(id));
+    }
 }
 
 int main(int argc, char* argv[]) {
