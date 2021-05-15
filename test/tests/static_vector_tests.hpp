@@ -3,9 +3,13 @@
 #include <gtest/gtest.h>
 #include <test_type/test_type.hpp>
 #include <static_vector.hpp>
+using namespace uwr;
 
 template<class T>
 class StaticVectorTests : public ::testing::Test {
+public:
+    static constexpr len_t C = 10;
+    using size_type = typename uwr::static_vector<T, C>::size_type;
 
 private:
     void SetUp() {}
@@ -13,9 +17,7 @@ private:
 
 public:
     T GetValue(int id) { return id; }
-public:
-    static constexpr int C = 10;
-    using size_type = typename uwr::static_vector<T, C>::size_type;
+    static_vector<T, C> GetVectorOfSize(size_type size);
 };
 
 template<>
@@ -26,6 +28,16 @@ template<>
 std::string StaticVectorTests<std::string>::GetValue(int id);
 template<>
 std::array<int, 10> StaticVectorTests<std::array<int, 10>>::GetValue(int id);
+
+template<class T>
+static_vector<T, StaticVectorTests<T>::C>
+StaticVectorTests<T>::GetVectorOfSize(size_type size) {
+    static_vector<T, C> v(size);
+    for (size_type i = 0; i < size; ++i)
+        v[i] = GetValue(i);
+
+    return v;
+}
 
 class TypeNames {
 public:
