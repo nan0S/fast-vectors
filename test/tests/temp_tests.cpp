@@ -7,13 +7,18 @@
 int main() {
     constexpr static int C = 5;
     using T = test_type;
-    using Vector = boost::container::static_vector<T, C>;
-    // using Vector = uwr::static_vector<T, C>;
-    std::initializer_list<test_type> il { 1, 2, 3 };
+    // using Vector = boost::container::static_vector<T, C>;
+    using Vector = uwr::static_vector<T, C>;
+    Vector v { 1, 2, 3, 4 };
+    test_type val = 13;
     ON;
 
-    Vector v;
-    v.assign(il);
+    v.insert(v.begin(), 0, val);
+
+    for (const auto& x : v)
+        std::cout << x << std::endl;
+
+    OFF;
 
     return 0;
 }

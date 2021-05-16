@@ -594,132 +594,117 @@ TYPED_TEST(StaticVectorTests, Clear) {
     EXPECT_TRUE(v.empty());
 }
 
-TYPED_TEST(StaticVectorTests, InsertOneElementByCopyToBeginOfEmptyVector) {
+TYPED_TEST(StaticVectorTests, InsertOneElementByCopyToEmptyVector) {
     static_vector<TypeParam, this->C> v;
-    const auto val = this->GetValue(rand());
 
-    auto it = v.insert(v.begin(), val);
-
-    EXPECT_EQ(it, v.begin());
-    EXPECT_EQ(*it, val);
-    EXPECT_EQ(v.size(), 1);
+    this->InsertOneElementByCopy(v, 0, rand());
 }
 
-TYPED_TEST(StaticVectorTests, InsertOneElementByCopyToEndOfEmptyVector) {
+TYPED_TEST(StaticVectorTests, InsertOneElementByCopyAtBeginToNonEmptyVector) {
+    auto v = this->GetVectorOfSize(5);
+
+    this->InsertOneElementByCopy(v, 0, 13);
+}
+
+TYPED_TEST(StaticVectorTests, InsertOneElementByCopyAtEndToNonEmptyVector) {
+    const auto initial_size = 5;
+    auto v = this->GetVectorOfSize(initial_size);
+
+    this->InsertOneElementByCopy(v, initial_size, 13);
+}
+
+TYPED_TEST(StaticVectorTests, InsertOneElementByCopyInMiddleToNonEmptyVector) {
+    const auto initial_size = 5;
+    auto v = this->GetVectorOfSize(initial_size);
+    const auto pos = Random::rand(1, initial_size - 1);
+
+    this->InsertOneElementByCopy(v, pos, 13);
+}
+
+TYPED_TEST(StaticVectorTests, InsertOneElementByMoveAtBeginToEmptyVector) {
     static_vector<TypeParam, this->C> v;
-    const auto val = this->GetValue(rand());
-
-    auto it = v.insert(v.end(), val);
-
-    EXPECT_EQ(it, v.begin());
-    EXPECT_EQ(*it, val);
-    EXPECT_EQ(v.size(), 1);
+    
+    this->InsertOneElementByMove(v, 0, rand());
 }
 
-TYPED_TEST(StaticVectorTests, InsertOneElementByCopyToBeginOfNonEmptyVector) {
-    const auto initial_size = 5;
-    auto v = this->GetVectorOfSize(initial_size);
-    const auto val = this->GetValue(13);
-    
-    auto it = v.insert(v.begin(), val);
-    
-    EXPECT_EQ(it, v.begin());
-    EXPECT_EQ(*it, val);
-    for (int i = 0; i < initial_size; ++i)
-        EXPECT_EQ(v[i + 1], this->GetValue(i));
+TYPED_TEST(StaticVectorTests, InsertOneElementByMoveAtBeginToNonEmptyVector) {
+    auto v = this->GetVectorOfSize(5);
+
+    this->InsertOneElementByMove(v, 0, 13);
 }
 
-TYPED_TEST(StaticVectorTests, InsertOneElementByCopyToEndOfNonEmptyVector) {
+TYPED_TEST(StaticVectorTests, InsertOneElementByMoveAtEndToNonEmptyVector) {
     const auto initial_size = 5;
     auto v = this->GetVectorOfSize(initial_size);
-    const auto val = this->GetValue(13);
-    
-    auto it = v.insert(v.end(), val);
-    
-    EXPECT_EQ(it, v.end() - 1);
-    EXPECT_EQ(*it, val);
-    for (int i = 0; i < initial_size; ++i)
-        EXPECT_EQ(v[i], this->GetValue(i));
+
+    this->InsertOneElementByMove(v, initial_size, 13);
 }
 
-TYPED_TEST(StaticVectorTests, InsertOneElementByCopyToMiddleOfNonEmptyVector) {
+TYPED_TEST(StaticVectorTests, InsertOneElementByMoveInMiddleToNonEmptyVector) {
     const auto initial_size = 5;
     auto v = this->GetVectorOfSize(initial_size);
-    const auto val = this->GetValue(13);
     const auto pos = Random::rand(1, initial_size - 1);
     
-    auto it = v.insert(v.begin() + pos, val);
-    
-    EXPECT_EQ(it, v.begin() + pos);
-    EXPECT_EQ(*it, val);
-    for (int i = 0; i < pos; ++i)
-        EXPECT_EQ(v[i], this->GetValue(i));
-    for (int i = pos; i < initial_size; ++i)
-        EXPECT_EQ(v[i + 1], this->GetValue(i));
+    this->InsertOneElementByMove(v, pos, 13);
 }
 
-TYPED_TEST(StaticVectorTests, InsertOneElementByMoveToBeginOfEmptyVector) {
+TYPED_TEST(StaticVectorTests, InsertZeroElementsByFillToEmptyVector) {
     static_vector<TypeParam, this->C> v;
-    const auto id = rand();
 
-    auto it = v.insert(v.begin(), this->GetValue(id));
-
-    EXPECT_EQ(it, v.begin());
-    EXPECT_EQ(*it, this->GetValue(id));
-    EXPECT_EQ(v.size(), 1);
+    this->InsertMultipleElementsByFill(v, 0, 0, 13);
 }
 
-TYPED_TEST(StaticVectorTests, InsertOneElementByMoveToEndOfEmptyVector) {
+TYPED_TEST(StaticVectorTests, InsertZeroElementsByFillAtBeginToNonEmptyVector) {
+    auto v = this->GetVectorOfSize(5);
+
+    this->InsertMultipleElementsByFill(v, 0, 0, 13);
+}
+
+TYPED_TEST(StaticVectorTests, InsertZeroElementsByFillAtEndToNonEmptyVector) {
+    const auto initial_size = 5;
+    auto v = this->GetVectorOfSize(initial_size);
+
+    this->InsertMultipleElementsByFill(v, initial_size, 0, 13);
+}
+
+TYPED_TEST(StaticVectorTests, InsertZeroElementsByFillInMiddleToNonEmptyVector) {
+    const auto initial_size = 5;
+    auto v = this->GetVectorOfSize(initial_size);
+    int pos = Random::rand(1, initial_size - 1);
+
+    this->InsertMultipleElementsByFill(v, pos, 0, 13);
+}
+
+TYPED_TEST(StaticVectorTests, InsertMultipleElementsByFillToEmptyVector) {
     static_vector<TypeParam, this->C> v;
-    const auto id = rand();
+    int count = Random::rand<int>(1, this->C);
 
-    auto it = v.insert(v.end(), this->GetValue(id));
-
-    EXPECT_EQ(it, v.begin());
-    EXPECT_EQ(*it, this->GetValue(id));
-    EXPECT_EQ(v.size(), 1);
+    this->InsertMultipleElementsByFill(v, 0, count, rand());
 }
 
-TYPED_TEST(StaticVectorTests, InsertOneElementByMoveToBeginOfNonEmptyVector) {
+TYPED_TEST(StaticVectorTests, InsertMultipleElementsByFillAtBeginToNonEmptyVector) {
     const auto initial_size = 5;
     auto v = this->GetVectorOfSize(initial_size);
-    const auto id = 13;
-    
-    auto it = v.insert(v.begin(), this->GetValue(id));
-    
-    EXPECT_EQ(it, v.begin());
-    EXPECT_EQ(*it, this->GetValue(id));
-    for (int i = 0; i < initial_size; ++i)
-        EXPECT_EQ(v[i + 1], this->GetValue(i));
+    int count = Random::rand<int>(1, this->C - initial_size);
+
+    this->InsertMultipleElementsByFill(v, 0, count, 13);
 }
 
-TYPED_TEST(StaticVectorTests, InsertOneElementByMoveToEndOfNonEmptyVector) {
+TYPED_TEST(StaticVectorTests, InsertMultipleElementsByFillAtEndToNonEmptyVector) {
     const auto initial_size = 5;
     auto v = this->GetVectorOfSize(initial_size);
-    const auto id = 13;
-    
-    auto it = v.insert(v.end(), this->GetValue(id));
-    
-    EXPECT_EQ(it, v.end() - 1);
-    EXPECT_EQ(*it, this->GetValue(id));
-    for (int i = 0; i < initial_size; ++i)
-        EXPECT_EQ(v[i], this->GetValue(i));
+    int count = Random::rand<int>(1, this->C - initial_size);
+
+    this->InsertMultipleElementsByFill(v, initial_size, count, 13);
 }
 
-TYPED_TEST(StaticVectorTests, InsertOneElementByMoveToMiddleOfNonEmptyVector) {
+TYPED_TEST(StaticVectorTests, InsertMultipleElementsByFillInMiddleToNonEmptyVector) {
     const auto initial_size = 5;
     auto v = this->GetVectorOfSize(initial_size);
-    const auto id = 13;
-    const auto pos = Random::rand(1, initial_size - 1);
-    
-    auto it = v.insert(v.begin() + pos, this->GetValue(id));
-    
-    EXPECT_EQ(it, v.begin() + pos);
-    EXPECT_EQ(*it, this->GetValue(id));
-    for (int i = 0; i < pos; ++i)
-        EXPECT_EQ(v[i], this->GetValue(i));
-    for (int i = pos; i < initial_size; ++i)
-        EXPECT_EQ(v[i + 1], this->GetValue(i));
+    int count = Random::rand<int>(1, this->C - initial_size);
+    int pos = Random::rand(1, initial_size - 1);
+
+    this->InsertMultipleElementsByFill(v, pos, count, 13);
 }
 
 int main(int argc, char* argv[]) {

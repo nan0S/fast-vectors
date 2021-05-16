@@ -567,6 +567,10 @@ template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, size_type count, const T& value) {
     auto position = const_cast<T*>(pos);
+    // TODO: unlikely or can do better
+    if (!count)
+        return position;
+
     auto eptr = end();
     auto rest = static_cast<size_type>(std::distance(position, eptr));
 
