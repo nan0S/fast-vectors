@@ -1,4 +1,5 @@
 #include "static_vector_tests.hpp"
+#include <utils/utils.hpp>
 
 template<>
 void
@@ -231,21 +232,58 @@ TYPED_TEST(StaticVectorTests, DoesResizeChangeSize) {
     EXPECT_EQ(v.size(), 3);
 }
 
-TYPED_TEST(StaticVectorTests, ResizeDefaultConstruct) {
+TYPED_TEST(StaticVectorTests, ResizeEmptyWithDefaultConstruct) {
     static_vector<TypeParam, this->C> v;
 
     v.resize(5);
+
     for (const auto& x : v)
         EXPECT_EQ(x, TypeParam());
 }
 
-TYPED_TEST(StaticVectorTests, ResizeWithFill) {
+TYPED_TEST(StaticVectorTests, ResizeEmptyWithFill) {
+    const auto val = this->GetValue(rand());
     static_vector<TypeParam, this->C> v;
-    const auto val = this->GetValue(13);
 
     v.resize(5, val);
+
     for (const auto& x : v)
         EXPECT_EQ(x, val);
+}
+
+TYPED_TEST(StaticVectorTests, ResizeNonEmptyWithDefaultConstruct) {
+    const auto initial_size = 5;
+    auto v = this->GetVectorOfSize(initial_size);
+
+    v.resize(initial_size + 2);
+    
+    for (int i = 0; i < initial_size; ++i)
+        EXPECT_EQ(v[i], this->GetValue(i));
+    for (int i = initial_size; i < initial_size + 2; ++i)
+        EXPECT_EQ(v[i], TypeParam());
+
+    v.resize(3);
+
+    for (typename TestFixture::size_type i = 0; i < v.size(); ++i)
+        EXPECT_EQ(v[i], this->GetValue(i));
+}
+
+TYPED_TEST(StaticVectorTests, ResizeNonEmptyWithFill) {
+    const auto initial_size = 5;
+    const auto val = this->GetValue(13);
+    auto v = this->GetVectorOfSize(initial_size);
+
+    v.resize(initial_size + 2, val);
+    
+    for (int i = 0; i < initial_size; ++i)
+        EXPECT_EQ(v[i], this->GetValue(i));
+    for (int i = initial_size; i < initial_size + 2; ++i)
+        EXPECT_EQ(v[i], val);
+
+    v.resize(3);
+
+    for (typename TestFixture::size_type i = 0; i < v.size(); ++i)
+        EXPECT_EQ(v[i], this->GetValue(i));
 }
 
 TYPED_TEST(StaticVectorTests, Reserve) {
@@ -351,7 +389,7 @@ TYPED_TEST(StaticVectorTests, PushBackByCopy) {
     static_vector<TypeParam, this->C> v(2);
     const auto initial_size = v.size();
 
-    for (int i = 0; i < 5; ++i) {
+    for (int i = 0; i + initial_size < this->C; ++i) {
         int id = rand();
         const auto val = this->GetValue(id);
         v.push_back(val);
@@ -360,19 +398,328 @@ TYPED_TEST(StaticVectorTests, PushBackByCopy) {
         EXPECT_EQ(v.back(), val);
         EXPECT_EQ(val, this->GetValue(id));
     }
+
+    const auto val = this->GetValue(0);
+    EXPECT_THROW(v.push_back(val),
+        std::out_of_range);
 }
 
 TYPED_TEST(StaticVectorTests, PushBackByMove) {
     static_vector<TypeParam, this->C> v(3);
     const auto initial_size = v.size();
 
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i + initial_size < this->C; ++i) {
         int id = rand();
         v.push_back(this->GetValue(id));
 
         EXPECT_EQ(v.size(), initial_size + i + 1);
         EXPECT_EQ(v.back(), this->GetValue(id));
     }
+
+    EXPECT_THROW(v.push_back(this->GetValue(0)),
+        std::out_of_range);
+}
+
+TYPED_TEST(StaticVectorTests, FastPushBackByCopy) {
+    static_vector<TypeParam, this->C> v(2);
+    const auto initial_size = v.size();
+
+    for (int i = 0; i + initial_size < this->C; ++i) {
+        int id = rand();
+        const auto val = this->GetValue(id);
+        v.fast_push_back(val);
+
+        EXPECT_EQ(v.size(), initial_size + i + 1);
+        EXPECT_EQ(v.back(), val);
+        EXPECT_EQ(val, this->GetValue(id));
+    }
+}
+
+TYPED_TEST(StaticVectorTests, FastPushBackByMove) {
+    static_vector<TypeParam, this->C> v(3);
+    const auto initial_size = v.size();
+
+    for (int i = 0; i + initial_size < this->C; ++i) {
+        int id = rand();
+        v.push_back(this->GetValue(id));
+
+        EXPECT_EQ(v.size(), initial_size + i + 1);
+        EXPECT_EQ(v.back(), this->GetValue(id));
+    }
+}
+
+TYPED_TEST(StaticVectorTests, EmplaceBack) {
+    static_vector<TypeParam, this->C> v(3);
+    const auto initial_size = v.size();
+
+    for (int i = 0; i + initial_size < this->C; ++i) {
+        int id = rand();
+        v.emplace_back(this->GetValue(id));
+
+        EXPECT_EQ(v.size(), initial_size + i + 1);
+        EXPECT_EQ(v.back(), this->GetValue(id));
+    }
+
+    EXPECT_THROW(v.push_back(this->GetValue(0)),
+        std::out_of_range);
+}
+
+TYPED_TEST(StaticVectorTests, FastEmplaceBack) {
+    static_vector<TypeParam, this->C> v(2);
+    const auto initial_size = v.size();
+
+    for (int i = 0; i + initial_size < this->C; ++i) {
+        int id = rand();
+        const auto val = this->GetValue(id);
+        v.fast_emplace_back(val);
+
+        EXPECT_EQ(v.size(), initial_size + i + 1);
+        EXPECT_EQ(v.back(), val);
+        EXPECT_EQ(val, this->GetValue(id));
+    }
+}
+
+TYPED_TEST(StaticVectorTests, PopBack) {
+    const auto initial_size = 3;
+    auto v = this->GetVectorOfSize(initial_size);
+
+    for (int i = initial_size - 1; i >= 0; --i) {
+        EXPECT_EQ(v.back(), this->GetValue(i));
+        v.pop_back();
+        EXPECT_EQ(v.size(), i);
+    }
+
+    EXPECT_TRUE(v.empty());
+}
+
+TYPED_TEST(StaticVectorTests, SafePopBack) {
+    const auto initial_size = 3;
+    auto v = this->GetVectorOfSize(initial_size);
+
+    for (int i = initial_size - 1; i >= 0; --i) {
+        EXPECT_EQ(v.back(), this->GetValue(i));
+        v.safe_pop_back();
+        EXPECT_EQ(v.size(), i);
+    }
+
+    EXPECT_TRUE(v.empty());
+    EXPECT_NO_THROW(v.safe_pop_back());
+    EXPECT_EQ(v.size(), 0);
+}
+
+TYPED_TEST(StaticVectorTests, PushPopBackMixed) {
+    static_vector<TypeParam, this->C> v;
+    const TypeParam values[] = {
+        this->GetValue(13), this->GetValue(81), this->GetValue(12)
+    };
+    
+    v.push_back(values[0]);
+
+    EXPECT_EQ(v.size(), 1);
+    EXPECT_EQ(v.back(), values[0]);
+
+    v.push_back(values[1]);
+
+    EXPECT_EQ(v.size(), 2);
+    EXPECT_EQ(v.back(), values[1]);
+
+    v.pop_back();
+
+    EXPECT_EQ(v.size(), 1);
+    EXPECT_EQ(v.back(), values[0]);
+
+    v.pop_back();
+    v.push_back(values[2]);
+    v.push_back(values[2]);
+    v.push_back(values[2]);
+
+    EXPECT_EQ(v.size(), 3);
+    EXPECT_EQ(v.back(), values[2]);
+
+    v.pop_back();
+
+    EXPECT_EQ(v.size(), 2);
+    EXPECT_EQ(v.back(), values[2]);
+
+    v.pop_back();
+
+    EXPECT_EQ(v.size(), 1);
+    EXPECT_EQ(v.back(), values[2]);
+
+    v.pop_back();
+
+    EXPECT_EQ(v.size(), 0);
+}
+
+TYPED_TEST(StaticVectorTests, TwoSwap) {
+    const auto v1_size = 5;
+    const auto v2_size = 3;
+    auto v1 = this->GetVectorOfSize(v1_size);
+    auto v2 = this->GetVectorOfSize(v2_size);
+
+    std::reverse(v1.begin(), v1.end());
+    v1.swap(v2);
+    v2.swap(v1);
+
+    EXPECT_EQ(v1.size(), v1_size);
+    EXPECT_EQ(v2.size(), v2_size);
+    for (typename TestFixture::size_type i = 0; i < v1.size(); ++i)
+        EXPECT_EQ(v1[i], this->GetValue(v1.size() - 1 - i));
+    for (typename TestFixture::size_type i = 0; i < v2.size(); ++i)
+        EXPECT_EQ(v2[i], this->GetValue(i));
+}
+
+TYPED_TEST(StaticVectorTests, OneSwap) {
+    const auto v1_size = 5;
+    const auto v2_size = 3;
+    auto v1 = this->GetVectorOfSize(v1_size);
+    auto v2 = this->GetVectorOfSize(v2_size);
+
+    std::reverse(v1.begin(), v1.end());
+    v1.swap(v2);
+
+    EXPECT_EQ(v1.size(), v2_size);
+    EXPECT_EQ(v2.size(), v1_size);
+    for (typename TestFixture::size_type i = 0; i < v1.size(); ++i)
+        EXPECT_EQ(v1[i], this->GetValue(i));
+    for (typename TestFixture::size_type i = 0; i < v2.size(); ++i)
+        EXPECT_EQ(v2[i], this->GetValue(v2.size() - 1 - i));
+}
+
+TYPED_TEST(StaticVectorTests, Clear) {
+    auto v = this->GetVectorOfSize(5);
+    
+    v.clear();
+
+    EXPECT_TRUE(v.empty());
+}
+
+TYPED_TEST(StaticVectorTests, InsertOneElementByCopyToBeginOfEmptyVector) {
+    static_vector<TypeParam, this->C> v;
+    const auto val = this->GetValue(rand());
+
+    auto it = v.insert(v.begin(), val);
+
+    EXPECT_EQ(it, v.begin());
+    EXPECT_EQ(*it, val);
+    EXPECT_EQ(v.size(), 1);
+}
+
+TYPED_TEST(StaticVectorTests, InsertOneElementByCopyToEndOfEmptyVector) {
+    static_vector<TypeParam, this->C> v;
+    const auto val = this->GetValue(rand());
+
+    auto it = v.insert(v.end(), val);
+
+    EXPECT_EQ(it, v.begin());
+    EXPECT_EQ(*it, val);
+    EXPECT_EQ(v.size(), 1);
+}
+
+TYPED_TEST(StaticVectorTests, InsertOneElementByCopyToBeginOfNonEmptyVector) {
+    const auto initial_size = 5;
+    auto v = this->GetVectorOfSize(initial_size);
+    const auto val = this->GetValue(13);
+    
+    auto it = v.insert(v.begin(), val);
+    
+    EXPECT_EQ(it, v.begin());
+    EXPECT_EQ(*it, val);
+    for (int i = 0; i < initial_size; ++i)
+        EXPECT_EQ(v[i + 1], this->GetValue(i));
+}
+
+TYPED_TEST(StaticVectorTests, InsertOneElementByCopyToEndOfNonEmptyVector) {
+    const auto initial_size = 5;
+    auto v = this->GetVectorOfSize(initial_size);
+    const auto val = this->GetValue(13);
+    
+    auto it = v.insert(v.end(), val);
+    
+    EXPECT_EQ(it, v.end() - 1);
+    EXPECT_EQ(*it, val);
+    for (int i = 0; i < initial_size; ++i)
+        EXPECT_EQ(v[i], this->GetValue(i));
+}
+
+TYPED_TEST(StaticVectorTests, InsertOneElementByCopyToMiddleOfNonEmptyVector) {
+    const auto initial_size = 5;
+    auto v = this->GetVectorOfSize(initial_size);
+    const auto val = this->GetValue(13);
+    const auto pos = Random::rand(1, initial_size - 1);
+    
+    auto it = v.insert(v.begin() + pos, val);
+    
+    EXPECT_EQ(it, v.begin() + pos);
+    EXPECT_EQ(*it, val);
+    for (int i = 0; i < pos; ++i)
+        EXPECT_EQ(v[i], this->GetValue(i));
+    for (int i = pos; i < initial_size; ++i)
+        EXPECT_EQ(v[i + 1], this->GetValue(i));
+}
+
+TYPED_TEST(StaticVectorTests, InsertOneElementByMoveToBeginOfEmptyVector) {
+    static_vector<TypeParam, this->C> v;
+    const auto id = rand();
+
+    auto it = v.insert(v.begin(), this->GetValue(id));
+
+    EXPECT_EQ(it, v.begin());
+    EXPECT_EQ(*it, this->GetValue(id));
+    EXPECT_EQ(v.size(), 1);
+}
+
+TYPED_TEST(StaticVectorTests, InsertOneElementByMoveToEndOfEmptyVector) {
+    static_vector<TypeParam, this->C> v;
+    const auto id = rand();
+
+    auto it = v.insert(v.end(), this->GetValue(id));
+
+    EXPECT_EQ(it, v.begin());
+    EXPECT_EQ(*it, this->GetValue(id));
+    EXPECT_EQ(v.size(), 1);
+}
+
+TYPED_TEST(StaticVectorTests, InsertOneElementByMoveToBeginOfNonEmptyVector) {
+    const auto initial_size = 5;
+    auto v = this->GetVectorOfSize(initial_size);
+    const auto id = 13;
+    
+    auto it = v.insert(v.begin(), this->GetValue(id));
+    
+    EXPECT_EQ(it, v.begin());
+    EXPECT_EQ(*it, this->GetValue(id));
+    for (int i = 0; i < initial_size; ++i)
+        EXPECT_EQ(v[i + 1], this->GetValue(i));
+}
+
+TYPED_TEST(StaticVectorTests, InsertOneElementByMoveToEndOfNonEmptyVector) {
+    const auto initial_size = 5;
+    auto v = this->GetVectorOfSize(initial_size);
+    const auto id = 13;
+    
+    auto it = v.insert(v.end(), this->GetValue(id));
+    
+    EXPECT_EQ(it, v.end() - 1);
+    EXPECT_EQ(*it, this->GetValue(id));
+    for (int i = 0; i < initial_size; ++i)
+        EXPECT_EQ(v[i], this->GetValue(i));
+}
+
+TYPED_TEST(StaticVectorTests, InsertOneElementByMoveToMiddleOfNonEmptyVector) {
+    const auto initial_size = 5;
+    auto v = this->GetVectorOfSize(initial_size);
+    const auto id = 13;
+    const auto pos = Random::rand(1, initial_size - 1);
+    
+    auto it = v.insert(v.begin() + pos, this->GetValue(id));
+    
+    EXPECT_EQ(it, v.begin() + pos);
+    EXPECT_EQ(*it, this->GetValue(id));
+    for (int i = 0; i < pos; ++i)
+        EXPECT_EQ(v[i], this->GetValue(i));
+    for (int i = pos; i < initial_size; ++i)
+        EXPECT_EQ(v[i + 1], this->GetValue(i));
 }
 
 int main(int argc, char* argv[]) {

@@ -90,8 +90,8 @@ public:
     constexpr void assign(std::initializer_list<T> ilist);
 
     constexpr void push_back(const T& value);
-    constexpr void fast_push_back(const T& value) noexcept;
     constexpr void push_back(T&& value);
+    constexpr void fast_push_back(const T& value) noexcept;
     constexpr void fast_push_back(T&& value) noexcept;
 
     constexpr void pop_back();
@@ -119,6 +119,7 @@ public:
     constexpr void fast_emplace_back(Args&&... args) noexcept;
 
 private:
+    // TODO: maybe inline
     constexpr T* data_at(size_type n) noexcept;
     constexpr const T* data_at(size_type n) const noexcept;
 
@@ -468,7 +469,17 @@ static_vector<T, C>::assign(InputIterator first, InputIterator last) {
 template<class T, len_t C>
 constexpr void
 static_vector<T, C>::assign(size_type n, const T& val) {
-    mem::fill(data(), n, val);
+    auto ptr = data();
+    
+    if (n < m_length) {
+        mem::destroy(ptr + n, ptr + m_length);
+        mem::fill(ptr, n, val);
+    }
+    else {
+        mem::fill(ptr, m_length, val);
+        mem::ufill(ptr + m_length, n - m_length, val);
+    }
+
     m_length = n;
 }
 
@@ -489,16 +500,17 @@ static_vector<T, C>::push_back(const_reference value) {
 
 template<class T, len_t C>
 constexpr void
-static_vector<T, C>::fast_push_back(const_reference value) noexcept {
-    new (data() + m_length++) T(value);
-}
-
-template<class T, len_t C>
-constexpr void static_vector<T, C>::push_back(T&& value) {
+static_vector<T, C>::push_back(T&& value) {
     // TODO: uncomment
     if (m_length == C)
         throw std::out_of_range("Out of bounds");
     new (data() + m_length++) T(std::move(value));
+}
+
+template<class T, len_t C>
+constexpr void
+static_vector<T, C>::fast_push_back(const_reference value) noexcept {
+    new (data() + m_length++) T(value);
 }
 
 template<class T, len_t C>
@@ -525,8 +537,12 @@ template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, const T& value) {
     auto position = const_cast<T*>(pos);
-    mem::shiftr(position + 1, position, end());
-    *position = value;
+    if (position == end())
+        new (position) T(value);
+    else {
+        mem::shiftr(position + 1, position, end());
+        *position = value;
+    }
     ++m_length;
 
     return position;
@@ -536,8 +552,12 @@ template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, T&& value) {
     auto position = const_cast<T*>(pos);
-    mem::shiftr(position + 1, position, end());
-    *position = std::move(value);
+    if (position == end())
+        new (position) T(std::move(value));
+    else {
+        mem::shiftr(position + 1, position, end());
+        *position = value;
+    }
     ++m_length;
 
     return position;
