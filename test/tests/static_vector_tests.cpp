@@ -73,8 +73,8 @@ TYPED_TEST(StaticVectorTests, CopyConstructor) {
 }
 
 TYPED_TEST(StaticVectorTests, MoveConstructor) {
-    const auto val = this->GetValue(10);
-    const auto size = 5;
+    const TypeParam val = this->GetValue(10);
+    const int size = 5;
     static_vector<TypeParam, this->C> v1(size, val);
     static_vector<TypeParam, this->C> v2(std::move(v1));
     
@@ -106,8 +106,8 @@ TYPED_TEST(StaticVectorTests, CopyOperator) {
 }
 
 TYPED_TEST(StaticVectorTests, MoveOperator) {
-    const auto val = this->GetValue(10);
-    const auto size = 5;
+    const TypeParam val = this->GetValue(10);
+    const int size = 5;
     static_vector<TypeParam, this->C> v1(size, val);
     static_vector<TypeParam, this->C> v2(3);
     v2 = std::move(v1);
@@ -242,7 +242,7 @@ TYPED_TEST(StaticVectorTests, ResizeEmptyWithDefaultConstruct) {
 }
 
 TYPED_TEST(StaticVectorTests, ResizeEmptyWithFill) {
-    const auto val = this->GetValue(rand());
+    const TypeParam val = this->GetValue(rand());
     static_vector<TypeParam, this->C> v;
 
     v.resize(5, val);
@@ -252,7 +252,7 @@ TYPED_TEST(StaticVectorTests, ResizeEmptyWithFill) {
 }
 
 TYPED_TEST(StaticVectorTests, ResizeNonEmptyWithDefaultConstruct) {
-    const auto initial_size = 5;
+    const int initial_size = 5;
     auto v = this->GetVectorOfSize(initial_size);
 
     v.resize(initial_size + 2);
@@ -269,8 +269,8 @@ TYPED_TEST(StaticVectorTests, ResizeNonEmptyWithDefaultConstruct) {
 }
 
 TYPED_TEST(StaticVectorTests, ResizeNonEmptyWithFill) {
-    const auto initial_size = 5;
-    const auto val = this->GetValue(13);
+    const int initial_size = 5;
+    const TypeParam val = this->GetValue(13);
     auto v = this->GetVectorOfSize(initial_size);
 
     v.resize(initial_size + 2, val);
@@ -288,7 +288,7 @@ TYPED_TEST(StaticVectorTests, ResizeNonEmptyWithFill) {
 
 TYPED_TEST(StaticVectorTests, Reserve) {
     static_vector<TypeParam, this->C> v;
-    const auto initial_size = v.size();
+    const typename TestFixture::size_type initial_size = v.size();
     
     for (typename TestFixture::size_type i = 1; i <= this->C; ++i) {
         v.reserve(i);
@@ -362,7 +362,7 @@ TYPED_TEST(StaticVectorTests, RangeAssign) {
 
 TYPED_TEST(StaticVectorTests, FillAssign) {
     auto v = this->GetVectorOfSize(3);
-    const auto val = this->GetValue(rand());
+    const TypeParam val = this->GetValue(rand());
     typename TestFixture::size_type size = 5;
     
     v.assign(size, val);
@@ -387,11 +387,11 @@ TYPED_TEST(StaticVectorTests, InitializerListAssign) {
 
 TYPED_TEST(StaticVectorTests, PushBackByCopy) {
     static_vector<TypeParam, this->C> v(2);
-    const auto initial_size = v.size();
+    const typename TestFixture::size_type initial_size = v.size();
 
-    for (int i = 0; i + initial_size < this->C; ++i) {
+    for (typename TestFixture::size_type i = 0; i + initial_size < this->C; ++i) {
         int id = rand();
-        const auto val = this->GetValue(id);
+        const TypeParam val = this->GetValue(id);
         v.push_back(val);
 
         EXPECT_EQ(v.size(), initial_size + i + 1);
@@ -399,16 +399,16 @@ TYPED_TEST(StaticVectorTests, PushBackByCopy) {
         EXPECT_EQ(val, this->GetValue(id));
     }
 
-    const auto val = this->GetValue(0);
+    const TypeParam val = this->GetValue(0);
     EXPECT_THROW(v.push_back(val),
         std::out_of_range);
 }
 
 TYPED_TEST(StaticVectorTests, PushBackByMove) {
     static_vector<TypeParam, this->C> v(3);
-    const auto initial_size = v.size();
+    const typename TestFixture::size_type initial_size = v.size();
 
-    for (int i = 0; i + initial_size < this->C; ++i) {
+    for (typename TestFixture::size_type i = 0; i + initial_size < this->C; ++i) {
         int id = rand();
         v.push_back(this->GetValue(id));
 
@@ -422,11 +422,11 @@ TYPED_TEST(StaticVectorTests, PushBackByMove) {
 
 TYPED_TEST(StaticVectorTests, FastPushBackByCopy) {
     static_vector<TypeParam, this->C> v(2);
-    const auto initial_size = v.size();
+    const typename TestFixture::size_type initial_size = v.size();
 
     for (int i = 0; i + initial_size < this->C; ++i) {
         int id = rand();
-        const auto val = this->GetValue(id);
+        const TypeParam val = this->GetValue(id);
         v.fast_push_back(val);
 
         EXPECT_EQ(v.size(), initial_size + i + 1);
@@ -437,9 +437,9 @@ TYPED_TEST(StaticVectorTests, FastPushBackByCopy) {
 
 TYPED_TEST(StaticVectorTests, FastPushBackByMove) {
     static_vector<TypeParam, this->C> v(3);
-    const auto initial_size = v.size();
+    const typename TestFixture::size_type initial_size = v.size();
 
-    for (int i = 0; i + initial_size < this->C; ++i) {
+    for (typename TestFixture::size_type i = 0; i + initial_size < this->C; ++i) {
         int id = rand();
         v.push_back(this->GetValue(id));
 
@@ -450,9 +450,9 @@ TYPED_TEST(StaticVectorTests, FastPushBackByMove) {
 
 TYPED_TEST(StaticVectorTests, EmplaceBack) {
     static_vector<TypeParam, this->C> v(3);
-    const auto initial_size = v.size();
+    const typename TestFixture::size_type initial_size = v.size();
 
-    for (int i = 0; i + initial_size < this->C; ++i) {
+    for (typename TestFixture::size_type i = 0; i + initial_size < this->C; ++i) {
         int id = rand();
         v.emplace_back(this->GetValue(id));
 
@@ -466,11 +466,11 @@ TYPED_TEST(StaticVectorTests, EmplaceBack) {
 
 TYPED_TEST(StaticVectorTests, FastEmplaceBack) {
     static_vector<TypeParam, this->C> v(2);
-    const auto initial_size = v.size();
+    const typename TestFixture::size_type initial_size = v.size();
 
-    for (int i = 0; i + initial_size < this->C; ++i) {
+    for (typename TestFixture::size_type i = 0; i + initial_size < this->C; ++i) {
         int id = rand();
-        const auto val = this->GetValue(id);
+        const TypeParam val = this->GetValue(id);
         v.fast_emplace_back(val);
 
         EXPECT_EQ(v.size(), initial_size + i + 1);
@@ -480,7 +480,7 @@ TYPED_TEST(StaticVectorTests, FastEmplaceBack) {
 }
 
 TYPED_TEST(StaticVectorTests, PopBack) {
-    const auto initial_size = 3;
+    const int initial_size = 3;
     auto v = this->GetVectorOfSize(initial_size);
 
     for (int i = initial_size - 1; i >= 0; --i) {
@@ -493,7 +493,7 @@ TYPED_TEST(StaticVectorTests, PopBack) {
 }
 
 TYPED_TEST(StaticVectorTests, SafePopBack) {
-    const auto initial_size = 3;
+    const int initial_size = 3;
     auto v = this->GetVectorOfSize(initial_size);
 
     for (int i = initial_size - 1; i >= 0; --i) {
@@ -552,8 +552,8 @@ TYPED_TEST(StaticVectorTests, PushPopBackMixed) {
 }
 
 TYPED_TEST(StaticVectorTests, TwoSwap) {
-    const auto v1_size = 5;
-    const auto v2_size = 3;
+    const int v1_size = 5;
+    const int v2_size = 3;
     auto v1 = this->GetVectorOfSize(v1_size);
     auto v2 = this->GetVectorOfSize(v2_size);
 
@@ -570,8 +570,8 @@ TYPED_TEST(StaticVectorTests, TwoSwap) {
 }
 
 TYPED_TEST(StaticVectorTests, OneSwap) {
-    const auto v1_size = 5;
-    const auto v2_size = 3;
+    const int v1_size = 5;
+    const int v2_size = 3;
     auto v1 = this->GetVectorOfSize(v1_size);
     auto v2 = this->GetVectorOfSize(v2_size);
 
@@ -607,16 +607,16 @@ TYPED_TEST(StaticVectorTests, InsertOneElementByCopyAtBeginToNonEmptyVector) {
 }
 
 TYPED_TEST(StaticVectorTests, InsertOneElementByCopyAtEndToNonEmptyVector) {
-    const auto initial_size = 5;
+    const int initial_size = 5;
     auto v = this->GetVectorOfSize(initial_size);
 
     this->InsertOneElementByCopy(v, initial_size, 13);
 }
 
 TYPED_TEST(StaticVectorTests, InsertOneElementByCopyInMiddleToNonEmptyVector) {
-    const auto initial_size = 5;
+    const int initial_size = 5;
     auto v = this->GetVectorOfSize(initial_size);
-    const auto pos = Random::rand(1, initial_size - 1);
+    const int pos = Random::rand(1, initial_size - 1);
 
     this->InsertOneElementByCopy(v, pos, 13);
 }
@@ -634,16 +634,16 @@ TYPED_TEST(StaticVectorTests, InsertOneElementByMoveAtBeginToNonEmptyVector) {
 }
 
 TYPED_TEST(StaticVectorTests, InsertOneElementByMoveAtEndToNonEmptyVector) {
-    const auto initial_size = 5;
+    const int initial_size = 5;
     auto v = this->GetVectorOfSize(initial_size);
 
     this->InsertOneElementByMove(v, initial_size, 13);
 }
 
 TYPED_TEST(StaticVectorTests, InsertOneElementByMoveInMiddleToNonEmptyVector) {
-    const auto initial_size = 5;
+    const int initial_size = 5;
     auto v = this->GetVectorOfSize(initial_size);
-    const auto pos = Random::rand(1, initial_size - 1);
+    const int pos = Random::rand(1, initial_size - 1);
     
     this->InsertOneElementByMove(v, pos, 13);
 }
@@ -661,14 +661,14 @@ TYPED_TEST(StaticVectorTests, InsertZeroElementsByFillAtBeginToNonEmptyVector) {
 }
 
 TYPED_TEST(StaticVectorTests, InsertZeroElementsByFillAtEndToNonEmptyVector) {
-    const auto initial_size = 5;
+    const int initial_size = 5;
     auto v = this->GetVectorOfSize(initial_size);
 
     this->InsertMultipleElementsByFill(v, initial_size, 0, 13);
 }
 
 TYPED_TEST(StaticVectorTests, InsertZeroElementsByFillInMiddleToNonEmptyVector) {
-    const auto initial_size = 5;
+    const int initial_size = 5;
     auto v = this->GetVectorOfSize(initial_size);
     int pos = Random::rand(1, initial_size - 1);
 
@@ -683,28 +683,194 @@ TYPED_TEST(StaticVectorTests, InsertMultipleElementsByFillToEmptyVector) {
 }
 
 TYPED_TEST(StaticVectorTests, InsertMultipleElementsByFillAtBeginToNonEmptyVector) {
-    const auto initial_size = 5;
+    const int initial_size = 5;
     auto v = this->GetVectorOfSize(initial_size);
-    int count = Random::rand<int>(1, this->C - initial_size);
+    const int count = Random::rand<int>(1, this->C - initial_size);
 
     this->InsertMultipleElementsByFill(v, 0, count, 13);
 }
 
 TYPED_TEST(StaticVectorTests, InsertMultipleElementsByFillAtEndToNonEmptyVector) {
-    const auto initial_size = 5;
+    const int initial_size = 5;
     auto v = this->GetVectorOfSize(initial_size);
-    int count = Random::rand<int>(1, this->C - initial_size);
+    const int count = Random::rand<int>(1, this->C - initial_size);
 
     this->InsertMultipleElementsByFill(v, initial_size, count, 13);
 }
 
 TYPED_TEST(StaticVectorTests, InsertMultipleElementsByFillInMiddleToNonEmptyVector) {
-    const auto initial_size = 5;
+    const int initial_size = 5;
     auto v = this->GetVectorOfSize(initial_size);
-    int count = Random::rand<int>(1, this->C - initial_size);
-    int pos = Random::rand(1, initial_size - 1);
+    const int count = Random::rand<int>(1, this->C - initial_size);
+    const int pos = Random::rand(1, initial_size - 1);
 
     this->InsertMultipleElementsByFill(v, pos, count, 13);
+}
+
+TYPED_TEST(StaticVectorTests, InsertZeroElementsByRangeToEmptyVector) {
+    static_vector<TypeParam, this->C> v;
+    TypeParam a[] = {
+        this->GetValue(0), this->GetValue(13), this->GetValue(10)
+    };
+    
+    this->InsertMultipleElementsByRange(v, 0, a, a);
+}
+
+TYPED_TEST(StaticVectorTests, InsertZeroElementsByRangeAtBeginToNonEmptyVector) {
+    auto v = this->GetVectorOfSize(6);
+    TypeParam a[] = {
+        this->GetValue(0), this->GetValue(13), this->GetValue(10)
+    };
+    
+    this->InsertMultipleElementsByRange(v, 0, a, a);
+}
+
+TYPED_TEST(StaticVectorTests, InsertZeroElementsByRangeAtEndToNonEmptyVector) {
+    const int initial_size = 6;
+    auto v = this->GetVectorOfSize(initial_size);
+    TypeParam a[] = {
+        this->GetValue(0), this->GetValue(13), this->GetValue(10)
+    };
+    
+    this->InsertMultipleElementsByRange(v, initial_size, a, a);
+}
+
+TYPED_TEST(StaticVectorTests, InsertZeroElementsByRangeInMiddleToNonEmptyVector) {
+    const int initial_size = 6;
+    auto v = this->GetVectorOfSize(initial_size);
+    const int pos = Random::rand(1, initial_size - 1);
+    TypeParam a[] = {
+        this->GetValue(0), this->GetValue(13), this->GetValue(10)
+    };
+    
+    this->InsertMultipleElementsByRange(v, pos, a, a);
+}
+
+TYPED_TEST(StaticVectorTests, InsertMultipleElementsByRangeAtBeginToNonEmptyVector) {
+    auto v = this->GetVectorOfSize(6);
+    TypeParam a[] = {
+        this->GetValue(0), this->GetValue(13), this->GetValue(10)
+    };
+    const int count = sizeof(a) / sizeof(a[0]);
+    
+    this->InsertMultipleElementsByRange(v, 0, a, a + count);
+}
+
+TYPED_TEST(StaticVectorTests, InsertMultipleElementsByRangeAtEndToNonEmptyVector) {
+    const int initial_size = 6;
+    auto v = this->GetVectorOfSize(initial_size);
+    TypeParam a[] = {
+        this->GetValue(0), this->GetValue(13), this->GetValue(10)
+    };
+    const int count = sizeof(a) / sizeof(a[0]);
+
+    this->InsertMultipleElementsByRange(v, initial_size, a, a + count);
+}
+
+TYPED_TEST(StaticVectorTests, InsertMultipleElementsByRangeInMiddleToNonEmptyVector) {
+    const int initial_size = 6;
+    auto v = this->GetVectorOfSize(initial_size);
+    const int pos = Random::rand(1, initial_size - 1);
+    TypeParam a[] = {
+        this->GetValue(0), this->GetValue(13), this->GetValue(10)
+    };
+    const int count = sizeof(a) / sizeof(a[0]);
+    
+    this->InsertMultipleElementsByRange(v, pos, a, a + count);
+}
+
+TYPED_TEST(StaticVectorTests, InsertZeroElementsByInitializerListToEmptyVector) {
+    static_vector<TypeParam, this->C> v;
+    std::initializer_list<TypeParam> ilist;
+    
+    this->InsertMultipleElementsByInitializerList(v, 0, ilist);
+}
+
+TYPED_TEST(StaticVectorTests, InsertZeroElementsByInitializerListAtBeginToNonEmptyVector) {
+    auto v = this->GetVectorOfSize(6);
+    std::initializer_list<TypeParam> ilist {
+        this->GetValue(49), this->GetValue(13)
+    };
+    
+    this->InsertMultipleElementsByInitializerList(v, 0, ilist);
+}
+
+TYPED_TEST(StaticVectorTests, InsertZeroElementsByInitializerListAtEndToNonEmptyVector) {
+    const int initial_size = 6;
+    auto v = this->GetVectorOfSize(initial_size);
+    std::initializer_list<TypeParam> ilist {
+        this->GetValue(49), this->GetValue(13)
+    };
+    
+    this->InsertMultipleElementsByInitializerList(v, initial_size, ilist);
+}
+
+TYPED_TEST(StaticVectorTests, InsertZeroElementsByInitializerListInMiddleToNonEmptyVector) {
+    const int initial_size = 6;
+    auto v = this->GetVectorOfSize(initial_size);
+    const int pos = Random::rand(1, initial_size - 1);
+    std::initializer_list<TypeParam> ilist {
+        this->GetValue(49), this->GetValue(13)
+    };
+    
+    this->InsertMultipleElementsByInitializerList(v, pos, ilist);
+}
+
+TYPED_TEST(StaticVectorTests, InsertMultipleElementsByInitializerListAtBeginToNonEmptyVector) {
+    auto v = this->GetVectorOfSize(6);
+    std::initializer_list<TypeParam> ilist {
+        this->GetValue(49), this->GetValue(13)
+    };
+    
+    this->InsertMultipleElementsByInitializerList(v, 0, ilist);
+}
+
+TYPED_TEST(StaticVectorTests, InsertMultipleElementsByInitializerListAtEndToNonEmptyVector) {
+    const int initial_size = 6;
+    auto v = this->GetVectorOfSize(initial_size);
+    std::initializer_list<TypeParam> ilist {
+        this->GetValue(49), this->GetValue(13)
+    };
+
+    this->InsertMultipleElementsByInitializerList(v, initial_size, ilist);
+}
+
+TYPED_TEST(StaticVectorTests, InsertMultipleElementsByInitializerListInMiddleToNonEmptyVector) {
+    const int initial_size = 6;
+    auto v = this->GetVectorOfSize(initial_size);
+    const int pos = Random::rand(1, initial_size - 1);
+    std::initializer_list<TypeParam> ilist {
+        this->GetValue(49), this->GetValue(13)
+    };
+    
+    this->InsertMultipleElementsByInitializerList(v, pos, ilist);
+}
+
+TYPED_TEST(StaticVectorTests, EmplaceOneElementByCopyToEmptyVector) {
+    static_vector<TypeParam, this->C> v;
+
+    this->EmplaceAt(v, 0, rand());
+}
+
+TYPED_TEST(StaticVectorTests, EmplaceOneElementByCopyAtBeginToNonEmptyVector) {
+    auto v = this->GetVectorOfSize(5);
+
+    this->EmplaceAt(v, 0, 13);
+}
+
+TYPED_TEST(StaticVectorTests, EmplaceOneElementByCopyAtEndToNonEmptyVector) {
+    const int initial_size = 5;
+    auto v = this->GetVectorOfSize(initial_size);
+
+    this->EmplaceAt(v, initial_size, 13);
+}
+
+TYPED_TEST(StaticVectorTests, EmplaceOneElementByCopyInMiddleToNonEmptyVector) {
+    const int initial_size = 5;
+    auto v = this->GetVectorOfSize(initial_size);
+    const int pos = Random::rand(1, initial_size - 1);
+
+    this->EmplaceAt(v, pos, 13);
 }
 
 int main(int argc, char* argv[]) {

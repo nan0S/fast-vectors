@@ -16,13 +16,24 @@ private:
     void SetUp() {}
     void TearDown() {}
 
+    void ExpectInsertedInAt(const sv& v, size_type pos,
+            size_type count, const sv& save);
+
 public:
     T GetValue(int id) { return id; }
     sv GetVectorOfSize(size_type size);
 
     void InsertOneElementByCopy(sv& v, size_type pos, int id);
     void InsertOneElementByMove(sv& v, size_type pos, int id);
-    void InsertMultipleElementsByFill(sv& v, size_type pos, size_type count, int id);
+    void InsertMultipleElementsByFill(sv& v, size_type pos,
+            size_type count, int id);
+    template<class InputIterator>
+    void InsertMultipleElementsByRange(sv& v, size_type pos,
+            InputIterator begin, InputIterator end);
+    void InsertMultipleElementsByInitializerList(sv& v, size_type pos,
+            std::initializer_list<T> ilist);
+
+    void EmplaceAt(sv& v, size_type pos, int id);
 };
 
 template<>
@@ -46,56 +57,103 @@ StaticVectorTests<T>::GetVectorOfSize(size_type size) {
 
 template<class T>
 void
+StaticVectorTests<T>::ExpectInsertedInAt(const sv& v, size_type pos,
+        size_type count, const sv& save) {
+    EXPECT_EQ(v.size(), save.size() + count);
+    for (size_type i = 0; i < pos; ++i)
+        EXPECT_EQ(v[i], save[i]);
+    for (size_type i = pos; i < save.size(); ++i)
+        EXPECT_EQ(v[count + i], save[i]);
+}
+
+template<class T>
+void
 StaticVectorTests<T>::InsertOneElementByCopy(sv& v, size_type pos, int id) {
     const sv save = v;
     const T val = GetValue(id);
-    const size_type initial_size = v.size();
     
     auto it = v.insert(v.begin() + pos, val);
 
-    EXPECT_EQ(v.size(), initial_size + 1);
+    ExpectInsertedInAt(v, pos, 1, save);
     EXPECT_EQ(it, v.begin() + pos);
     EXPECT_EQ(*it, val);
-    for (size_type i = 0; i < pos; ++i)
-        EXPECT_EQ(v[i], save[i]);
-    for (size_type i = pos; i < initial_size; ++i)
-        EXPECT_EQ(v[i + 1], save[i]);
 }
 
 template<class T>
 void
 StaticVectorTests<T>::InsertOneElementByMove(sv& v, size_type pos, int id) {
     const sv save = v;
-    const size_type initial_size = v.size();
     
     auto it = v.insert(v.begin() + pos, GetValue(id));
 
-    EXPECT_EQ(v.size(), initial_size + 1);
+    ExpectInsertedInAt(v, pos, 1, save);
     EXPECT_EQ(it, v.begin() + pos);
     EXPECT_EQ(*it, GetValue(id));
-    for (size_type i = 0; i < pos; ++i)
-        EXPECT_EQ(v[i], save[i]);
-    for (size_type i = pos; i < initial_size; ++i)
-        EXPECT_EQ(v[i + 1], save[i]);
 }
 
 template<class T>
 void
 StaticVectorTests<T>::InsertMultipleElementsByFill(sv& v, size_type pos, size_type count, int id) {
     const sv save = v;
-    const size_type initial_size = v.size();
     const T val = GetValue(id);
 
     auto it = v.insert(v.begin() + pos, count, val);
-    
-    EXPECT_EQ(v.size(), initial_size + count);
+
+    ExpectInsertedInAt(v, pos, count, save);
     EXPECT_EQ(it, v.begin() + pos);
-    for (size_type i = 0; i < pos; ++i)
-        EXPECT_EQ(v[i], save[i]);
     for (size_type i = 0; i < count; ++i)
         EXPECT_EQ(v[pos + i], val);
-    for (size_type i = pos; i < initial_size; ++i)
-        EXPECT_EQ(v[count + i], save[i]);
+}
+
+template<class T>
+template<class InputIterator>
+void
+StaticVectorTests<T>::InsertMultipleElementsByRange(sv& v, size_type pos,
+        InputIterator begin, InputIterator end) {
+    const sv save = v;
+    const size_type count = std::distance(begin, end);
+    T save_range[count];
+    std::copy(&*begin, &*end, save_range);
+
+    auto it = v.insert(v.begin() + pos, begin, end);
+
+    ExpectInsertedInAt(v, pos, count, save);
+    EXPECT_EQ(it, v.begin() + pos);
+    for (size_type i = 0; i < count; ++i, ++begin) {
+        EXPECT_EQ(*begin, save_range[i]);
+        EXPECT_EQ(v[pos + i], *begin);
+    }
+}
+
+template<class T>
+void
+StaticVectorTests<T>::InsertMultipleElementsByInitializerList(sv& v, size_type pos,
+        std::initializer_list<T> ilist) {
+    const sv save = v;
+    const size_type count = ilist.size();
+    T save_range[count];
+    std::copy(ilist.begin(), ilist.end(), save_range);
+
+    auto it = v.insert(v.begin() + pos, ilist);
+
+    ExpectInsertedInAt(v, pos, count, save);
+    EXPECT_EQ(it, v.begin() + pos);
+    for (size_type i = 0; i < count; ++i) {
+        EXPECT_EQ(ilist.begin()[i], save_range[i]);
+        EXPECT_EQ(v[pos + i], ilist.begin()[i]);
+    }
+}
+
+template<class T>
+void
+StaticVectorTests<T>::EmplaceAt(sv& v, size_type pos, int id) {
+    const sv save = v;
+    
+    auto it = v.emplace(v.begin() + pos, GetValue(id));
+
+    ExpectInsertedInAt(v, pos, 1, save);
+    EXPECT_EQ(it, v.begin() + pos);
+    EXPECT_EQ(*it, GetValue(id));
 }
 
 class TypeNames {

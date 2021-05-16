@@ -537,6 +537,7 @@ template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, const T& value) {
     auto position = const_cast<T*>(pos);
+    // TODO: unlikely or do better
     if (position == end())
         new (position) T(value);
     else {
@@ -595,6 +596,10 @@ template<class InputIterator, class>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, InputIterator first, InputIterator last) {
     auto position = const_cast<T*>(pos);
+    // TODO: unlikely or can do better
+    if (first == last)
+        return position;
+
     auto eptr = end();
     auto count = std::distance(first, last);
     auto rest = std::distance(position, eptr);
@@ -607,7 +612,7 @@ static_vector<T, C>::insert(const_iterator pos, InputIterator first, InputIterat
     else {
         mem::umove(position + count, position, eptr);
         mem::copy(position, first, rest);
-        mem::ucopy(position, first + rest, last);
+        mem::ucopy(eptr, first + rest, last);
     }
 
     m_length += count;
@@ -671,8 +676,18 @@ template<class T, len_t C>
 template<class... Args>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::emplace(const_iterator pos, Args&&... args) {
-    // TODO: improve when pos == end()
-    return insert(pos, T(std::forward<Args>(args)...));
+    auto position = const_cast<T*>(pos);
+    // TODO: unlikely or do better
+    if (position == end())
+        new (position) T(std::forward<Args>(args)...);
+    else {
+        mem::shiftr(position + 1, position, end());
+        // TODO: if args is of type T, we can do better
+        *position = T(std::forward<Args>(args)...);
+    }
+    ++m_length;
+
+    return position;
 }
 
 template<class T, len_t C>
