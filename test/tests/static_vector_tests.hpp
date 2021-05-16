@@ -18,6 +18,8 @@ private:
 
     void ExpectInsertedInAt(const sv& v, size_type pos,
             size_type count, const sv& save);
+    void ExpectErasedInAt(const sv& v, size_type pos,
+            size_type count, const sv& save);
 
 public:
     T GetValue(int id) { return id; }
@@ -34,6 +36,9 @@ public:
             std::initializer_list<T> ilist);
 
     void EmplaceAt(sv& v, size_type pos, int id);
+
+    void EraseOneElement(sv& v, size_type pos);
+    void EraseMultipleElements(sv& v, size_type pos, size_type count);
 };
 
 template<>
@@ -64,6 +69,17 @@ StaticVectorTests<T>::ExpectInsertedInAt(const sv& v, size_type pos,
         EXPECT_EQ(v[i], save[i]);
     for (size_type i = pos; i < save.size(); ++i)
         EXPECT_EQ(v[count + i], save[i]);
+}
+
+template<class T>
+void
+StaticVectorTests<T>::ExpectErasedInAt(const sv& v, size_type pos,
+        size_type count, const sv& save) {
+    EXPECT_EQ(v.size(), save.size() - count);
+    for (size_type i = 0; i < pos; ++i)
+        EXPECT_EQ(v[i], save[i]);
+    for (size_type i = pos; i < v.size(); ++i)
+        EXPECT_EQ(v[i], save[i + count]);
 }
 
 template<class T>
@@ -154,6 +170,31 @@ StaticVectorTests<T>::EmplaceAt(sv& v, size_type pos, int id) {
     ExpectInsertedInAt(v, pos, 1, save);
     EXPECT_EQ(it, v.begin() + pos);
     EXPECT_EQ(*it, GetValue(id));
+}
+
+template<class T>
+void
+StaticVectorTests<T>::EraseOneElement(sv& v, size_type pos) {
+    const sv save = v;
+    const size_type initial_size = v.size();
+
+    auto it = v.erase(v.begin() + pos);
+
+    ExpectErasedInAt(v, pos, pos == initial_size ? 0 : 1, save);
+    EXPECT_EQ(it, v.begin() + pos);
+}
+
+template<class T>
+void
+StaticVectorTests<T>::EraseMultipleElements(sv& v, size_type pos, size_type count) {
+    ASSERT_LE(pos + count, v.size());
+
+    const sv save = v;
+
+    auto it = v.erase(v.begin() + pos, v.begin() + pos + count);
+
+    ExpectErasedInAt(v, pos, count, save);
+    EXPECT_EQ(it, v.begin() + pos);
 }
 
 class TypeNames {

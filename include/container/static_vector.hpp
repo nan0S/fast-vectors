@@ -640,11 +640,14 @@ template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::erase(const_iterator first, const_iterator last) {
     auto f = const_cast<T*>(first);
-    auto l = const_cast<T*>(last);
-    auto e = end();
-    mem::shiftl(f, l, e);
-    mem::destroy(f + (e - l), e);
-    m_length -= l - f;
+    // TODO: unlikely, maybe can do better
+    if (first != last) {
+        auto l = const_cast<T*>(last);
+        auto e = end();
+        mem::shiftl(f, l, e);
+        mem::destroy(f + (e - l), e);
+        m_length -= l - f;
+    }
 
     return f;
 }

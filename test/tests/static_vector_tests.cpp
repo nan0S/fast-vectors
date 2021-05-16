@@ -586,6 +586,41 @@ TYPED_TEST(StaticVectorTests, OneSwap) {
         EXPECT_EQ(v2[i], this->GetValue(v2.size() - 1 - i));
 }
 
+TYPED_TEST(StaticVectorTests, StdTwoSwap) {
+    const int v1_size = 5;
+    const int v2_size = 3;
+    auto v1 = this->GetVectorOfSize(v1_size);
+    auto v2 = this->GetVectorOfSize(v2_size);
+
+    std::reverse(v1.begin(), v1.end());
+    std::swap(v1, v2);
+    std::swap(v2, v1);
+
+    EXPECT_EQ(v1.size(), v1_size);
+    EXPECT_EQ(v2.size(), v2_size);
+    for (typename TestFixture::size_type i = 0; i < v1.size(); ++i)
+        EXPECT_EQ(v1[i], this->GetValue(v1.size() - 1 - i));
+    for (typename TestFixture::size_type i = 0; i < v2.size(); ++i)
+        EXPECT_EQ(v2[i], this->GetValue(i));
+}
+
+TYPED_TEST(StaticVectorTests, StdOneSwap) {
+    const int v1_size = 5;
+    const int v2_size = 3;
+    auto v1 = this->GetVectorOfSize(v1_size);
+    auto v2 = this->GetVectorOfSize(v2_size);
+
+    std::reverse(v1.begin(), v1.end());
+    std::swap(v1, v2);
+
+    EXPECT_EQ(v1.size(), v2_size);
+    EXPECT_EQ(v2.size(), v1_size);
+    for (typename TestFixture::size_type i = 0; i < v1.size(); ++i)
+        EXPECT_EQ(v1[i], this->GetValue(i));
+    for (typename TestFixture::size_type i = 0; i < v2.size(); ++i)
+        EXPECT_EQ(v2[i], this->GetValue(v2.size() - 1 - i));
+}
+
 TYPED_TEST(StaticVectorTests, Clear) {
     auto v = this->GetVectorOfSize(5);
     
@@ -871,6 +906,71 @@ TYPED_TEST(StaticVectorTests, EmplaceOneElementByCopyInMiddleToNonEmptyVector) {
     const int pos = Random::rand(1, initial_size - 1);
 
     this->EmplaceAt(v, pos, 13);
+}
+
+TYPED_TEST(StaticVectorTests, EraseBeginFromNonEmptyVector) {
+    auto v = this->GetVectorOfSize(5);
+
+    this->EraseOneElement(v, 0);
+}
+
+TYPED_TEST(StaticVectorTests, EraseEndFromNonEmptyVector) {
+    const int initial_size = 5;
+    auto v = this->GetVectorOfSize(initial_size);
+    
+    this->EraseOneElement(v, initial_size - 1);
+}
+
+TYPED_TEST(StaticVectorTests, EraseZeroElementsFromEmptyVector) {
+    static_vector<TypeParam, this->C> v;
+    
+    this->EraseMultipleElements(v, 0, 0);
+}
+
+TYPED_TEST(StaticVectorTests, EraseZeroElementsAtBeginFromNonEmptyVector) {
+    auto v = this->GetVectorOfSize(5);
+    
+    this->EraseMultipleElements(v, 0, 0);
+}
+
+TYPED_TEST(StaticVectorTests, EraseZeroElemensAtEndFromNonEmptyVector) {
+    const int initial_size = 5;
+    auto v = this->GetVectorOfSize(initial_size);
+    
+    this->EraseMultipleElements(v, initial_size, 0);
+}
+
+TYPED_TEST(StaticVectorTests, EraseAllElementsFromNonEmptyVector) {
+    const int initial_size = 5;
+    auto v = this->GetVectorOfSize(initial_size);
+    
+    this->EraseMultipleElements(v, 0, initial_size);
+    EXPECT_TRUE(v.empty());
+}
+
+TYPED_TEST(StaticVectorTests, EraseMultipleElementsAtBeginFromNonEmptyVector) {
+    const int initial_size = 5;
+    auto v = this->GetVectorOfSize(initial_size);
+    const int count = Random::rand(1, initial_size - 1);
+    
+    this->EraseMultipleElements(v, 0, count);
+}
+
+TYPED_TEST(StaticVectorTests, EraseMultipleElementsToEndFromNonEmptyVector) {
+    const int initial_size = 5;
+    auto v = this->GetVectorOfSize(initial_size);
+    const int pos = Random::rand(1, initial_size - 1);
+    
+    this->EraseMultipleElements(v, pos, initial_size - pos);
+}
+
+TYPED_TEST(StaticVectorTests, EraseMutipleElementsInMiddleFromNonEmptyVector) {
+    const int initial_size = 7;
+    auto v = this->GetVectorOfSize(initial_size);
+    const int pos = Random::rand(1, initial_size - 2);
+    const int count = Random::rand(1, initial_size - 1 - pos);
+
+    this->EraseMultipleElements(v, pos, count);
 }
 
 int main(int argc, char* argv[]) {
