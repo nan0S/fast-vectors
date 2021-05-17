@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#define CPP_ABOVE_17 __cplusplus > 201703L
+
 #define ON test_type::do_print = true
 #define OFF test_type::do_print = false
 
@@ -18,6 +20,15 @@ public:
     operator int();
 
     friend bool operator==(const test_type& x, const test_type& y);
+    friend bool operator!=(const test_type& x, const test_type& y);
+    friend bool operator<(const test_type& x, const test_type& y);
+    friend bool operator<=(const test_type& x, const test_type& y);
+    friend bool operator>(const test_type& x, const test_type& y);
+    friend bool operator>=(const test_type& x, const test_type& y);
+#ifdef CPP_ABOVE_17
+    auto operator<=>(const test_type& y) const = default;
+#endif
+
     friend std::ostream& operator<<(std::ostream& out, const test_type& o);
 
 public:

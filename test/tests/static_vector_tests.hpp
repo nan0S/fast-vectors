@@ -18,8 +18,6 @@ private:
 
     void ExpectInsertedInAt(const sv& v, size_type pos,
             size_type count, const sv& save);
-    void ExpectErasedInAt(const sv& v, size_type pos,
-            size_type count, const sv& save);
 
 public:
     T GetValue(int id) { return id; }
@@ -39,6 +37,9 @@ public:
 
     void EraseOneElement(sv& v, size_type pos);
     void EraseMultipleElements(sv& v, size_type pos, size_type count);
+
+    void ExpectErasedInAt(const sv& v, size_type pos,
+            size_type count, const sv& save);
 };
 
 template<>

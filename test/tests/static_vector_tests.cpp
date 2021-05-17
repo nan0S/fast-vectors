@@ -973,6 +973,416 @@ TYPED_TEST(StaticVectorTests, EraseMutipleElementsInMiddleFromNonEmptyVector) {
     this->EraseMultipleElements(v, pos, count);
 }
 
+#if CPP_ABOVE_17
+
+TYPED_TEST(StaticVectorTests, EraseByValueFromEmptyVector) {
+    static_vector<TypeParam, this->C> v;
+    
+    auto count = std::erase(v, this->GetValue(0));
+
+    EXPECT_EQ(count, 0);
+    EXPECT_TRUE(v.empty());
+}
+
+TYPED_TEST(StaticVectorTests, EraseByValueNothingFromNonEmptyVector) {
+    const int initial_size =  5;
+    auto v = this->GetVectorOfSize(initial_size);
+
+    auto count = std::erase(v, this->GetValue(13));
+
+    EXPECT_EQ(count, 0);
+    EXPECT_EQ(v.size(), initial_size);
+}
+
+TYPED_TEST(StaticVectorTests, EraseByValueOneValueFromBeginFromNonEmptyVector) {
+    auto v = this->GetVectorOfSize(5);
+    const auto save = v;
+
+    auto count = std::erase(v, this->GetValue(0));
+
+    ASSERT_EQ(count, 1);
+    this->ExpectErasedInAt(v, 0, 1, save);
+}
+
+TYPED_TEST(StaticVectorTests, EraseByValueOneValueFromEndFromNonEmptyVector) {
+    const int initial_size = 5;
+    auto v = this->GetVectorOfSize(initial_size);
+    const auto save = v;
+
+    auto count = std::erase(v, this->GetValue(4));
+
+    ASSERT_EQ(count, 1);
+    this->ExpectErasedInAt(v, initial_size - 1, 1, save);
+}
+
+TYPED_TEST(StaticVectorTests, EraseByValueOneValueInMiddleFromNonEmptyVector) {
+    auto v = this->GetVectorOfSize(5);
+    const auto save = v;
+
+    auto count = std::erase(v, this->GetValue(2));
+
+    ASSERT_EQ(count, 1);
+    this->ExpectErasedInAt(v, 2, 1, save);
+}
+
+TYPED_TEST(StaticVectorTests, EraseByValueMultipleValuesInOneBlockFromNonEmptyVector) {
+    static_vector<TypeParam, this->C> v {
+        this->GetValue(0), this->GetValue(2), this->GetValue(2), this->GetValue(2)
+    };
+    const auto save = v;
+
+    auto count = std::erase(v, this->GetValue(2));
+
+    ASSERT_EQ(count, 3);
+    this->ExpectErasedInAt(v, 1, 3, save);
+}
+
+TYPED_TEST(StaticVectorTests, EraseByValueMultipleValuesScatteredFromNonEmptyVector) {
+    static_vector<TypeParam, this->C> v {
+        this->GetValue(0), this->GetValue(0), this->GetValue(13),
+        this->GetValue(4), this->GetValue(0), this->GetValue(1),
+        this->GetValue(0), this->GetValue(1), this->GetValue(0)
+    };
+    const static_vector<TypeParam, this->C> expected_result {
+        this->GetValue(13), this->GetValue(4), this->GetValue(1),
+        this->GetValue(1)
+    };
+
+    auto count = std::erase(v, this->GetValue(0));
+
+    ASSERT_EQ(count, 5);
+    EXPECT_EQ(v, expected_result);
+}
+
+TYPED_TEST(StaticVectorTests, EraseIfByValueFromEmptyVector) {
+    static_vector<TypeParam, this->C> v;
+    
+    auto count = std::erase_if(v, [](const TypeParam&){
+        return false;
+    });
+
+    EXPECT_EQ(count, 0);
+    EXPECT_TRUE(v.empty());
+}
+
+TYPED_TEST(StaticVectorTests, EraseIfByValueNothingFromNonEmptyVector) {
+    const int initial_size =  5;
+    auto v = this->GetVectorOfSize(initial_size);
+
+    auto count = std::erase_if(v, [this](const TypeParam& x) {
+        return x == this->GetValue(13);
+    });
+
+    EXPECT_EQ(count, 0);
+    EXPECT_EQ(v.size(), initial_size);
+}
+
+TYPED_TEST(StaticVectorTests, EraseIfByValueOneValueFromBeginFromNonEmptyVector) {
+    auto v = this->GetVectorOfSize(5);
+    const auto save = v;
+
+    auto count = std::erase_if(v, [this](const TypeParam& x){
+        return x == this->GetValue(0);
+    });
+
+    ASSERT_EQ(count, 1);
+    this->ExpectErasedInAt(v, 0, 1, save);
+}
+
+TYPED_TEST(StaticVectorTests, EraseIfByValueOneValueFromEndFromNonEmptyVector) {
+    const int initial_size = 5;
+    auto v = this->GetVectorOfSize(initial_size);
+    const auto save = v;
+
+    auto count = std::erase_if(v, [this](const TypeParam& x){
+        return x == this->GetValue(4);
+    });
+
+    ASSERT_EQ(count, 1);
+    this->ExpectErasedInAt(v, initial_size - 1, 1, save);
+}
+
+TYPED_TEST(StaticVectorTests, EraseIfByValueOneValueInMiddleFromNonEmptyVector) {
+    auto v = this->GetVectorOfSize(5);
+    const auto save = v;
+
+    auto count = std::erase_if(v, [this](const TypeParam& x){
+        return x == this->GetValue(2);
+    });
+
+    ASSERT_EQ(count, 1);
+    this->ExpectErasedInAt(v, 2, 1, save);
+}
+
+TYPED_TEST(StaticVectorTests, EraseIfByValueMultipleValuesInOneBlockFromNonEmptyVector) {
+    static_vector<TypeParam, this->C> v {
+        this->GetValue(0), this->GetValue(2), this->GetValue(2), this->GetValue(2)
+    };
+    const auto save = v;
+
+    auto count = std::erase_if(v, [this](const TypeParam& x){
+        return x == this->GetValue(2);
+    });
+
+    ASSERT_EQ(count, 3);
+    this->ExpectErasedInAt(v, 1, 3, save);
+}
+
+TYPED_TEST(StaticVectorTests, EraseIfByValueMultipleValuesScatteredFromNonEmptyVector) {
+    static_vector<TypeParam, this->C> v {
+        this->GetValue(0), this->GetValue(0), this->GetValue(13),
+        this->GetValue(4), this->GetValue(0), this->GetValue(1),
+        this->GetValue(0), this->GetValue(1), this->GetValue(0)
+    };
+    const static_vector<TypeParam, this->C> expected_result {
+        this->GetValue(13), this->GetValue(4), this->GetValue(1),
+        this->GetValue(1)
+    };
+
+    auto count = std::erase_if(v, [this](const TypeParam& x){
+        return x == this->GetValue(0);
+    });
+
+    ASSERT_EQ(count, 5);
+    EXPECT_EQ(v, expected_result);
+}
+
+TYPED_TEST(StaticVectorTests, EraseIfByValueMultipleValuesScatteredFromNonEmptyVector2) {
+    static_vector<TypeParam, this->C> v {
+        this->GetValue(0), this->GetValue(0), this->GetValue(13),
+        this->GetValue(4), this->GetValue(0), this->GetValue(1),
+        this->GetValue(0), this->GetValue(1), this->GetValue(0)
+    };
+
+    auto count = std::erase_if(v, [this](const TypeParam& x){
+        return x != this->GetValue(0);
+    });
+
+    ASSERT_EQ(count, 4);
+    ASSERT_EQ(v.size(), 5);
+    EXPECT_TRUE(std::all_of(v.begin(), v.end(), [this](const TypeParam& x){
+        return x == this->GetValue(0);
+    }));
+}
+
+#endif // CPP_ABOVE_17
+
+TYPED_TEST(StaticVectorTests, EmptyVectorsAreEqual) {
+    static_vector<TypeParam, this->C> v1, v2;
+    
+    EXPECT_TRUE(v1 == v2);
+}
+
+TYPED_TEST(StaticVectorTests, EqualIndependentNonEmptyVectorsAreEqual) {
+    static_vector<TypeParam, this->C> v1 {
+        this->GetValue(0), this->GetValue(13)
+    };
+    static_vector<TypeParam, this->C> v2 {
+        this->GetValue(0), this->GetValue(13)
+    };
+
+    EXPECT_TRUE(v1 == v2);
+}
+
+TYPED_TEST(StaticVectorTests, CopiedVectorIsEqualToOriginal) {
+    const int initial_size = Random::rand(2, 8);
+    static_vector<TypeParam, this->C> v1;
+    for (int i = 0; i < initial_size; ++i)
+        v1.push_back(this->GetValue(i));
+    auto v2 = v1;
+
+    EXPECT_TRUE(v1 == v2);
+}
+
+TYPED_TEST(StaticVectorTests, EmptyVectorsAreNotDifferent) {
+    static_vector<TypeParam, this->C> v1, v2;
+    
+    EXPECT_FALSE(v1 != v2);
+}
+
+TYPED_TEST(StaticVectorTests, EqualIndependentNonEmptyVectorsAreNotDifferent) {
+    static_vector<TypeParam, this->C> v1 {
+        this->GetValue(0), this->GetValue(13)
+    };
+    static_vector<TypeParam, this->C> v2 {
+        this->GetValue(0), this->GetValue(13)
+    };
+
+    EXPECT_FALSE(v1 != v2);
+}
+
+TYPED_TEST(StaticVectorTests, CopiedVectorIsNotDifferentToOriginal) {
+    const int initial_size = Random::rand(2, 8);
+    static_vector<TypeParam, this->C> v1;
+    for (int i = 0; i < initial_size; ++i)
+        v1.push_back(this->GetValue(i));
+    auto v2 = v1;
+
+    EXPECT_FALSE(v1 != v2);
+}
+
+TYPED_TEST(StaticVectorTests, DifferentVectorsAreDifferentWhereOneIsEmpty) {
+    static_vector<TypeParam, this->C> v1;
+    auto v2 = this->GetVectorOfSize(3);
+
+    EXPECT_TRUE(v1 != v2);
+    EXPECT_TRUE(v2 != v1);
+}
+
+TYPED_TEST(StaticVectorTests, DifferentVectorsOfTheSameSizeAreDifferent) {
+    static_vector<TypeParam, this->C> v1 {
+        this->GetValue(2), this->GetValue(1), this->GetValue(0)
+    };
+    auto v2 = this->GetVectorOfSize(3);
+
+    EXPECT_TRUE(v1 != v2);
+}
+
+TYPED_TEST(StaticVectorTests, RelationalOperatorsTwoEmptyVectors) {
+    static_vector<TypeParam, this->C> v1, v2;
+    
+    EXPECT_TRUE(v1 <= v2);
+    EXPECT_TRUE(v1 >= v2);
+    EXPECT_TRUE(v2 <= v1);
+    EXPECT_TRUE(v2 >= v1);
+    EXPECT_FALSE(v1 < v2);
+    EXPECT_FALSE(v1 > v2);
+    EXPECT_FALSE(v2 > v1);
+    EXPECT_FALSE(v2 > v1);
+}
+
+TYPED_TEST(StaticVectorTests, RelationalOperatorsWithOneEmptyVector) {
+    static_vector<TypeParam, this->C> v1; 
+    auto v2 = this->GetVectorOfSize(5);
+ 
+    EXPECT_TRUE(v1 < v2);
+    EXPECT_TRUE(v1 <= v2);
+    EXPECT_FALSE(v1 > v2);
+    EXPECT_FALSE(v1 >= v2);
+    EXPECT_FALSE(v2 < v1);
+    EXPECT_FALSE(v2 <= v1);
+    EXPECT_TRUE(v2 > v1);
+    EXPECT_TRUE(v2 >= v1);
+}
+
+TYPED_TEST(StaticVectorTests, RelationalOperatorsWithTwoNonEmptyEqualVectors) {
+    auto v1 = this->GetVectorOfSize(5);
+    auto v2 = this->GetVectorOfSize(5);
+
+    EXPECT_TRUE(v1 <= v2);
+    EXPECT_TRUE(v1 >= v2);
+    EXPECT_TRUE(v2 <= v1);
+    EXPECT_TRUE(v2 >= v1);
+    EXPECT_FALSE(v1 < v2);
+    EXPECT_FALSE(v1 > v2);
+    EXPECT_FALSE(v2 < v1);
+    EXPECT_FALSE(v2 > v1);
+}
+
+TYPED_TEST(StaticVectorTests, RelationalOperatorsWithTwoNonEmptyEqualSizedVectors) {
+    auto v1 = this->GetVectorOfSize(5);
+    v1[2] = this->GetValue(1);
+    auto v2 = this->GetVectorOfSize(5);
+
+    EXPECT_TRUE(v1 <= v2);
+    EXPECT_FALSE(v1 >= v2);
+    EXPECT_FALSE(v2 <= v1);
+    EXPECT_TRUE(v2 >= v1);
+    EXPECT_TRUE(v1 < v2);
+    EXPECT_FALSE(v1 > v2);
+    EXPECT_FALSE(v2 < v1);
+    EXPECT_TRUE(v2 > v1);
+}
+
+TYPED_TEST(StaticVectorTests, RelationalOperatorsWithTwoNonEmptyDifferentSizedVectorsOnePrefixOfAnother) {
+    auto v1 = this->GetVectorOfSize(4);
+    auto v2 = this->GetVectorOfSize(5);
+
+    EXPECT_TRUE(v1 <= v2);
+    EXPECT_FALSE(v1 >= v2);
+    EXPECT_FALSE(v2 <= v1);
+    EXPECT_TRUE(v2 >= v1);
+    EXPECT_TRUE(v1 < v2);
+    EXPECT_FALSE(v1 > v2);
+    EXPECT_FALSE(v2 < v1);
+    EXPECT_TRUE(v2 > v1);
+}
+
+TYPED_TEST(StaticVectorTests, RelationalOperatorsWithTwoNonEmptyDifferentVectors) {
+    static_vector<TypeParam, this->C> v1 {
+        this->GetValue(0), this->GetValue(2), this->GetValue(1)
+    };
+    static_vector<TypeParam, this->C> v2 {
+        this->GetValue(0), this->GetValue(9)
+    };
+    
+    EXPECT_TRUE(v1 <= v2);
+    EXPECT_FALSE(v1 >= v2);
+    EXPECT_FALSE(v2 <= v1);
+    EXPECT_TRUE(v2 >= v1);
+    EXPECT_TRUE(v1 < v2);
+    EXPECT_FALSE(v1 > v2);
+    EXPECT_FALSE(v2 < v1);
+    EXPECT_TRUE(v2 > v1);
+}
+
+#ifdef CPP_ABOVE_17
+
+TYPED_TEST(StaticVectorTests, ThreeWayCompareOfEmptyVectors) {
+    static_vector<TypeParam, this->C> v1;
+    static_vector<TypeParam, this->C> v2;
+
+    EXPECT_TRUE((v1 <=> v2) == 0);
+    EXPECT_TRUE((v2 <=> v1) == 0);
+}
+
+TYPED_TEST(StaticVectorTests, ThreeWayCompareOfOneEmpty) {
+    static_vector<TypeParam, this->C> v1;
+    auto v2 = this->GetVectorOfSize(3);
+    
+    EXPECT_TRUE((v1 <=> v2) < 0);
+    EXPECT_TRUE((v2 <=> v1) > 0);
+}
+
+TYPED_TEST(StaticVectorTests, ThreeWayCompareOfNonEmptyEqualVectors) {
+    auto v1 = this->GetVectorOfSize(3);
+    auto v2 = this->GetVectorOfSize(3);
+
+    EXPECT_TRUE((v1 <=> v2) == 0);
+    EXPECT_TRUE((v2 <=> v1) == 0);
+}
+
+TYPED_TEST(StaticVectorTests, ThreeWayCompareOfNonEmptyEqualSizedVectors) {
+    auto v1 = this->GetVectorOfSize(3);
+    auto v2 = this->GetVectorOfSize(3);
+    v2[1] = this->GetValue(3);
+
+    EXPECT_TRUE((v1 <=> v2) < 0);
+    EXPECT_TRUE((v2 <=> v1) > 0);
+}
+
+TYPED_TEST(StaticVectorTests, ThreeWayCompareOfNonEmptyDifferentSizedVectorsOnePrefixOfOther) {
+    auto v1 = this->GetVectorOfSize(3);
+    auto v2 = this->GetVectorOfSize(4);
+
+    EXPECT_TRUE((v1 <=> v2) < 0);
+    EXPECT_TRUE((v2 <=> v1) > 0);
+}
+
+TYPED_TEST(StaticVectorTests, ThreeWayCompareOfNonEmptyDifferentVectors) {
+    static_vector<TypeParam, this->C> v1 {
+        this->GetValue(0), this->GetValue(2), this->GetValue(1)
+    };
+    static_vector<TypeParam, this->C> v2 {
+        this->GetValue(0), this->GetValue(9)
+    };
+
+    EXPECT_TRUE((v1 <=> v2) < 0);
+    EXPECT_TRUE((v2 <=> v1) > 0);
+}
+
+#endif // CPP_ABOVE_17
+
 int main(int argc, char* argv[]) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

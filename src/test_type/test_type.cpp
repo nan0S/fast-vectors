@@ -56,6 +56,26 @@ bool operator==(const test_type& x, const test_type& y) {
     return x.val == y.val;
 }
 
+bool operator!=(const test_type& x, const test_type& y) {
+    return x.val != y.val;
+}
+
+bool operator<(const test_type& x, const test_type& y) {
+    return x.val < y.val;
+}
+
+bool operator<=(const test_type& x, const test_type& y) {
+    return x.val <= y.val;
+}
+
+bool operator>(const test_type& x, const test_type& y) {
+    return x.val > y.val;
+}
+
+bool operator>=(const test_type& x, const test_type& y) {
+    return x.val >= y.val;
+}
+
 std::ostream& operator<<(std::ostream& out, const test_type& o) {
     return out << o.val;
 }
