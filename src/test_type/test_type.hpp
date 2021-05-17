@@ -25,7 +25,7 @@ public:
     friend bool operator<=(const test_type& x, const test_type& y);
     friend bool operator>(const test_type& x, const test_type& y);
     friend bool operator>=(const test_type& x, const test_type& y);
-#ifdef CPP_ABOVE_17
+#if CPP_ABOVE_17
     auto operator<=>(const test_type& y) const = default;
 #endif
 
