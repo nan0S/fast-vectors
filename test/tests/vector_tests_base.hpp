@@ -196,22 +196,6 @@ TYPED_TEST(VectorTestsBase, IsSizeChanging) {
     EXPECT_EQ(v.size(), 0);
 }
 
-TYPED_TEST(VectorTestsBase, IsMaxSizeConstantAndCorrect) {
-    typename TestFixture::vector v;
-    
-    EXPECT_EQ(v.max_size(), this->C);
-    v.resize(5);
-    EXPECT_EQ(v.max_size(), this->C);
-}
-
-TYPED_TEST(VectorTestsBase, IsCapacityConstantAndCorrect) {
-    typename TestFixture::vector v;
-    
-    EXPECT_EQ(v.capacity(), this->C);
-    v.resize(5);
-    EXPECT_EQ(v.capacity(), this->C);
-}
-
 TYPED_TEST(VectorTestsBase, IsVectorInitiallyEmpty) {
     typename TestFixture::vector v;
     
@@ -400,9 +384,6 @@ TYPED_TEST(VectorTestsBase, PushBackByCopy) {
         EXPECT_EQ(v.back(), val);
         EXPECT_EQ(val, this->GetValue(id));
     }
-
-    const TypeParam val = this->GetValue(0);
-    EXPECT_ANY_THROW(v.push_back(val));
 }
 
 TYPED_TEST(VectorTestsBase, PushBackByMove) {
@@ -416,8 +397,6 @@ TYPED_TEST(VectorTestsBase, PushBackByMove) {
         EXPECT_EQ(v.size(), initial_size + i + 1);
         EXPECT_EQ(v.back(), this->GetValue(id));
     }
-
-    EXPECT_ANY_THROW(v.push_back(this->GetValue(0)));
 }
 
 TYPED_TEST(VectorTestsBase, FastPushBackByCopy) {
@@ -460,8 +439,6 @@ TYPED_TEST(VectorTestsBase, EmplaceBack) {
         EXPECT_EQ(v.size(), initial_size + i + 1);
         EXPECT_EQ(v.back(), this->GetValue(id));
     }
-
-    EXPECT_ANY_THROW(v.push_back(this->GetValue(0)));
 }
 
 TYPED_TEST(VectorTestsBase, FastEmplaceBack) {
