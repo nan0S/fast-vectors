@@ -289,33 +289,33 @@ int main() {
 
     info("<int>", 1);
     experiment<bstatic_vector, int>(
-        "boost::static_vector", 1000, 10);
+        "boost::static_vector", 500, 20);
     experiment<ustatic_vector, int>(
-        "uwr::static_vector", 1000, 10);
+        "uwr::static_vector", 500, 20);
 
     info("<std::string>", 1);
     experiment<bstatic_vector, std::string>(
-        "boost::static_vector", 1000, 10);
+        "boost::static_vector", 300, 20);
     experiment<ustatic_vector, std::string>(
-        "uwr::static_vector", 1000, 10);
+        "uwr::static_vector", 300, 20);
 
     info("<test_type>", 1);
     experiment<bstatic_vector, test_type>(
-        "boost::static_vector", 1000, 10);
+        "boost::static_vector", 300, 20);
     experiment<ustatic_vector, test_type>(
-        "uwr::static_vector", 1000, 10);
+        "uwr::static_vector", 300, 20);
 
     info("<int, std::string>", 1);
     experiment<bstatic_vector, int, std::string>(
-        "boost::static_vector", 1000, 10);
+        "boost::static_vector", 200, 20);
     experiment<ustatic_vector, int, std::string>(
-        "uwr::static_vector", 1000, 10);
+        "uwr::static_vector", 200, 20);
 
     info("<int, std::string, std::array<int, 10>>", 1);
     experiment<bstatic_vector, int, std::string, std::array<int, 10>>(
-        "boost::static_vector>", 1000, 10);
+        "boost::static_vector>", 100, 30);
     experiment<ustatic_vector, int, std::string, std::array<int, 10>>(
-        "uwr::static_vector>", 1000, 10);
+        "uwr::static_vector>", 100, 30);
 
     return 0;
 }
