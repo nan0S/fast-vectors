@@ -210,19 +210,9 @@ vector<T>& vector<T>::operator=(const vector<T>& other) noexcept {
 template<class T>
 constexpr
 vector<T>& vector<T>::operator=(vector<T>&& other) noexcept {
-    auto ptr = data();
-    auto optr = other.data();
-
-    if (other.m_length < m_length) {
-        destroy(ptr + other.m_length, ptr + m_length);
-        move(ptr, optr, other.m_length);
-    }
-    else {
-        move(ptr, optr, m_length);
-        umove(ptr + m_length, optr + m_length, optr + other.m_length);
-    }
-
-    m_length = other.m_length;
+    std::swap(m_length, other.m_length);
+    std::swap(m_capacity, other.m_capacity);
+    std::swap(m_data, other.m_data);
 
     return *this;
 }
@@ -231,20 +221,12 @@ vector<T>& vector<T>::operator=(vector<T>&& other) noexcept {
 template<class T>
 constexpr
 vector<T>& vector<T>::operator=(std::initializer_list<T> ilist) noexcept {
-    auto ptr = data();
-    auto optr = ilist.begin();
-    auto ilist_len = ilist.size();
-
-    if (ilist_len < m_length) {
-        destroy(ptr + ilist_len, ptr + m_length);
-        copy(ptr, optr, ilist_len);
-    }
-    else {
-        copy(ptr, optr, m_length);
-        ucopy(ptr + m_length, optr + m_length, optr + ilist_len);
-    }
-
-    m_length = ilist_len;
+    if (ilist.size() > m_capacity)
+        mem::change_capacity(m_data, m_length, m_capacity, ilist.size());
+    
+    mem::destroy(m_data, m_data + m_length);
+    mem::ucopy(m_data, ilist.begin(), ilist.end());
+    m_length = ilist.size();
 
     return *this;
 }
@@ -336,36 +318,38 @@ vector<T>::max_size() const noexcept {
 template<class T>
 constexpr void
 vector<T>::resize(size_type n) {
-    if (n > m_length) {
-        auto ptr = data();
-        construct(ptr + m_length, ptr + n);
+    if (n > m_capacity)
+        mem::change_capacity(m_data, m_length, m_capacity, n);
+
+    if (n < m_length) {
+        mem::destroy(m_data + n, m_data + m_length);
         m_length = n;
     }
-    else if (n < m_length) {
-        auto ptr = data();
-        destroy(ptr + n, ptr + m_length);
-        m_length = n;
-    }
+    else if (n > m_length)
+        mem::construct(m_data + m_length, n - m_length);
+
+    m_length = n;
 }
 
 template<class T>
 constexpr void vector<T>::resize(size_type n, const T& val) {
-    if (n > m_length) {
-        auto ptr = data();
-        ufill(ptr + m_length, ptr + n, val);
+    if (n > m_capacity)
+        mem::change_capacity(m_data, m_length, m_capacity, n);
+
+    if (n < m_length) {
+        mem::destroy(m_data + n, m_data + m_length);
         m_length = n;
     }
-    else if (n < m_length) {
-        auto ptr = data();
-        destroy(ptr + n, ptr + m_length);
-        m_length = n;
-    }
+    else if (n > m_length)
+        mem::ufill(m_data + m_length, n - m_length, val);
+
+    m_length = n;
 }
 
 template<class T>
 constexpr typename vector<T>::size_type
 vector<T>::capacity() const noexcept {
-    return C;
+    return m_capacity;
 }
 
 template<class T>
@@ -376,66 +360,39 @@ vector<T>::empty() const noexcept {
 
 template<class T>
 constexpr void
-vector<T>::reserve(size_type) noexcept {
+vector<T>::reserve(size_type n) noexcept {
+    if (n <= m_capacity)
+        return;
+    n = n < 2 * m_capacity ? 2 * m_capacity : n;
+    mem::change_capacity(m_data, m_length, m_capacity, n);
 }
 
 template<class T>
 constexpr void
 vector<T>::shrink_to_fit() noexcept {
+    if (m_capacity < mem::map_threshold<T>)
+        mem::change_capacity(m_data, m_length, m_capacity, m_length);
 }
 
 template<class T>
 constexpr typename vector<T>::reference
 vector<T>::operator[](size_type n) {
-    return *data_at(n);
+    return m_data[n];
 }
 
 template<class T>
 constexpr typename vector<T>::const_reference
 vector<T>::operator[](size_type n) const {
-    return *data_at(n);
+    return m_data[n];
 }
 
 template<class T>
 constexpr typename vector<T>::reference
 vector<T>::at(size_type n) {
+    // TODO: unlikely
     if (n >= m_length)
         throw std::out_of_range("Index out of range: " + std::to_string(n));
-    return *data_at(n);
-}
-
-template<class T>
-constexpr typename vector<T>::reference
-vector<T>::front() {
-    return *data_at(0);
-}
-
-template<class T>
-constexpr typename vector<T>::const_reference
-vector<T>::front() const {
-    return *data_at(0);
-}
-
-template<class T>
-constexpr typename vector<T>::reference
-vector<T>::back() {
-    return *data_at(m_length - 1);
-}
-
-template<class T>
-constexpr typename vector<T>::const_reference
-vector<T>::back() const {
-    return *data_at(m_length - 1);
-}
-
-template<class T>
-constexpr T* vector<T>::data() noexcept {
-    return data_at(0);
-}
-
-template<class T>
-constexpr const T* vector<T>::data() const noexcept {
-    return data_at(0);
+    return m_data[n];
 }
 
 template<class T>
@@ -444,32 +401,68 @@ vector<T>::at(size_type n) const {
     // TODO: unlikely
     if (n >= m_length)
         throw std::out_of_range("Index out of range: " + std::to_string(n));
-    return *data_at(n);
+    return m_data[n];
+}
+
+template<class T>
+constexpr typename vector<T>::reference
+vector<T>::front() {
+    return m_data[0];
+}
+
+template<class T>
+constexpr typename vector<T>::const_reference
+vector<T>::front() const {
+    return m_data[0];
+}
+
+template<class T>
+constexpr typename vector<T>::reference
+vector<T>::back() {
+    return m_data[m_length - 1];
+}
+
+template<class T>
+constexpr typename vector<T>::const_reference
+vector<T>::back() const {
+    return m_data[m_length - 1];
+}
+
+template<class T>
+constexpr T*
+vector<T>::data() noexcept {
+    return m_data;
+}
+
+template<class T>
+constexpr const T*
+vector<T>::data() const noexcept {
+    return m_data;
 }
 
 template<class T>
 template<class InputIterator, class>
 constexpr void
 vector<T>::assign(InputIterator first, InputIterator last) {
-    auto n = static_cast<len_t>(std::distance(first, last));
-    auto ptr = data();
+    auto count = std::distance(first, last);
+    if (count > m_capacity)
+        mem::change_capacity(m_data, m_length, m_capacity, count);
 
-    if (n < m_length) {
-        destroy(ptr + n, ptr + m_length);
-        copy(ptr, first, n);
-    }
-    else {
-        copy(ptr, first, m_length);
-        ucopy(ptr + m_length, first + m_length, last);
-    }
-
-    m_length = n;
+    mem::destroy(m_data, m_data + m_length);
+    mem::ucopy(m_data, first, last);
+    
+    m_length = count;
 }
 
 template<class T>
 constexpr void
 vector<T>::assign(size_type n, const T& val) {
-    fill(data(), n, val);
+    if (n > m_capacity)
+        mem::change_capacity(m_data, m_length, m_capacity, n);
+
+    mem::destroy(m_data, m_data + m_length);
+    mem::ufill(m_data, n, val);
+
     m_length = n;
 }
 
@@ -482,37 +475,39 @@ vector<T>::assign(std::initializer_list<T> ilist) {
 template<class T>
 constexpr void
 vector<T>::push_back(const_reference value) {
-    // TODO: uncomment
-    if (m_length == C)
-        throw std::out_of_range("Out of bounds");
-    new (data() + m_length++) T(value);
+    mem::grow(m_data, m_length, m_capacity);
+    new (data() + m_length) T(value);
+    ++m_length;
 }
 
 template<class T>
 constexpr void
 vector<T>::fast_push_back(const_reference value) noexcept {
-    new (data() + m_length++) T(value);
+    new (m_data + m_length) T(value);
+    ++m_length;
 }
 
 template<class T>
 constexpr void
 vector<T>::push_back(T&& value) {
-    // TODO: uncomment
-    if (m_length == C)
-        throw std::out_of_range("Out of bounds");
-    new (data() + m_length++) T(std::move(value));
+    mem::grow(m_data, m_length, m_capacity);
+    new (m_data + m_length) T(std::forward<T>(value));
+    ++m_length;
 }
 
 template<class T>
 constexpr void
 vector<T>::fast_push_back(T&& value) noexcept {
-    new (data() + m_length++) T(std::move(value));
+    new (m_data + m_length) T(std::forward<T>(value));
+    ++m_length;
 }
 
 template<class T>
 constexpr void
 vector<T>::pop_back() {
-    destroy_at(data() + --m_length);
+    if constexpr (!std::is_trivially_destructible_v<T>)
+        back().~T();
+    --m_length;
 }
 
 template<class T>
@@ -520,7 +515,9 @@ constexpr void
 vector<T>::safe_pop_back() noexcept {
     if (m_length == 0)
         return;
-    destroy_at(data() + --m_length);
+    if constexpr (!std::is_trivially_destructible_v<T>)
+        back().~T();
+    --m_length;
 }
 
 template<class T>

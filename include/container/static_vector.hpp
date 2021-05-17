@@ -120,7 +120,8 @@ public:
 
 private:
     // TODO: maybe inline
-    constexpr T* data_at(size_type n) noexcept;
+    constexpr
+        T* data_at(size_type n) noexcept;
     constexpr const T* data_at(size_type n) const noexcept;
 
 private:
@@ -397,6 +398,16 @@ constexpr static_vector<T, C>::operator[](size_type n) const {
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::reference
 static_vector<T, C>::at(size_type n) {
+    // TODO: unlikely
+    if (n >= m_length)
+        throw std::out_of_range("Index out of range: " + std::to_string(n));
+    return *data_at(n);
+}
+
+template<class T, len_t C>
+constexpr typename static_vector<T, C>::const_reference
+static_vector<T, C>::at(size_type n) const {
+    // TODO: unlikely
     if (n >= m_length)
         throw std::out_of_range("Index out of range: " + std::to_string(n));
     return *data_at(n);
@@ -436,15 +447,6 @@ template<class T, len_t C>
 constexpr const T*
 static_vector<T, C>::data() const noexcept {
     return data_at(0);
-}
-
-template<class T, len_t C>
-constexpr typename static_vector<T, C>::const_reference
-static_vector<T, C>::at(size_type n) const {
-    // TODO: unlikely
-    if (n >= m_length)
-        throw std::out_of_range("Index out of range: " + std::to_string(n));
-    return *data_at(n);
 }
 
 template<class T, len_t C>
