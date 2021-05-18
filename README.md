@@ -31,16 +31,15 @@ Of course `-I` compilation flag is recommended to avoid typing the whole path.
 ```c
 /* main.cpp */
 
-#include <iostream>
 #include <uwr/container/static_vector.hpp>
 #include <uwr/container/vector.hpp>
 
 int main() {
-    static_vector<int, 5> sv { 1, 2, 3 };
+    uwr::static_vector<int, 5> sv { 1, 2, 3 };
     sv.push_back(10);
     sv.erase(sv.begin() + 1, sv.begin() + 3);
 
-    vector<std::string> v { "this", "is", "example" };
+    uwr::vector<std::string> v { "this", "is", "example" };
     v.push_back("code");
     v.insert(v.end(), "1");
     v.clear();
