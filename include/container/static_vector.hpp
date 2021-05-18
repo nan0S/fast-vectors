@@ -1,7 +1,12 @@
 #pragma once
 
+#define CPP_ABOVE_17 __cplusplus > 201703L
+
 #include <iterator>
 #include "../common/memory.hpp"
+#if CPP_ABOVE_17
+#include "../common/synth_three_way.hpp"
+#endif
 
 namespace uwr {
 
@@ -725,8 +730,6 @@ static_vector<T, C>::data_at(size_type n) const noexcept {
 }
 
 /* non-member operators  */
-#define CPP_ABOVE_17 __cplusplus > 201703L
-
 template<class T, len_t C>
 constexpr inline bool operator==(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs);
 template<class T, len_t C>
@@ -743,10 +746,8 @@ template<class T, len_t C>
 constexpr std::ostream& operator<<(std::ostream& out, const static_vector<T, C>& v);
 
 #if CPP_ABOVE_17
-
 template<class T, len_t C>
 constexpr inline auto operator<=>(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs);
-
 #endif
 
 /* non-member operators' implementations */
@@ -800,31 +801,15 @@ operator<<(std::ostream& out, const static_vector<T, C>& v) {
 
 #if CPP_ABOVE_17
 
-constexpr inline struct synth_three_way_t {
-    template<class T, std::totally_ordered_with<T> U>
-    auto operator()(const T& lhs, const U& rhs) {
-        if constexpr (std::three_way_comparable_with<T, U>)
-            return lhs <=> rhs;
-        else {
-            if (lhs == rhs)
-                return std::strong_ordering::equal;
-            else if (lhs < rhs)
-                return std::strong_ordering::less;
-            else
-                return std::strong_ordering::greater;
-        }
-    }
-} synth_three_way;
-
 template<class T, len_t C>
 constexpr auto
 operator<=>(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
     return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(),
                                                   rhs.begin(), rhs.end(),
-                                                  synth_three_way);
+                                                  mem::synth_three_way);
 }
 
-#endif // CPP_ABOVE_17
+#endif
 
 } // namespace uwr
 

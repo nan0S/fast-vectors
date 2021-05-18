@@ -64,6 +64,24 @@ void destroy(T* begin, T* end);
 template<class T>
 void destroy_at(T* addr);
 
+// TODO: remove
+template<class T>
+T_Move<T> 
+shiftr_data(T* begin, len_t end)
+{
+    memmove(begin + 1, begin, end * sizeof(T));
+}
+
+template<class T>
+NT_Move<T> 
+shiftr_data(T* begin, len_t end)
+{
+    auto end_p = begin + end;
+    new (end_p) T(std::move(*(end_p - 1)));
+    std::move_backward(begin, end_p - 1, end_p);
+    begin->~T();
+}
+
 /* assumption: begin < dest <= end and addresses >= end are uninitialized*/
 template<class T>
 T_Move<T> shiftr(T* dest, T* begin, T* end);
@@ -195,4 +213,4 @@ NT_Move_A<T> shiftl(T* dest, T* begin, T* end) {
     std::move(begin, end, dest);
 }
 
-} // namespace uwr
+} // namespace uwr::mem
