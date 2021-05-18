@@ -1,12 +1,21 @@
 #pragma once
 
+#define CPP_ABOVE_17 __cplusplus > 201703L
+
 #include <iterator>
+#include <limits>
 #include "../common/allocator.hpp"
+#if CPP_ABOVE_17
+#include "../common/synth_three_way.hpp"
+#endif
 
 namespace uwr {
 
+using len_t = mem::len_t;
+
 template<class T>
 class vector {
+public:
     using value_type = T;
     // TODO: restore to uing
     // using size_type = uint_fast32_t;
@@ -444,7 +453,7 @@ template<class T>
 template<class InputIterator, class>
 constexpr void
 vector<T>::assign(InputIterator first, InputIterator last) {
-    auto count = std::distance(first, last);
+    size_type count = std::distance(first, last);
     if (count > m_capacity)
         mem::change_capacity(m_data, m_length, m_capacity, count);
 
@@ -524,8 +533,12 @@ template<class T>
 constexpr typename vector<T>::iterator
 vector<T>::insert(const_iterator pos, const T& value) {
     auto position = const_cast<T*>(pos);
-    shiftr(position + 1, position, end());
-    *position = value;
+    auto m = std::distance(begin(), position);
+    mem::grow(m_data, m_length, m_capacity);
+    position = begin() + m;
+    if (position != end())
+        mem::shiftr_data(position, (end() - position));
+    new (position) T(value);
     ++m_length;
 
     return position;
@@ -535,8 +548,12 @@ template<class T>
 constexpr typename vector<T>::iterator
 vector<T>::insert(const_iterator pos, T&& value) {
     auto position = const_cast<T*>(pos);
-    shiftr(position + 1, position, end());
-    *position = std::move(value);
+    auto m = std::distance(begin(), position);
+    mem::grow(m_data, m_length, m_capacity);
+    position = begin() + m;
+    if (position != end())
+        mem::shiftr_data(position, (end() - position));
+    new (position) T(std::forward<T>(value));
     ++m_length;
 
     return position;
@@ -546,20 +563,24 @@ template<class T>
 constexpr typename vector<T>::iterator
 vector<T>::insert(const_iterator pos, size_type count, const T& value) {
     auto position = const_cast<T*>(pos);
-    auto eptr = end();
-    auto rest = static_cast<size_type>(std::distance(position, eptr));
-
-    // TODO: likely?
-    if (count < rest) {
-        shiftr(position + count, position, eptr);
-        fill(position, count, value);
+    if (m_length + count > m_capacity) {
+        auto m = std::distance(begin(), position);
+        size_type new_cap = std::max(m_length + count, m_capacity * 2);
+        mem::change_capacity(m_data, m_length, m_capacity, new_cap);
+        position = begin() + m;
+    }
+    auto end_ = end();
+    size_type rest = std::distance(position, end_);
+    if (rest > count) {
+        std::uninitialized_move(end_ - count, end_, end_);
+        std::move_backward(position, end_ - count, end_);
+        std::fill(position, position + count, value);
     }
     else {
-        umove(position + count, position, eptr);
-        fill(position, rest, value);
-        ufill(eptr, count - rest, value);
+        std::uninitialized_move(position, end_, position + count);
+        std::fill(position, end_, value);
+        std::uninitialized_fill(end_, position + count, value);
     }
-
     m_length += count;
 
     return position;
@@ -570,21 +591,25 @@ template<class InputIterator, class>
 constexpr typename vector<T>::iterator
 vector<T>::insert(const_iterator pos, InputIterator first, InputIterator last) {
     auto position = const_cast<T*>(pos);
-    auto eptr = end();
-    auto count = std::distance(first, last);
-    auto rest = std::distance(position, eptr);
-
-    // TODO: likely?
-    if (count < rest) {
-        shiftr(position + count, position, eptr);
-        copy(position, first, count);
+    size_type count = std::distance(first, last);
+    if (m_length + count > m_capacity) {
+        auto m = std::distance(begin(), position);
+        size_type new_cap = std::max(m_length + count, m_capacity * 2);
+        mem::change_capacity(m_data, m_length, m_capacity, new_cap);
+        position = begin() + m;
+    }
+    auto end_ = end();
+    size_type rest = std::distance(position, end_);
+    if (rest > count) {
+        std::uninitialized_move(end_ - count, end_, end_);
+        std::move_backward(position, end_ - count, end_);
+        std::copy(first, last, position);
     }
     else {
-        umove(position + count, position, eptr);
-        copy(position, first, rest);
-        ucopy(position, first + rest, last);
+        std::uninitialized_move(position, end_, position + count);
+        std::copy(first, first + rest, position);
+        std::uninitialized_copy(first + rest, last, end_);
     }
-
     m_length += count;
 
     return position;
@@ -600,7 +625,8 @@ template<class T>
 constexpr typename vector<T>::iterator
 vector<T>::erase(const_iterator pos) {
     auto position = const_cast<T*>(pos);
-    shiftl(position, position + 1, end());
+    if (position + 1 != end())
+        std::copy(position + 1, end(), position);
     pop_back();
 
     return position;
@@ -611,10 +637,11 @@ constexpr typename vector<T>::iterator
 vector<T>::erase(const_iterator first, const_iterator last) {
     auto f = const_cast<T*>(first);
     auto l = const_cast<T*>(last);
-    auto e = end();
-    shiftl(f, l, e);
-    destroy(f + (e - l), e);
-    m_length -= l - f;
+    auto n = std::distance(first, last);
+    if (last != end())
+        std::move(l, end(), f);
+    mem::destroy(end() - n, end());
+    m_length -= n;
 
     return f;
 }
@@ -622,23 +649,16 @@ vector<T>::erase(const_iterator first, const_iterator last) {
 template<class T>
 constexpr void
 vector<T>::swap(vector<T>& other) {
-    vector<T> *o1 = this, *o2 = &other;
-    size_type min_len = std::min(o1->m_length, o2->m_length);
-    for (size_type i = 0; i < min_len; ++i)
-        std::swap((*this)[i], other[i]);
-
-    if (o1->m_length != min_len)
-        std::swap(o1, o2);
-
-    umove(o1->begin() + min_len, o2->begin() + min_len, o2->end());
-    destroy(o2->begin() + min_len, o2->end());
-    std::swap(o1->m_length, o2->m_length);
+    using std::swap;
+    swap(m_data, other.m_data);
+    swap(m_length, other.m_length);
+    swap(m_capacity, other.m_capacity);
 }
 
 template<class T>
 constexpr void
 vector<T>::clear() noexcept {
-    destroy(data(), m_length);
+    mem::destroy(m_data, m_data + m_length);
     m_length = 0;
 }
 
@@ -654,34 +674,21 @@ template<class T>
 template<class... Args>
 constexpr void
 vector<T>::emplace_back(Args&&... args) {
-    // TODO: uncomment
-    if (m_length == C)
-        throw std::out_of_range("Out of bounds");
-    new (data() + m_length++) T(std::forward<Args>(args)...);
+    mem::grow(m_data, m_length, m_capacity);
+    new (m_data + m_length) T(std::forward<Args>(args)...);
+    ++m_length;
 }
 
 template<class T>
 template<class... Args>
 constexpr void
 vector<T>::fast_emplace_back(Args&&... args) noexcept {
-    new (data() + m_length++) T(std::forward<Args>(args)...);
+    new (m_data + m_length) T(std::forward<Args>(args)...);
+    ++m_length;
 }
 
-template<class T>
-constexpr T*
-vector<T>::data_at(size_type n) noexcept {
-    return reinterpret_cast<T*>(&m_data[n]);
-}
-
-template<class T>
-constexpr const T*
-vector<T>::data_at(size_type n) const noexcept {
-    return reinterpret_cast<const T*>(&m_data[n]);
-}
 
 /* non-member operators  */
-#define CPP_ABOVE_17 __cplusplus > 201703L
-
 template<class T>
 constexpr inline bool operator==(const vector<T>& lhs, const vector<T>& rhs);
 template<class T>
@@ -698,10 +705,8 @@ template<class T>
 constexpr std::ostream& operator<<(std::ostream& out, const vector<T>& v);
 
 #if CPP_ABOVE_17
-
 template<class T>
 constexpr inline auto operator<=>(const vector<T>& lhs, const vector<T>& rhs);
-
 #endif
 
 /* non-member operators' implementations */
@@ -755,55 +760,36 @@ operator<<(std::ostream& out, const vector<T>& v) {
 
 #if CPP_ABOVE_17
 
-constexpr inline struct synth_three_way_t {
-    template<class T, std::totally_ordered_with<T> U>
-    auto operator()(const T& lhs, const U& rhs) {
-        if constexpr (std::three_way_comparable_with<T, U>)
-            return lhs <=> rhs;
-        else {
-            if (lhs == rhs)
-                return std::strong_ordering::equal;
-            else if (lhs < rhs)
-                return std::strong_ordering::less;
-            else
-                return std::strong_ordering::greater;
-        }
-    }
-} synth_three_way;
-
 template<class T>
 constexpr auto
 operator<=>(const vector<T>& lhs, const vector<T>& rhs) {
     return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(),
                                                   rhs.begin(), rhs.end(),
-                                                  synth_three_way);
+                                                  mem::synth_three_way);
 }
 
-#endif // CPP_ABOVE_17
+#endif
 
 } // namespace uwr
 
 
 namespace std {
 
-/* non-member functions */
-template<class T, uwr::len_t C>
-constexpr void swap(uwr::vector<T>& x, uwr::vector<T>& y);
-
 #if CPP_ABOVE_17
 
-template<class T, uwr::len_t C, class U>
+/* non-member functions */
+template<class T, class U>
 constexpr typename uwr::vector<T>::size_type
 erase(uwr::vector<T>& c, const U& value);
 
-template<class T, uwr::len_t C, class Pred>
+template<class T, class Pred>
 constexpr typename uwr::vector<T>::size_type
 erase_if(uwr::vector<T>& c, Pred pred);
 
 #endif
 
 /* non-member functions' implementations */
-template<class T, uwr::len_t C>
+template<class T>
 constexpr void
 swap(uwr::vector<T>& x, uwr::vector<T>& y) {
     x.swap(y);
@@ -811,7 +797,7 @@ swap(uwr::vector<T>& x, uwr::vector<T>& y) {
 
 #if CPP_ABOVE_17
 
-template<class T, uwr::len_t C, class U>
+template<class T, class U>
 constexpr typename uwr::vector<T>::size_type
 erase(uwr::vector<T>& c, const U& value) {
     // TODO: possible optimizations?
@@ -822,7 +808,7 @@ erase(uwr::vector<T>& c, const U& value) {
     return r;
 }
 
-template<class T, uwr::len_t C, class Pred>
+template<class T, class Pred>
 constexpr typename uwr::vector<T>::size_type
 erase_if(uwr::vector<T>& c, Pred pred) {
     // TODO: possible optimizations?

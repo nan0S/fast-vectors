@@ -14,7 +14,7 @@ namespace uwr::mem {
     template<class T>
     T* allocate(len_t n);
     template<class T>
-    T* deallocate(T* p, len_t n);
+    void deallocate(T* p, len_t n);
 
     template<class T>
     len_t fix_capacity(len_t n);
@@ -65,7 +65,7 @@ namespace uwr::mem {
                 return (T*)mremap(data, capacity * sizeof(T),
                             n * sizeof(T), MREMAP_MAYMOVE);
             case 0:
-                return ::realloc(data, n * sizeof(T));
+                return (T*)::realloc(data, n * sizeof(T));
 
             default:
                 T* new_data = allocate<T>(n);

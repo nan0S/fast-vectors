@@ -1,4 +1,5 @@
 #include <vector.hpp>
+#include <boost/container/vector.hpp>
 
 template<class T>
 using vector_t = uwr::vector<T>;
