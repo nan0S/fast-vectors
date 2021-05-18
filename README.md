@@ -28,7 +28,7 @@ Of course `-I` compilation flag is recommended to avoid typing the whole path.
 
 # Example
 `make install`
-```cpp=
+```c
 /* main.cpp */
 
 #include <iostream>
