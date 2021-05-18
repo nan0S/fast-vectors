@@ -10,7 +10,7 @@ All vectors are implemented for `C++20` although they are guaranteed to be compa
 <!-- - `deque` (future) - double-ended vector, adding to front and back possible -->
 
 # Info
-Besides container implementations, repository containts different benchmarks and tests. If you are interested in using the containers only, type `make install` or copy whole `include` folder to your project destination and include proper header (e.g. `#include "include/container/static_vector.hpp"`).
+Besides container implementations, repository containts different benchmarks and tests. If you are interested in using the containers only, type `make install` or copy whole `include` folder to your project destination, and include proper header (e.g. `#include "uwr/container/static_vector.hpp"` if you did `make install` or `#include "include/container/static_vector.hpp"` if you copied `include` directory manually, of course `-I` compilation flag is recommended to avoid typing whole path).
 
 # Usage:
 - `make install` - install code locally
