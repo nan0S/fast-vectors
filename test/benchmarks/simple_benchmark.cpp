@@ -101,7 +101,7 @@ void test4(const std::string& name) {
 }
 
 int main() {
-    info("simple benchmark:", 0);
+    info("simple benchmark (static_vector):", 0);
 
     #if 1
     constexpr int TEST1_TIMES = 50000;

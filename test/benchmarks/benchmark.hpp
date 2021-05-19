@@ -1,21 +1,17 @@
 #include <bits/stdc++.h>
 
-#include <static_vector.hpp>
-#include <boost/container/static_vector.hpp>
 #include <boost/format.hpp>
-#include <test_type/test_type.hpp>
 #include <utils/utils.hpp>
 
 template<template<class> class V, class... Ts>
-class static_vector_env {
+class vector_bench_env {
 public:
-    static_vector_env(int seed) :
+    vector_bench_env(int seed) :
         gen(seed) {}
 
     void run_simulation(int iters=1000) {
         for (int i = 0; i < iters; ++i) {
             (dispatch_action<Ts>(i), ...);
-            // std::cout << boost::format("iter = %s, length_sum = %ld\n") % i % get_length_sum();
         }
     }
 
@@ -100,7 +96,7 @@ private:
 
         while (q--) {
             auto& picked = typed_env[pick_dist(gen)];
-            auto can_put_in = picked.capacity() - picked.size();
+            auto can_put_in = picked.max_size() - picked.size();
             auto put_in = random<size_type<T>>(0, std::min(max_size, can_put_in));
 
             while (put_in--)
@@ -258,7 +254,7 @@ void experiment(std::string test_name, int iters=1000, int repeat=10) {
     constexpr int seed = 12345512;
 
     for (int r = 0; r < repeat; ++r) {
-        static_vector_env<V, Ts...> v_env(seed + r);
+        vector_bench_env<V, Ts...> v_env(seed + r);
         v_env.run_simulation(iters);
         info(boost::format("in progress: %d%%") % ((r + 1) * 100 / repeat), 2, true);
         std::cout.flush();
@@ -268,54 +264,4 @@ void experiment(std::string test_name, int iters=1000, int repeat=10) {
     auto delta = std::chrono::duration<double>(end - begin).count();
 
     info(boost::format("%s: %dms\n") % test_name % (delta * 1000), 2, true);
-}
-
-static constexpr uint C = 500000;
-
-template<class T>
-using ustatic_vector = uwr::static_vector<T, C>;
-template<class T>
-using bstatic_vector = boost::container::static_vector<T, C>;
-
-int main() {
-    test_type::do_print = false;
-
-    info("benchmark:", 0);
-
-    // push_back_benchmark<bstatic_vector<int>>(
-        // "boost::static_vector", C, 1000);
-    // push_back_benchmark<ustatic_vector<int>>(
-        // "uwr::static_vector", C, 1000);
-
-    info("<int>", 1);
-    experiment<bstatic_vector, int>(
-        "boost::static_vector", 500, 20);
-    experiment<ustatic_vector, int>(
-        "uwr::static_vector", 500, 20);
-
-    info("<std::string>", 1);
-    experiment<bstatic_vector, std::string>(
-        "boost::static_vector", 300, 20);
-    experiment<ustatic_vector, std::string>(
-        "uwr::static_vector", 300, 20);
-
-    info("<test_type>", 1);
-    experiment<bstatic_vector, test_type>(
-        "boost::static_vector", 300, 20);
-    experiment<ustatic_vector, test_type>(
-        "uwr::static_vector", 300, 20);
-
-    info("<int, std::string>", 1);
-    experiment<bstatic_vector, int, std::string>(
-        "boost::static_vector", 200, 20);
-    experiment<ustatic_vector, int, std::string>(
-        "uwr::static_vector", 200, 20);
-
-    info("<int, std::string, std::array<int, 10>>", 1);
-    experiment<bstatic_vector, int, std::string, std::array<int, 10>>(
-        "boost::static_vector>", 100, 30);
-    experiment<ustatic_vector, int, std::string, std::array<int, 10>>(
-        "uwr::static_vector>", 100, 30);
-
-    return 0;
 }
