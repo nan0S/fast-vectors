@@ -563,6 +563,9 @@ template<class T>
 constexpr typename vector<T>::iterator
 vector<T>::insert(const_iterator pos, size_type count, const T& value) {
     auto position = const_cast<T*>(pos);
+    if (!count)
+        return position;
+
     if (m_length + count > m_capacity) {
         auto m = std::distance(begin(), position);
         size_type new_cap = std::max(m_length + count, m_capacity * 2);
@@ -591,6 +594,9 @@ template<class InputIterator, class>
 constexpr typename vector<T>::iterator
 vector<T>::insert(const_iterator pos, InputIterator first, InputIterator last) {
     auto position = const_cast<T*>(pos);
+    if (first == last)
+        return position;
+
     size_type count = std::distance(first, last);
     if (m_length + count > m_capacity) {
         auto m = std::distance(begin(), position);
@@ -636,6 +642,9 @@ template<class T>
 constexpr typename vector<T>::iterator
 vector<T>::erase(const_iterator first, const_iterator last) {
     auto f = const_cast<T*>(first);
+    if (first == last)
+        return f;
+
     auto l = const_cast<T*>(last);
     auto n = std::distance(first, last);
     if (last != end())
