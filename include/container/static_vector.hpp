@@ -545,12 +545,12 @@ constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, const T& value) {
     auto position = const_cast<T*>(pos);
     // TODO: unlikely or do better
-    if (position == end())
-        new (position) T(value);
-    else {
+    // if (position == end())
+        // new (position) T(value);
+    // else {
         mem::shiftr(position + 1, position, end());
         *position = value;
-    }
+    // }
     ++m_length;
 
     return position;
@@ -560,12 +560,12 @@ template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, T&& value) {
     auto position = const_cast<T*>(pos);
-    if (position == end())
-        new (position) T(std::move(value));
-    else {
+    // if (position == end())
+        // new (position) T(std::move(value));
+    // else {
         mem::shiftr(position + 1, position, end());
         *position = value;
-    }
+    // }
     ++m_length;
 
     return position;
@@ -576,8 +576,8 @@ constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, size_type count, const T& value) {
     auto position = const_cast<T*>(pos);
     // TODO: unlikely or can do better
-    if (!count)
-        return position;
+    // if (!count)
+        // return position;
 
     auto eptr = end();
     auto rest = static_cast<size_type>(std::distance(position, eptr));
@@ -604,8 +604,8 @@ constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, InputIterator first, InputIterator last) {
     auto position = const_cast<T*>(pos);
     // TODO: unlikely or can do better
-    if (first == last)
-        return position;
+    // if (first == last)
+        // return position;
 
     auto eptr = end();
     auto count = std::distance(first, last);
@@ -648,13 +648,13 @@ constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::erase(const_iterator first, const_iterator last) {
     auto f = const_cast<T*>(first);
     // TODO: unlikely, maybe can do better
-    if (first != last) {
+    // if (first != last) {
         auto l = const_cast<T*>(last);
         auto e = end();
         mem::shiftl(f, l, e);
         mem::destroy(f + (e - l), e);
         m_length -= l - f;
-    }
+    // }
 
     return f;
 }
@@ -688,13 +688,13 @@ constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::emplace(const_iterator pos, Args&&... args) {
     auto position = const_cast<T*>(pos);
     // TODO: unlikely or do better
-    if (position == end())
-        new (position) T(std::forward<Args>(args)...);
-    else {
+    // if (position == end())
+        // new (position) T(std::forward<Args>(args)...);
+    // else {
         mem::shiftr(position + 1, position, end());
         // TODO: if args is of type T, we can do better
         *position = T(std::forward<Args>(args)...);
-    }
+    // }
     ++m_length;
 
     return position;
