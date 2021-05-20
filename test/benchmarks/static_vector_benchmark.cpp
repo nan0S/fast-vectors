@@ -21,35 +21,35 @@ int main() {
     // push_back_benchmark<ustatic_vector<int>>(
         // "uwr::static_vector", C, 1000);
 
-    info("<int>", 1);
-    experiment<bstatic_vector, int>(
-        "boost::static_vector", 1000, 10);
-    experiment<ustatic_vector, int>(
-        "uwr::static_vector", 1000, 10);
+    // info("<int>", 1);
+    // experiment<bstatic_vector, int>(
+        // "boost::static_vector", 1000, 10);
+    // experiment<ustatic_vector, int>(
+        // "uwr::static_vector", 1000, 10);
 
-    info("<std::string>", 1);
-    experiment<bstatic_vector, std::string>(
-        "boost::static_vector", 1000, 10);
-    experiment<ustatic_vector, std::string>(
-        "uwr::static_vector", 1000, 10);
+    // info("<std::string>", 1);
+    // experiment<bstatic_vector, std::string>(
+        // "boost::static_vector", 1000, 10);
+    // experiment<ustatic_vector, std::string>(
+        // "uwr::static_vector", 1000, 10);
 
     info("<test_type>", 1);
     experiment<bstatic_vector, test_type>(
-        "boost::static_vector", 1000, 10);
+        "boost::static_vector", 500, 10);
     experiment<ustatic_vector, test_type>(
-        "uwr::static_vector", 1000, 10);
+        "uwr::static_vector", 500, 10);
 
-    info("<int, std::string>", 1);
-    experiment<bstatic_vector, int, std::string>(
-        "boost::static_vector", 1000, 10);
-    experiment<ustatic_vector, int, std::string>(
-        "uwr::static_vector", 1000, 10);
+    // info("<int, std::string>", 1);
+    // experiment<bstatic_vector, int, std::string>(
+        // "boost::static_vector", 1000, 10);
+    // experiment<ustatic_vector, int, std::string>(
+        // "uwr::static_vector", 1000, 10);
 
-    info("<int, std::string, std::array<int, 10>>", 1);
-    experiment<bstatic_vector, int, std::string, std::array<int, 10>>(
-        "boost::static_vector>", 1000, 10);
-    experiment<ustatic_vector, int, std::string, std::array<int, 10>>(
-        "uwr::static_vector>", 1000, 10);
+    // info("<int, std::string, std::array<int, 10>>", 1);
+    // experiment<bstatic_vector, int, std::string, std::array<int, 10>>(
+        // "boost::static_vector>", 1000, 10);
+    // experiment<ustatic_vector, int, std::string, std::array<int, 10>>(
+        // "uwr::static_vector>", 1000, 10);
 
     return 0;
 }
