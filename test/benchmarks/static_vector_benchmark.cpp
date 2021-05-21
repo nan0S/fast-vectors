@@ -2,7 +2,7 @@
 #include <boost/container/static_vector.hpp>
 #include <test_type/test_type.hpp>
 
-#include "benchmark.hpp"
+#include "vector_benchmark_base.hpp"
 
 static constexpr uint C = 500000;
 

@@ -46,7 +46,7 @@ run-tests: $(TESTS)
 	done
 
 run-%: $(BIN_DIR)/benchmarks/%
-	@./$< --benchmark_color=yes
+	@./$< --benchmark_color=yes --benchmark_counters_tabular=true
 run-%: $(BIN_DIR)/tests/%
 	@./$< --gtest_color=yes
 
