@@ -49,5 +49,5 @@ int main() {
 ```
 
 # Requirements
-Only for benchmarks and tests - BOOST library and GoogleTest.
+Only for benchmarks and tests - BOOST library, GoogleTest and GoogleBenchmark.
 Containers itself does not require any additional libraries.

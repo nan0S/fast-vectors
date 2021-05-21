@@ -1,7 +1,5 @@
-#include <bits/stdc++.h>
-
-#include <boost/format.hpp>
 #include <utils/utils.hpp>
+#include <benchmark/benchmark.h>
 
 template<template<class> class V, class... Ts>
 class vector_bench_env {
@@ -227,41 +225,30 @@ private:
 };
 
 template<class Vector>
-void push_back_benchmark(std::string test_name, int max_iters=100000, int repeat=10) {
+void BM_push_back(::benchmark::State& s) {
     using T = typename Vector::value_type;
-    auto begin = std::chrono::high_resolution_clock::now();
+    int max_iters = s.range(0);
+    int iters = s.range(0);
 
-    int iters = max_iters;
     while (iters > 1000)
         iters /= 10;
 
-    for (; iters < max_iters; iters *= 10)
-        for (int t = 0; t < repeat; ++t) {
+    for (auto _ : s)
+        for (; iters < max_iters; iters *= 10) {
             Vector v;
             for (int i = 0; i < iters; ++i)
                 v.push_back(T());
         }
-
-    auto end = std::chrono::high_resolution_clock::now();
-    auto delta = std::chrono::duration<double>(end - begin).count();
-
-    std::cout << test_name << ": " << delta * 1000 << "ms" << std::endl;
 }
 
 template<template<class> class V, class... Ts>
-void experiment(std::string test_name, int iters=1000, int repeat=10) {
-    auto begin = std::chrono::high_resolution_clock::now();
+void BM_environment(::benchmark::State& s) {
     constexpr int seed = 12345512;
+    int iters = s.range(0);
+    int r = 0;
 
-    for (int r = 0; r < repeat; ++r) {
-        vector_bench_env<V, Ts...> v_env(seed + r);
+    for (auto _ : s) {
+        vector_bench_env<V, Ts...> v_env(seed + r++);
         v_env.run_simulation(iters);
-        info(boost::format("in progress: %d%%") % ((r + 1) * 100 / repeat), 2, true);
-        std::cout.flush();
     }
-
-    auto end = std::chrono::high_resolution_clock::now();
-    auto delta = std::chrono::duration<double>(end - begin).count();
-
-    info(boost::format("%s: %dms\n") % test_name % (delta * 1000), 2, true);
 }
