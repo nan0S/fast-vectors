@@ -3,9 +3,6 @@
 #include <gtest/gtest.h>
 #include <test_type/test_type.hpp>
 
-// template<class T>
-// using vector_t = std::vector<T>;
-
 template<class T>
 class VectorTestsBase : public ::testing::Test {
 public:

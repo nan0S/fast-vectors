@@ -4,16 +4,17 @@
 #include <random>
 #include <array>
 
+// TODO: remove
 template<class T>
 void info(const T& msg, int indent=0, bool reset=false);
 
 template<class T>
 T get_value(int id);
-// template<class T, int C>
-// template<class std::array<typename T, int C>>
-// std::array<T, C> get_value(int id);
+
 template<>
 std::string get_value(int id);
+template<>
+std::array<int, 10> get_value(int id);
 
 namespace Random {
     extern std::mt19937 rng;
@@ -41,6 +42,7 @@ namespace Random {
     }
 }
 
+// TODO: remove
 template<class T>
 void info(const T& msg, int indent, bool reset) {
     if (reset)
@@ -56,11 +58,3 @@ template<class T>
 T get_value(int id) {
     return id;
 }
-
-// template<class T, std::size_t C>
-// std::array<T, C> get_value(int id) {
-    // std::array<T, C> arr;
-    // arr.fill(get_value<T>(id));
-
-    // return arr;
-// }

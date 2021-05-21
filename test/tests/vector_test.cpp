@@ -4,7 +4,7 @@
 template<class T>
 using vector_t = uwr::vector<T>;
 
-#include "vector_tests_base.hpp"
+#include "vector_test_base.hpp"
 
 template<class T>
 class VectorTests : public VectorTestsBase<T> {

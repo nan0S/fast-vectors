@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vector_tests_base_fixture.hpp"
+#include "vector_test_base_fixture.hpp"
 #include <utils/utils.hpp>
 
 template<>

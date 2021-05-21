@@ -4,7 +4,7 @@ static constexpr uwr::len_t C = 10;
 template<class T>
 using vector_t = uwr::static_vector<T, C>;
 
-#include "vector_tests_base.hpp"
+#include "vector_test_base.hpp"
 
 template<class T>
 class StaticVectorTests : public VectorTestsBase<T> {
