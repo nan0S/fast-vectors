@@ -1,6 +1,6 @@
-# CXX := g++ -std=c++17
+CXX := g++ -std=c++17
 # check c++20, but write for at least c++17 compatibility
-CXX := g++ -std=c++20
+# CXX := g++ -std=c++20
 
 OFLAGS := -Ofast -march=native -flto -fomit-frame-pointer -s -DNDEBUG
 WFLAGS := -Wall -Wextra
