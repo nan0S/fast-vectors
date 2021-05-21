@@ -49,5 +49,8 @@ int main() {
 ```
 
 # Requirements
-Only for benchmarks and tests - BOOST library and GoogleTest.
-Containers itself does not require any additional libraries.
+Only for benchmarks and tests - [BOOST library](https://github.com/boostorg/boost), [GoogleTest](https://github.com/google/googletest) and [GoogleBenchmark](https://github.com/google/benchmark).
+Containers itself do not require any additional libraries.
+
+# Note
+If you want to run benchmarks type: `sudo cpupower frequency-set --governor performance` before to get reliable results. 
