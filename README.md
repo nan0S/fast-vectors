@@ -53,4 +53,4 @@ Only for benchmarks and tests - [BOOST library](https://github.com/boostorg/boos
 Containers itself do not require any additional libraries.
 
 # Note
-If you want to run benchmarks type: `sudo cpupower frequency-set --governor performance` before to get reliable results. 
+If you want to run benchmarks type: `sudo cpupower frequency-set --governor performance` before to get reliable results. This command disables CPU Frequency Scaling. To restore CPU Frequnecy Scaling type `sudo cpupower frequency-set --governor powersave` after the benchmarks.
