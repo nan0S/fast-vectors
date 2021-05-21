@@ -34,6 +34,22 @@ public:
 public:
     static int do_print;
     static int instances;
+    static constexpr int ops_count = 7;
+    static int ops[2][ops_count];
+    static int ops_idx;
+
+    static void save_ops();
+    static bool are_ops_better();
+
+    enum PRIO {
+        COPY_CONSTRUCTOR = 0,
+        COPY_OPERATOR,
+        MOVE_CONSTRUCTOR,
+        MOVE_OPERATOR,
+        DESTRUCTOR,
+        VALUE_CONSTRUCTOR,
+        CONSTRUCTOR
+    };
 
 private:
     int val;
