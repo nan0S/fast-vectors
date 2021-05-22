@@ -25,7 +25,7 @@ DEPENDS += $(patsubst %.cpp,$(BUILD_DIR)/%.d,$(TSOURCES))
 
 TESTS := $(filter $(BIN_DIR)/tests/%,$(TARGETS))
 BENCHMARKS := $(filter $(BIN_DIR)/benchmarks/%, $(TARGETS))
-TESTS := $(filter-out $(BIN_DIR)/tests/temp_tests, $(TESTS)) # custom - filter out scratchpad test
+TESTS := $(filter-out $(BIN_DIR)/tests/temp_test, $(TESTS)) # custom - filter out scratchpad test
 
 .PHONY: clean
 .SECONDARY: $(patsubst %.d,%.o,$(DEPENDS)) # do not remove %.o files
@@ -46,7 +46,7 @@ run-tests: $(TESTS)
 	done
 
 run-%: $(BIN_DIR)/benchmarks/%
-	@./$<
+	@./$< --benchmark_color=yes --benchmark_counters_tabular=true
 run-%: $(BIN_DIR)/tests/%
 	@./$< --gtest_color=yes
 
@@ -58,7 +58,7 @@ $(BIN_DIR)/tests/%: $(BUILD_DIR)/$(TEST_DIR)/tests/%.o $(OBJECTS) Makefile
 
 $(BIN_DIR)/benchmarks/%: $(BUILD_DIR)/$(TEST_DIR)/benchmarks/%.o $(OBJECTS) Makefile
 	@mkdir -p $(shell dirname $@)
-	$(CXX) $(CXXFLAGS) -MMD -MP $< $(OBJECTS) -o $@
+	$(CXX) $(CXXFLAGS) -lbenchmark -MMD -MP $< $(OBJECTS) -o $@
 
 $(BUILD_DIR)/%.o: %.cpp Makefile
 	@mkdir -p $(shell dirname $@)

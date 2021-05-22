@@ -64,6 +64,15 @@ void destroy(T* begin, T* end);
 template<class T>
 void destroy_at(T* addr);
 
+template<class T, class V, class... Args>
+T create(V&& x, Args&&... args);
+template<class T>
+const T& create(const T& x);
+template<class T>
+T&& create(T&& x);
+template<class T>
+T create();
+
 // TODO: remove
 template<class T>
 T_Move<T> 
@@ -211,6 +220,26 @@ T_Move_A<T> shiftl(T* dest, T* begin, T* end) {
 template<class T>
 NT_Move_A<T> shiftl(T* dest, T* begin, T* end) {
     std::move(begin, end, dest);
+}
+
+template<class T, class V, class... Args>
+T create(V&& x, Args&&... args) {
+    return T(std::forward<V>(x), std::forward<Args>(args)...);
+}
+
+template<class T>
+const T& create(const T& x) {
+    return x;
+}
+
+template<class T>
+T&& create(T&& x) {
+    return std::forward<T>(x);
+}
+
+template<class T>
+T create() {
+    return T();
 }
 
 } // namespace uwr::mem

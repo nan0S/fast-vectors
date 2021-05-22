@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <deque>
 
 #define CPP_ABOVE_17 __cplusplus > 201703L
 
@@ -34,6 +35,29 @@ public:
 public:
     static int do_print;
     static int instances;
+
+    struct record_t {
+        static constexpr int ops_count = 7;
+
+        union {
+            struct {
+                int copy_cons, copy_op;
+                int move_cons, move_op;
+                int val_cons, def_cons;
+                int dest;
+            };
+            int ops[ops_count];
+        };
+
+        friend bool operator<=(const record_t& x, const record_t& y);
+    };
+
+    static std::deque<record_t> records;
+    static record_t record;
+    
+    static void start_recording();
+    static void stop_recording();
+    static bool is_current_not_better();
 
 private:
     int val;
