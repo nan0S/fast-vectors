@@ -24,6 +24,8 @@ void BM_push_back(::benchmark::State& s) {
 
         for (int i = 0; i < times; ++i) {
             Vector v;
+            ::benchmark::DoNotOptimize(v);
+
             for (int j = 0; j < times; ++j)
                 v.push_back(T());
             for (const auto& x : v)
