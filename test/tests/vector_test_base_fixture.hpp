@@ -246,7 +246,7 @@ std::string TypeNames::GetName(int id) {
 using TestedTypes = ::testing::Types<
     tested_vector_t<int>,
     tested_vector_t<test_type>,
-#if !(CPP_ABOVE_17)
+#if !(CPP_ABOVE_17) && !defined(DONT_COMPARE)
     compare_vector_t<test_type>,
 #endif
     tested_vector_t<std::string>,
