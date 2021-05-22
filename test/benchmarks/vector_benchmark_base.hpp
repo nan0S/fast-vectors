@@ -239,6 +239,9 @@ void BM_push_back(::benchmark::State& s) {
             for (int i = 0; i < iters; ++i)
                 v.push_back(T());
         }
+
+    int id = s.range(1);
+    s.counters["t" + std::to_string(id)];
 }
 
 template<template<class> class V, class... Ts>
@@ -251,4 +254,7 @@ void BM_environment(::benchmark::State& s) {
         vector_bench_env<V, Ts...> v_env(seed + r++);
         v_env.run_simulation(iters);
     }
+
+    int id = s.range(1);
+    s.counters["t" + std::to_string(id)];
 }

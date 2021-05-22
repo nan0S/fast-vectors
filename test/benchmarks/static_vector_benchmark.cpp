@@ -7,43 +7,58 @@
 static constexpr uint C = 500000;
 
 template<class T>
-using ustatic_vector = uwr::static_vector<T, C>;
+using uwr_static_vector = uwr::static_vector<T, C>;
 template<class T>
-using bstatic_vector = boost::container::static_vector<T, C>;
+using boost_static_vector = boost::container::static_vector<T, C>;
 
-BENCHMARK_TEMPLATE(BM_environment, bstatic_vector, int)
-    ->Unit(::benchmark::kMillisecond)
-    ->Arg(500);
-BENCHMARK_TEMPLATE(BM_environment, ustatic_vector, int)
-    ->Unit(::benchmark::kMillisecond)
-    ->Arg(500);
+static constexpr int INT_ITERS = 500;
+static constexpr int STRING_ITERS = 300;
+static constexpr int TEST_TYPE_ITERS = 300;
+static constexpr int INT_STRING_ITERS = 200;
+static constexpr int INT_STRING_ARRAY_ITERS = 100;
 
-BENCHMARK_TEMPLATE(BM_environment, bstatic_vector, std::string)
+BENCHMARK_TEMPLATE(BM_environment, boost_static_vector, int)
     ->Unit(::benchmark::kMillisecond)
-    ->Arg(300);
-BENCHMARK_TEMPLATE(BM_environment, ustatic_vector, std::string)
+    ->MinTime(0.5)
+    ->Args({INT_ITERS, 1});
+BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector, int)
     ->Unit(::benchmark::kMillisecond)
-    ->Arg(300);
+    ->MinTime(0.5)
+    ->Args({INT_ITERS, 1});
 
-BENCHMARK_TEMPLATE(BM_environment, bstatic_vector, test_type)
+BENCHMARK_TEMPLATE(BM_environment, boost_static_vector, std::string)
     ->Unit(::benchmark::kMillisecond)
-    ->Arg(300);
-BENCHMARK_TEMPLATE(BM_environment, ustatic_vector, test_type)
+    ->MinTime(0.5)
+    ->Args({STRING_ITERS, 2});
+BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector, std::string)
     ->Unit(::benchmark::kMillisecond)
-    ->Arg(300);
+    ->MinTime(0.5)
+    ->Args({STRING_ITERS, 2});
 
-BENCHMARK_TEMPLATE(BM_environment, bstatic_vector, int, std::string)
+BENCHMARK_TEMPLATE(BM_environment, boost_static_vector, test_type)
     ->Unit(::benchmark::kMillisecond)
-    ->Arg(200);
-BENCHMARK_TEMPLATE(BM_environment, ustatic_vector, int, std::string)
+    ->MinTime(0.5)
+    ->Args({TEST_TYPE_ITERS, 3});
+BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector, test_type)
     ->Unit(::benchmark::kMillisecond)
-    ->Arg(200);
+    ->MinTime(0.5)
+    ->Args({TEST_TYPE_ITERS, 3});
 
-BENCHMARK_TEMPLATE(BM_environment, bstatic_vector, int, std::string, std::array<int, 10>)
+BENCHMARK_TEMPLATE(BM_environment, boost_static_vector, int, std::string)
     ->Unit(::benchmark::kMillisecond)
-    ->Arg(100);
-BENCHMARK_TEMPLATE(BM_environment, ustatic_vector, int, std::string, std::array<int, 10>)
+    ->MinTime(0.5)
+    ->Args({INT_STRING_ITERS, 4});
+BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector, int, std::string)
     ->Unit(::benchmark::kMillisecond)
-    ->Arg(100);
+    ->MinTime(0.5)
+    ->Args({INT_STRING_ITERS, 4});
+
+BENCHMARK_TEMPLATE(BM_environment, boost_static_vector, int, std::string, std::array<int, 10>)
+    ->Unit(::benchmark::kMillisecond)
+    ->MinTime(0.5)
+    ->Args({INT_STRING_ARRAY_ITERS, 5});
+BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector, int, std::string, std::array<int, 10>)
+    ->Unit(::benchmark::kMillisecond)
+    ->Args({INT_STRING_ARRAY_ITERS, 5});
 
 BENCHMARK_MAIN();
