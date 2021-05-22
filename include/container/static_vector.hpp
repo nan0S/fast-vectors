@@ -564,7 +564,7 @@ static_vector<T, C>::insert(const_iterator pos, T&& value) {
         new (position) T(std::move(value));
     else {
         mem::shiftr(position + 1, position, end());
-        *position = value;
+        *position = std::move(value);
     }
     ++m_length;
 
@@ -692,8 +692,7 @@ static_vector<T, C>::emplace(const_iterator pos, Args&&... args) {
         new (position) T(std::forward<Args>(args)...);
     else {
         mem::shiftr(position + 1, position, end());
-        // TODO: if args is of type T, we can do better
-        *position = T(std::forward<Args>(args)...);
+        *position = mem::create<T>(std::forward<Args>(args)...);
     }
     ++m_length;
 

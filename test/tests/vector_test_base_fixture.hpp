@@ -1,13 +1,10 @@
 #pragma once
 
+#define CPP_ABOVE_17 __cplusplus > 201703L
+
 #include <gtest/gtest.h>
 #include <test_type/test_type.hpp>
 #include <utils/utils.hpp>
-
-// template<class T>
-// using tested_vector_t = std::vector<T>;
-// template<class T>
-// using compare_vector_t = std::set<T>;
 
 template<class V>
 class VectorTestBaseFixture : public ::testing::Test {
@@ -48,14 +45,32 @@ public:
 };
 
 template<>
-void VectorTestBaseFixture<tested_vector_t<test_type>>::SetUp();
-template<>
-void VectorTestBaseFixture<tested_vector_t<test_type>>::TearDown();
+void
+VectorTestBaseFixture<tested_vector_t<test_type>>::SetUp() {
+    test_type::instances = 0;
+    test_type::start_recording();
+}
 
 template<>
-void VectorTestBaseFixture<compare_vector_t<test_type>>::SetUp();
+void
+VectorTestBaseFixture<tested_vector_t<test_type>>::TearDown() {
+    EXPECT_EQ(test_type::instances, 0);
+    test_type::stop_recording();
+}
+
 template<>
-void VectorTestBaseFixture<compare_vector_t<test_type>>::TearDown();
+void
+VectorTestBaseFixture<compare_vector_t<test_type>>::SetUp() {
+    test_type::instances = 0;
+    test_type::start_recording();
+}
+
+template<>
+void
+VectorTestBaseFixture<compare_vector_t<test_type>>::TearDown() {
+    EXPECT_EQ(test_type::instances, 0);
+    EXPECT_TRUE(test_type::is_current_not_better());
+}
 
 template<class V>
 typename VectorTestBaseFixture<V>::value_type
@@ -222,7 +237,7 @@ std::string TypeNames::GetName(int id) {
 
     if (std::is_same_v<T, int>) return "int";
     if (std::is_same_v<T, std::string>) return "string";
-    if (std::is_same_v<T, test_type>) return "test_type";
+    if (std::is_same_v<T, test_type>) return "test_type" + std::to_string(id);
     if (std::is_same_v<T, std::array<int, 10>>) return "array<int, 10>";
 
     return std::to_string(id);
@@ -230,7 +245,10 @@ std::string TypeNames::GetName(int id) {
 
 using TestedTypes = ::testing::Types<
     tested_vector_t<int>,
-    tested_vector_t<test_type>, compare_vector_t<test_type>,
+    tested_vector_t<test_type>,
+#if !(CPP_ABOVE_17)
+    compare_vector_t<test_type>,
+#endif
     tested_vector_t<std::string>,
     tested_vector_t<std::array<int, 10>>
 >;

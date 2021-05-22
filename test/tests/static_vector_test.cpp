@@ -10,12 +10,12 @@ using compare_vector_t = boost::container::static_vector<T, C>;
 #include "vector_test_base.hpp"
 
 template<class V>
-class StaticVectorTests : public VectorTestsBase<V> {
+class StaticVectorTestFixture : public VectorTestBaseFixture<V> {
 };
 
-TYPED_TEST_SUITE(StaticVectorTests, TestedTypes, TypeNames);
+TYPED_TEST_SUITE(StaticVectorTestFixture, TestedTypes, TypeNames);
 
-TYPED_TEST(StaticVectorTests, IsMaxSizeConstantAndCorrect) {
+TYPED_TEST(StaticVectorTestFixture, IsMaxSizeConstantAndCorrect) {
     typename TestFixture::vector v;
     
     EXPECT_EQ(v.max_size(), C);
@@ -25,7 +25,7 @@ TYPED_TEST(StaticVectorTests, IsMaxSizeConstantAndCorrect) {
     EXPECT_EQ(v.max_size(), C);
 }
 
-TYPED_TEST(StaticVectorTests, IsCapacityConstantAndCorrect) {
+TYPED_TEST(StaticVectorTestFixture, IsCapacityConstantAndCorrect) {
     typename TestFixture::vector v;
     
     EXPECT_EQ(v.capacity(), C);
@@ -35,20 +35,20 @@ TYPED_TEST(StaticVectorTests, IsCapacityConstantAndCorrect) {
     EXPECT_EQ(v.capacity(), C);
 }
 
-TYPED_TEST(StaticVectorTests, PushBackByCopyToFilledVectorCausesException) {
+TYPED_TEST(StaticVectorTestFixture, PushBackByCopyToFilledVectorCausesException) {
     typename TestFixture::vector v(C);
     const auto val = this->GetValue(0);
 
     EXPECT_ANY_THROW(v.push_back(val));
 }
 
-TYPED_TEST(StaticVectorTests, PushBackByMoveToFilledVectorCausesException) {
+TYPED_TEST(StaticVectorTestFixture, PushBackByMoveToFilledVectorCausesException) {
     typename TestFixture::vector v(C);
 
     EXPECT_ANY_THROW(v.push_back(this->GetValue(0)));
 }
 
-TYPED_TEST(StaticVectorTests, EmplaceBackToFullVectorCausesException) {
+TYPED_TEST(StaticVectorTestFixture, EmplaceBackToFullVectorCausesException) {
     typename TestFixture::vector v(C);
 
     EXPECT_ANY_THROW(v.emplace_back(this->GetValue(3)));

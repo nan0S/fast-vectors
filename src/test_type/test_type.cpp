@@ -4,45 +4,51 @@
 #include <cassert>
 #include <numeric>
 #include <algorithm>
+#include <cstring>
 
 int test_type::do_print = false;
 int test_type::instances = 0;
-int test_type::ops[2][test_type::ops_count] = {};
-int test_type::ops_idx = 0;
+test_type::record_t test_type::record;
+std::deque<test_type::record_t> test_type::records;
 
 test_type::test_type() : val(0), moved(false) {
-    ++ops[ops_idx][CONSTRUCTOR];
+    ++record.def_cons;
     ++instances;
+
     if (do_print)
         std::cout << "()" << std::endl;
 }
 
 test_type::test_type(int val) : val(val), moved(false) {
-    ++ops[ops_idx][VALUE_CONSTRUCTOR];
+    ++record.val_cons;
     ++instances;
+
     if (do_print)
         std::cout << "(int)" << std::endl;
 }
 
 test_type::test_type(const test_type& o) : val(o.val), moved(o.moved) {
-    ++ops[ops_idx][COPY_CONSTRUCTOR];
+    ++record.copy_cons;
     ++instances;
+
     if (do_print)
         std::cout << "(const&)" << std::endl;
 }
 
 test_type::test_type(test_type&& o) : val(o.val), moved(o.moved) {
-    ++ops[ops_idx][MOVE_CONSTRUCTOR];
+    ++record.move_cons;
     ++instances;
     o.moved = true;
+
     if (do_print)
         std::cout << "(&&)" << std::endl;
 }
 
 test_type& test_type::operator=(const test_type& o) {
-    ++ops[ops_idx][COPY_OPERATOR];
+    ++record.copy_op;
     val = o.val;
     moved = o.moved;
+
     if (do_print)
         std::cout << "op=(const&)" << std::endl;
 
@@ -50,10 +56,11 @@ test_type& test_type::operator=(const test_type& o) {
 }
 
 test_type& test_type::operator=(test_type&& o) {
-    ++ops[ops_idx][MOVE_OPERATOR];
+    ++record.move_op;
     val = o.val;
     moved = o.moved;
     o.moved = true;
+
     if (do_print)
         std::cout << "op=(&&)" << std::endl;
 
@@ -61,8 +68,9 @@ test_type& test_type::operator=(test_type&& o) {
 }
 
 test_type::~test_type() {
-    ++ops[ops_idx][DESTRUCTOR];
+    ++record.dest;
     --instances;
+
     if (do_print)
         std::cout << "~()" << std::endl;
 }
@@ -111,19 +119,30 @@ std::ostream& operator<<(std::ostream& out, const test_type& o) {
     return out << o.val;
 }
 
-void test_type::save_ops() {
-    assert(ops_idx == 0);
-    std::copy_n(ops[0], ops_count, ops[1]);
-    std::fill_n(ops[0], ops_count, 0);
+bool operator<=(const test_type::record_t& x, const test_type::record_t& y) {
+    int sx = std::accumulate(x.ops, x.ops + x.ops_count, 0);
+    int sy = std::accumulate(y.ops, y.ops + y.ops_count, 0);
+    
+    if (sx != sy)
+        return sx < sy;
+
+    return !std::lexicographical_compare(y.ops, y.ops + y.ops_count,
+                                         x.ops, x.ops + x.ops_count);
 }
 
-bool test_type::are_ops_better() {
-    int s1 = std::accumulate(ops[0], ops[0] + ops_count, 0);
-    int s2 = std::accumulate(ops[1], ops[1] + ops_count, 0);
+void test_type::start_recording() {
+    std::memset(&record, 0, sizeof(record_t));
+}
 
-    if (s1 != s2)
-        return s1 < s2;
+void test_type::stop_recording() {
+    records.push_back(record);
+}
 
-    return !std::lexicographical_compare(ops[1], ops[1] + ops_count,
-                                         ops[0], ops[0] + ops_count);
+bool test_type::is_current_not_better() {
+    assert(!records.empty());
+
+    record_t compare = records.front();
+    records.pop_front();
+
+    return compare <= record;
 }

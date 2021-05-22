@@ -3,30 +3,6 @@
 #include "vector_test_base_fixture.hpp"
 #include <utils/utils.hpp>
 
-template<>
-void
-VectorTestBaseFixture<tested_vector_t<test_type>>::SetUp() {
-    test_type::instances = 0;
-}
-
-template<>
-void
-VectorTestBaseFixture<tested_vector_t<test_type>>::TearDown() {
-    EXPECT_EQ(test_type::instances, 0);
-}
-
-template<>
-void
-VectorTestBaseFixture<compare_vector_t<test_type>>::SetUp() {
-    test_type::instances = 0;
-}
-
-template<>
-void
-VectorTestBaseFixture<compare_vector_t<test_type>>::TearDown() {
-    test_type::instances = 0;
-}
-
 TYPED_TEST(VectorTestBaseFixture, DefaultConstructor) {
     typename TestFixture::vector v;
 
@@ -628,7 +604,8 @@ TYPED_TEST(VectorTestBaseFixture, InsertOneElementByCopyAtEndToNonEmptyVector) {
 TYPED_TEST(VectorTestBaseFixture, InsertOneElementByCopyInMiddleToNonEmptyVector) {
     const int initial_size = 5;
     auto v = this->GetVectorOfSize(initial_size);
-    const int pos = Random::rand(1, initial_size - 1);
+    const int pos = 3;
+    // const int pos = Random::rand(1, initial_size - 1);
 
     this->InsertOneElementByCopy(v, pos, 13);
 }
@@ -655,7 +632,7 @@ TYPED_TEST(VectorTestBaseFixture, InsertOneElementByMoveAtEndToNonEmptyVector) {
 TYPED_TEST(VectorTestBaseFixture, InsertOneElementByMoveInMiddleToNonEmptyVector) {
     const int initial_size = 5;
     auto v = this->GetVectorOfSize(initial_size);
-    const int pos = Random::rand(1, initial_size - 1);
+    const int pos = 3;
     
     this->InsertOneElementByMove(v, pos, 13);
 }
@@ -689,7 +666,7 @@ TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByFillInMiddleToNonEmptyVect
 
 TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByFillToEmptyVector) {
     typename TestFixture::vector v;
-    int count = Random::rand<int>(1, this->C);
+    const int count = 5;
 
     this->InsertMultipleElementsByFill(v, 0, count, rand());
 }
@@ -697,7 +674,7 @@ TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByFillToEmptyVector) {
 TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByFillAtBeginToNonEmptyVector) {
     const int initial_size = 5;
     auto v = this->GetVectorOfSize(initial_size);
-    const int count = Random::rand<int>(1, this->C - initial_size);
+    const int count = 3;
 
     this->InsertMultipleElementsByFill(v, 0, count, 13);
 }
@@ -705,7 +682,7 @@ TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByFillAtBeginToNonEmptyV
 TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByFillAtEndToNonEmptyVector) {
     const int initial_size = 5;
     auto v = this->GetVectorOfSize(initial_size);
-    const int count = Random::rand<int>(1, this->C - initial_size);
+    const int count = 4;
 
     this->InsertMultipleElementsByFill(v, initial_size, count, 13);
 }
@@ -713,8 +690,8 @@ TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByFillAtEndToNonEmptyVec
 TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByFillInMiddleToNonEmptyVector) {
     const int initial_size = 5;
     auto v = this->GetVectorOfSize(initial_size);
-    const int count = Random::rand<int>(1, this->C - initial_size);
-    const int pos = Random::rand(1, initial_size - 1);
+    const int count = 4;
+    const int pos = 2;
 
     this->InsertMultipleElementsByFill(v, pos, count, 13);
 }
@@ -782,7 +759,7 @@ TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeAtEndToNonEmptyVe
 TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeInMiddleToNonEmptyVector) {
     const int initial_size = 6;
     auto v = this->GetVectorOfSize(initial_size);
-    const int pos = Random::rand(1, initial_size - 1);
+    const int pos = 3;
     typename TestFixture::value_type a[] = {
         this->GetValue(0), this->GetValue(13), this->GetValue(10)
     };
@@ -800,9 +777,7 @@ TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByInitializerListToEmptyVect
 
 TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByInitializerListAtBeginToNonEmptyVector) {
     auto v = this->GetVectorOfSize(6);
-    auto ilist = {
-        this->GetValue(49), this->GetValue(13)
-    };
+    std::initializer_list<typename TestFixture::value_type> ilist;
     
     this->InsertMultipleElementsByInitializerList(v, 0, ilist);
 }
@@ -810,9 +785,7 @@ TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByInitializerListAtBeginToNo
 TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByInitializerListAtEndToNonEmptyVector) {
     const int initial_size = 6;
     auto v = this->GetVectorOfSize(initial_size);
-    auto ilist = {
-        this->GetValue(49), this->GetValue(13)
-    };
+    std::initializer_list<typename TestFixture::value_type> ilist;
     
     this->InsertMultipleElementsByInitializerList(v, initial_size, ilist);
 }
@@ -821,9 +794,7 @@ TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByInitializerListInMiddleToN
     const int initial_size = 6;
     auto v = this->GetVectorOfSize(initial_size);
     const int pos = Random::rand(1, initial_size - 1);
-    auto ilist = {
-        this->GetValue(49), this->GetValue(13)
-    };
+    std::initializer_list<typename TestFixture::value_type> ilist;
     
     this->InsertMultipleElementsByInitializerList(v, pos, ilist);
 }
@@ -850,7 +821,7 @@ TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByInitializerListAtEndTo
 TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByInitializerListInMiddleToNonEmptyVector) {
     const int initial_size = 6;
     auto v = this->GetVectorOfSize(initial_size);
-    const int pos = Random::rand(1, initial_size - 1);
+    const int pos = 3;
     auto ilist = {
         this->GetValue(49), this->GetValue(13)
     };
@@ -880,7 +851,7 @@ TYPED_TEST(VectorTestBaseFixture, EmplaceOneElementByCopyAtEndToNonEmptyVector) 
 TYPED_TEST(VectorTestBaseFixture, EmplaceOneElementByCopyInMiddleToNonEmptyVector) {
     const int initial_size = 5;
     auto v = this->GetVectorOfSize(initial_size);
-    const int pos = Random::rand(1, initial_size - 1);
+    const int pos = 3;
 
     this->EmplaceAt(v, pos, 13);
 }
@@ -928,7 +899,7 @@ TYPED_TEST(VectorTestBaseFixture, EraseAllElementsFromNonEmptyVector) {
 TYPED_TEST(VectorTestBaseFixture, EraseMultipleElementsAtBeginFromNonEmptyVector) {
     const int initial_size = 5;
     auto v = this->GetVectorOfSize(initial_size);
-    const int count = Random::rand(1, initial_size - 1);
+    const int count = 3;
     
     this->EraseMultipleElements(v, 0, count);
 }
@@ -944,8 +915,8 @@ TYPED_TEST(VectorTestBaseFixture, EraseMultipleElementsToEndFromNonEmptyVector) 
 TYPED_TEST(VectorTestBaseFixture, EraseMutipleElementsInMiddleFromNonEmptyVector) {
     const int initial_size = 7;
     auto v = this->GetVectorOfSize(initial_size);
-    const int pos = Random::rand(1, initial_size - 2);
-    const int count = Random::rand(1, initial_size - 1 - pos);
+    const int pos = 2;
+    const int count = 3;
 
     this->EraseMultipleElements(v, pos, count);
 }
@@ -1162,7 +1133,7 @@ TYPED_TEST(VectorTestBaseFixture, EqualIndependentNonEmptyVectorsAreEqual) {
 }
 
 TYPED_TEST(VectorTestBaseFixture, CopiedVectorIsEqualToOriginal) {
-    const int initial_size = Random::rand(2, 8);
+    const int initial_size = 6;
     typename TestFixture::vector v1;
     for (int i = 0; i < initial_size; ++i)
         v1.push_back(this->GetValue(i));
@@ -1189,7 +1160,7 @@ TYPED_TEST(VectorTestBaseFixture, EqualIndependentNonEmptyVectorsAreNotDifferent
 }
 
 TYPED_TEST(VectorTestBaseFixture, CopiedVectorIsNotDifferentToOriginal) {
-    const int initial_size = Random::rand(2, 8);
+    const int initial_size = 9;
     typename TestFixture::vector v1;
     for (int i = 0; i < initial_size; ++i)
         v1.push_back(this->GetValue(i));
