@@ -1,13 +1,16 @@
 #include <static_vector.hpp>
+#include <boost/container/static_vector.hpp>
 
 static constexpr uwr::len_t C = 10;
 template<class T>
-using vector_t = uwr::static_vector<T, C>;
+using tested_vector_t = uwr::static_vector<T, C>;
+template<class T>
+using compare_vector_t = boost::container::static_vector<T, C>;
 
 #include "vector_test_base.hpp"
 
-template<class T>
-class StaticVectorTests : public VectorTestsBase<T> {
+template<class V>
+class StaticVectorTests : public VectorTestsBase<V> {
 };
 
 TYPED_TEST_SUITE(StaticVectorTests, TestedTypes, TypeNames);
@@ -34,7 +37,7 @@ TYPED_TEST(StaticVectorTests, IsCapacityConstantAndCorrect) {
 
 TYPED_TEST(StaticVectorTests, PushBackByCopyToFilledVectorCausesException) {
     typename TestFixture::vector v(C);
-    const TypeParam val = this->GetValue(0);
+    const auto val = this->GetValue(0);
 
     EXPECT_ANY_THROW(v.push_back(val));
 }

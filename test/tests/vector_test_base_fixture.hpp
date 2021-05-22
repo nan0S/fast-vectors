@@ -2,11 +2,17 @@
 
 #include <gtest/gtest.h>
 #include <test_type/test_type.hpp>
+#include <utils/utils.hpp>
 
-template<class T>
-class VectorTestsBase : public ::testing::Test {
+// template<class T>
+// using tested_vector_t = std::vector<T>;
+// template<class T>
+// using compare_vector_t = std::set<T>;
+
+template<class V>
+class VectorTestBaseFixture : public ::testing::Test {
 public:
-    using vector = vector_t<T>;
+    using vector = V;
     using value_type = typename vector::value_type;
     using size_type = typename vector::size_type;
     static constexpr size_type C = 10;
@@ -19,7 +25,7 @@ private:
             size_type count, const vector& save);
 
 public:
-    value_type GetValue(int id) { return id; }
+    value_type GetValue(int id);
     vector GetVectorOfSize(size_type size);
 
     void InsertOneElementByCopy(vector& v, size_type pos, int id);
@@ -42,27 +48,34 @@ public:
 };
 
 template<>
-void VectorTestsBase<test_type>::SetUp();
+void VectorTestBaseFixture<tested_vector_t<test_type>>::SetUp();
 template<>
-void VectorTestsBase<test_type>::TearDown();
-template<>
-std::string VectorTestsBase<std::string>::GetValue(int id);
-template<>
-std::array<int, 10> VectorTestsBase<std::array<int, 10>>::GetValue(int id);
+void VectorTestBaseFixture<tested_vector_t<test_type>>::TearDown();
 
-template<class T>
-typename VectorTestsBase<T>::vector
-VectorTestsBase<T>::GetVectorOfSize(size_type size) {
+template<>
+void VectorTestBaseFixture<compare_vector_t<test_type>>::SetUp();
+template<>
+void VectorTestBaseFixture<compare_vector_t<test_type>>::TearDown();
+
+template<class V>
+typename VectorTestBaseFixture<V>::value_type
+VectorTestBaseFixture<V>::GetValue(int id) {
+    return get_value<value_type>(id);
+}
+
+template<class V>
+typename VectorTestBaseFixture<V>::vector
+VectorTestBaseFixture<V>::GetVectorOfSize(size_type size) {
     vector v(size);
     for (size_type i = 0; i < size; ++i)
-        v[i] = GetValue(i);
+        v[i] = get_value<value_type>(i);
 
     return v;
 }
 
-template<class T>
+template<class V>
 void
-VectorTestsBase<T>::ExpectInsertedInAt(const vector& v, size_type pos,
+VectorTestBaseFixture<V>::ExpectInsertedInAt(const vector& v, size_type pos,
         size_type count, const vector& save) {
     EXPECT_EQ(v.size(), save.size() + count);
     for (size_type i = 0; i < pos; ++i)
@@ -71,9 +84,9 @@ VectorTestsBase<T>::ExpectInsertedInAt(const vector& v, size_type pos,
         EXPECT_EQ(v[count + i], save[i]);
 }
 
-template<class T>
+template<class V>
 void
-VectorTestsBase<T>::ExpectErasedInAt(const vector& v, size_type pos,
+VectorTestBaseFixture<V>::ExpectErasedInAt(const vector& v, size_type pos,
         size_type count, const vector& save) {
     EXPECT_EQ(v.size(), save.size() - count);
     for (size_type i = 0; i < pos; ++i)
@@ -82,11 +95,11 @@ VectorTestsBase<T>::ExpectErasedInAt(const vector& v, size_type pos,
         EXPECT_EQ(v[i], save[i + count]);
 }
 
-template<class T>
+template<class V>
 void
-VectorTestsBase<T>::InsertOneElementByCopy(vector& v, size_type pos, int id) {
+VectorTestBaseFixture<V>::InsertOneElementByCopy(vector& v, size_type pos, int id) {
     const vector save = v;
-    const value_type val = GetValue(id);
+    const value_type val = get_value<value_type>(id);
     
     auto it = v.insert(v.begin() + pos, val);
 
@@ -95,23 +108,23 @@ VectorTestsBase<T>::InsertOneElementByCopy(vector& v, size_type pos, int id) {
     EXPECT_EQ(*it, val);
 }
 
-template<class T>
+template<class V>
 void
-VectorTestsBase<T>::InsertOneElementByMove(vector& v, size_type pos, int id) {
+VectorTestBaseFixture<V>::InsertOneElementByMove(vector& v, size_type pos, int id) {
     const vector save = v;
     
-    auto it = v.insert(v.begin() + pos, GetValue(id));
+    auto it = v.insert(v.begin() + pos, get_value<value_type>(id));
 
     ExpectInsertedInAt(v, pos, 1, save);
     EXPECT_EQ(it, v.begin() + pos);
-    EXPECT_EQ(*it, GetValue(id));
+    EXPECT_EQ(*it, get_value<value_type>(id));
 }
 
-template<class T>
+template<class V>
 void
-VectorTestsBase<T>::InsertMultipleElementsByFill(vector& v, size_type pos, size_type count, int id) {
+VectorTestBaseFixture<V>::InsertMultipleElementsByFill(vector& v, size_type pos, size_type count, int id) {
     const vector save = v;
-    const T val = GetValue(id);
+    const auto val = get_value<value_type>(id);
 
     auto it = v.insert(v.begin() + pos, count, val);
 
@@ -121,10 +134,10 @@ VectorTestsBase<T>::InsertMultipleElementsByFill(vector& v, size_type pos, size_
         EXPECT_EQ(v[pos + i], val);
 }
 
-template<class T>
+template<class V>
 template<class InputIterator>
 void
-VectorTestsBase<T>::InsertMultipleElementsByRange(vector& v, size_type pos,
+VectorTestBaseFixture<V>::InsertMultipleElementsByRange(vector& v, size_type pos,
         InputIterator begin, InputIterator end) {
     const vector save = v;
     const size_type count = std::distance(begin, end);
@@ -141,9 +154,9 @@ VectorTestsBase<T>::InsertMultipleElementsByRange(vector& v, size_type pos,
     }
 }
 
-template<class T>
+template<class V>
 void
-VectorTestsBase<T>::InsertMultipleElementsByInitializerList(vector& v, size_type pos,
+VectorTestBaseFixture<V>::InsertMultipleElementsByInitializerList(vector& v, size_type pos,
         std::initializer_list<value_type> ilist) {
     const vector save = v;
     const size_type count = ilist.size();
@@ -160,21 +173,21 @@ VectorTestsBase<T>::InsertMultipleElementsByInitializerList(vector& v, size_type
     }
 }
 
-template<class T>
+template<class V>
 void
-VectorTestsBase<T>::EmplaceAt(vector& v, size_type pos, int id) {
+VectorTestBaseFixture<V>::EmplaceAt(vector& v, size_type pos, int id) {
     const vector save = v;
     
-    auto it = v.emplace(v.begin() + pos, GetValue(id));
+    auto it = v.emplace(v.begin() + pos, get_value<value_type>(id));
 
     ExpectInsertedInAt(v, pos, 1, save);
     EXPECT_EQ(it, v.begin() + pos);
-    EXPECT_EQ(*it, GetValue(id));
+    EXPECT_EQ(*it, get_value<value_type>(id));
 }
 
-template<class T>
+template<class V>
 void
-VectorTestsBase<T>::EraseOneElement(vector& v, size_type pos) {
+VectorTestBaseFixture<V>::EraseOneElement(vector& v, size_type pos) {
     const vector save = v;
     const size_type initial_size = v.size();
 
@@ -184,9 +197,9 @@ VectorTestsBase<T>::EraseOneElement(vector& v, size_type pos) {
     EXPECT_EQ(it, v.begin() + pos);
 }
 
-template<class T>
+template<class V>
 void
-VectorTestsBase<T>::EraseMultipleElements(vector& v, size_type pos, size_type count) {
+VectorTestBaseFixture<V>::EraseMultipleElements(vector& v, size_type pos, size_type count) {
     ASSERT_LE(pos + count, v.size());
 
     const vector save = v;
@@ -199,21 +212,27 @@ VectorTestsBase<T>::EraseMultipleElements(vector& v, size_type pos, size_type co
 
 class TypeNames {
 public:
-    template<class T>
+    template<class V>
     static std::string GetName(int id);
 };
 
-template<class T>
+template<class V>
 std::string TypeNames::GetName(int id) {
+    using T = typename V::value_type;
+
     if (std::is_same_v<T, int>) return "int";
     if (std::is_same_v<T, std::string>) return "string";
     if (std::is_same_v<T, test_type>) return "test_type";
     if (std::is_same_v<T, std::array<int, 10>>) return "array<int, 10>";
+
     return std::to_string(id);
 }
 
 using TestedTypes = ::testing::Types<
-    int, test_type, std::string, std::array<int, 10>
+    tested_vector_t<int>,
+    tested_vector_t<test_type>, compare_vector_t<test_type>,
+    tested_vector_t<std::string>,
+    tested_vector_t<std::array<int, 10>>
 >;
 
-TYPED_TEST_SUITE(VectorTestsBase, TestedTypes, TypeNames);
+TYPED_TEST_SUITE(VectorTestBaseFixture, TestedTypes, TypeNames);
