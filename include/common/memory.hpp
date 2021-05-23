@@ -1,8 +1,8 @@
 #pragma once
 
-#include "trivial.hpp"
 #include <algorithm>
 #include <cstring>
+#include "trivial.hpp"
 
 namespace uwr::mem {
 

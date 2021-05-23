@@ -1,9 +1,8 @@
 #pragma once
 
-#define CPP_ABOVE_17 __cplusplus > 201703L
-
 #include <iterator>
 #include "../common/memory.hpp"
+#include "../common/define.hpp"
 #if CPP_ABOVE_17
 #include "../common/synth_three_way.hpp"
 #endif
@@ -124,10 +123,8 @@ public:
     constexpr void fast_emplace_back(Args&&... args) noexcept;
 
 private:
-    __attribute__((__always_inline__))
-        constexpr T* data_at(size_type n) noexcept;
-    __attribute__((__always_inline__))
-        constexpr const T* data_at(size_type n) const noexcept;
+    UWR_FORCEINLINE constexpr T* data_at(size_type n) noexcept;
+    UWR_FORCEINLINE constexpr const T* data_at(size_type n) const noexcept;
 
 private:
     typename std::aligned_storage<sizeof(T), alignof(T)>::type m_data[C];

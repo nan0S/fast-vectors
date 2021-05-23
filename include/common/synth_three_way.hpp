@@ -1,6 +1,6 @@
 #pragma once
 
-#define CPP_ABOVE_17 __cplusplus > 201703L
+#include "define.hpp"
 
 #if CPP_ABOVE_17
 

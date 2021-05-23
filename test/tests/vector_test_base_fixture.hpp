@@ -1,8 +1,7 @@
 #pragma once
 
-#define CPP_ABOVE_17 __cplusplus > 201703L
-
 #include <gtest/gtest.h>
+#include <common/define.hpp>
 #include <test_type/test_type.hpp>
 #include <utils/utils.hpp>
 

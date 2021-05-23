@@ -1,10 +1,9 @@
 #pragma once
 
-#define CPP_ABOVE_17 __cplusplus > 201703L
-
 #include <iterator>
 #include <limits>
 #include "../common/allocator.hpp"
+#include "../common/define.hpp"
 #if CPP_ABOVE_17
 #include "../common/synth_three_way.hpp"
 #endif

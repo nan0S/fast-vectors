@@ -2,8 +2,7 @@
 
 #include <iostream>
 #include <deque>
-
-#define CPP_ABOVE_17 __cplusplus > 201703L
+#include <common/define.hpp>
 
 #define ON test_type::do_print = true
 #define OFF test_type::do_print = false
