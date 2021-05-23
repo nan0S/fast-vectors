@@ -124,10 +124,10 @@ public:
     constexpr void fast_emplace_back(Args&&... args) noexcept;
 
 private:
-    // TODO: maybe inline
-    constexpr
-        T* data_at(size_type n) noexcept;
-    constexpr const T* data_at(size_type n) const noexcept;
+    __attribute__((__always_inline__))
+        constexpr T* data_at(size_type n) noexcept;
+    __attribute__((__always_inline__))
+        constexpr const T* data_at(size_type n) const noexcept;
 
 private:
     typename std::aligned_storage<sizeof(T), alignof(T)>::type m_data[C];
