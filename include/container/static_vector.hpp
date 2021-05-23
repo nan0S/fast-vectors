@@ -84,8 +84,8 @@ public:
     constexpr const_reference front() const;
     constexpr reference back();
     constexpr const_reference back() const;
-    constexpr T* data() noexcept;
-    constexpr const T* data() const noexcept;
+    UWR_FORCEINLINE constexpr T* data() noexcept;
+    UWR_FORCEINLINE constexpr const T* data() const noexcept;
 
     template<class InputIterator,
         class = typename std::iterator_traits<InputIterator>::value_type>
