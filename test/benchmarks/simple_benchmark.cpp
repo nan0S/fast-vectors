@@ -4,7 +4,6 @@
 #include <functional>
 
 #include <static_vector.hpp>
-#include <static_vector_alt.hpp>
 #include <boost/container/static_vector.hpp>
 #include <utils/utils.hpp>
 #include <test_type/test_type.hpp>
@@ -14,7 +13,6 @@ using T = int;
 constexpr uint C = 50000;
 
 using uwr_static_vector = uwr::static_vector<T, C>;
-using uwr_static_vector_alt = uwr::static_vector_alt<T, C>;
 using boost_static_vector = boost::container::static_vector<T, C>;
 
 static constexpr int PUSH_BACK_TIMES = 30000;
@@ -110,13 +108,6 @@ BENCHMARK_TEMPLATE(BM_push_back, boost_static_vector)
     ->Iterations(PUSH_BACK_ITERS)
 #endif
     ->Arg(PUSH_BACK_TIMES);
-BENCHMARK_TEMPLATE(BM_push_back, uwr_static_vector_alt)
-    ->Unit(::benchmark::kMillisecond)
-    ->MinTime(0.5)
-#if (PUSH_BACK_ITERS != -1)
-    ->Iterations(PUSH_BACK_ITERS)
-#endif
-    ->Arg(PUSH_BACK_TIMES);
 BENCHMARK_TEMPLATE(BM_push_back, uwr_static_vector)
     ->Unit(::benchmark::kMillisecond)
     ->MinTime(0.5)
@@ -126,13 +117,6 @@ BENCHMARK_TEMPLATE(BM_push_back, uwr_static_vector)
     ->Arg(PUSH_BACK_TIMES);
 
 BENCHMARK_TEMPLATE(BM_push_back_pop_back, boost_static_vector)
-    ->Unit(::benchmark::kMillisecond)
-    ->MinTime(0.5)
-#if (PUSH_BACK_POP_BACK_ITERS != -1)
-    ->Iterations(PUSH_BACK_POP_BACK_ITERS)
-#endif
-    ->Arg(PUSH_BACK_POP_BACK_TIMES);
-BENCHMARK_TEMPLATE(BM_push_back_pop_back, uwr_static_vector_alt)
     ->Unit(::benchmark::kMillisecond)
     ->MinTime(0.5)
 #if (PUSH_BACK_POP_BACK_ITERS != -1)
@@ -154,13 +138,6 @@ BENCHMARK_TEMPLATE(BM_swap, boost_static_vector)
     ->Iterations(SWAP_ITERS)
 #endif
     ->Arg(SWAP_TIMES);
-BENCHMARK_TEMPLATE(BM_swap, uwr_static_vector_alt)
-    ->Unit(::benchmark::kMillisecond)
-    ->MinTime(0.5)
-#if (SWAP_ITERS != -1)
-    ->Iterations(SWAP_ITERS)
-#endif
-    ->Arg(SWAP_TIMES);
 BENCHMARK_TEMPLATE(BM_swap, uwr_static_vector)
     ->Unit(::benchmark::kMillisecond)
     ->MinTime(0.5)
@@ -170,13 +147,6 @@ BENCHMARK_TEMPLATE(BM_swap, uwr_static_vector)
     ->Arg(SWAP_TIMES);
 
 BENCHMARK_TEMPLATE(BM_resize, boost_static_vector)
-    ->Unit(::benchmark::kMillisecond)
-    ->MinTime(0.5)
-#if (RESIZE_ITERS != -1)
-    ->Iterations(RESIZE_ITERS)
-#endif
-    ->Arg(RESIZE_TIMES);
-BENCHMARK_TEMPLATE(BM_resize, uwr_static_vector_alt)
     ->Unit(::benchmark::kMillisecond)
     ->MinTime(0.5)
 #if (RESIZE_ITERS != -1)
