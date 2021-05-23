@@ -5,8 +5,8 @@
 
 #include <static_vector.hpp>
 #include <boost/container/static_vector.hpp>
-#include <test_type/test_type.hpp>
 #include <utils/utils.hpp>
+#include <test_type/test_type.hpp>
 #include <benchmark/benchmark.h>
 
 using T = int;
@@ -15,7 +15,7 @@ constexpr uint C = 50000;
 using uwr_static_vector = uwr::static_vector<T, C>;
 using boost_static_vector = boost::container::static_vector<T, C>;
 
-static constexpr int PUSH_BACK_TIMES = 10000;
+static constexpr int PUSH_BACK_TIMES = 30000;
 static constexpr int PUSH_BACK_POP_BACK_TIMES = 10000;
 static constexpr int SWAP_TIMES = 3000;
 static constexpr int RESIZE_TIMES = 3000000;
@@ -100,10 +100,12 @@ void BM_resize(::benchmark::State& s) {
 BENCHMARK_TEMPLATE(BM_push_back, boost_static_vector)
     ->Unit(::benchmark::kMillisecond)
     ->MinTime(0.5)
+    ->Iterations(5)
     ->Arg(PUSH_BACK_TIMES);
 BENCHMARK_TEMPLATE(BM_push_back, uwr_static_vector)
     ->Unit(::benchmark::kMillisecond)
     ->MinTime(0.5)
+    ->Iterations(5)
     ->Arg(PUSH_BACK_TIMES);
 
 BENCHMARK_TEMPLATE(BM_push_back_pop_back, boost_static_vector)

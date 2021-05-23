@@ -59,6 +59,7 @@ BENCHMARK_TEMPLATE(BM_environment, boost_static_vector, int, std::string, std::a
     ->Args({INT_STRING_ARRAY_ITERS, 5});
 BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector, int, std::string, std::array<int, 10>)
     ->Unit(::benchmark::kMillisecond)
+    ->MinTime(0.5)
     ->Args({INT_STRING_ARRAY_ITERS, 5});
 
 BENCHMARK_MAIN();
