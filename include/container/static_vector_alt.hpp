@@ -52,20 +52,20 @@ public:
     constexpr static_vector_alt& operator=(static_vector_alt&& other) noexcept;
     constexpr static_vector_alt& operator=(std::initializer_list<T> ilist) noexcept;
 
-    constexpr iterator begin() noexcept;
-    constexpr const_iterator begin() const noexcept;
-    constexpr iterator end() noexcept;
-    constexpr const_iterator end() const noexcept;
+    UWR_FORCEINLINE constexpr iterator begin() noexcept;
+    UWR_FORCEINLINE constexpr const_iterator begin() const noexcept;
+    UWR_FORCEINLINE constexpr iterator end() noexcept;
+    UWR_FORCEINLINE constexpr const_iterator end() const noexcept;
 
-    constexpr reverse_iterator rbegin() noexcept;
-    constexpr const_reverse_iterator rbegin() const noexcept;
-    constexpr reverse_iterator rend() noexcept;
-    constexpr const_reverse_iterator rend() const noexcept;
+    UWR_FORCEINLINE constexpr reverse_iterator rbegin() noexcept;
+    UWR_FORCEINLINE constexpr const_reverse_iterator rbegin() const noexcept;
+    UWR_FORCEINLINE constexpr reverse_iterator rend() noexcept;
+    UWR_FORCEINLINE constexpr const_reverse_iterator rend() const noexcept;
 
-    constexpr const_iterator cbegin() const noexcept;
-    constexpr const_iterator cend() const noexcept;
-    constexpr const_reverse_iterator crbegin() const noexcept;
-    constexpr const_reverse_iterator crend() const noexcept;
+    UWR_FORCEINLINE constexpr const_iterator cbegin() const noexcept;
+    UWR_FORCEINLINE constexpr const_iterator cend() const noexcept;
+    UWR_FORCEINLINE constexpr const_reverse_iterator crbegin() const noexcept;
+    UWR_FORCEINLINE constexpr const_reverse_iterator crend() const noexcept;
 
     constexpr size_type size() const noexcept;
     constexpr size_type max_size() const noexcept;
@@ -76,14 +76,14 @@ public:
     constexpr void reserve(size_type n) noexcept;
     constexpr void shrink_to_fit() noexcept;
 
-    constexpr reference operator[](size_type n);
-    constexpr const_reference operator[](size_type n) const;
-    constexpr reference at(size_type n);
-    constexpr const_reference at(size_type n) const;
-    constexpr reference front();
-    constexpr const_reference front() const;
-    constexpr reference back();
-    constexpr const_reference back() const;
+    UWR_FORCEINLINE constexpr reference operator[](size_type n);
+    UWR_FORCEINLINE constexpr const_reference operator[](size_type n) const;
+    UWR_FORCEINLINE constexpr reference at(size_type n);
+    UWR_FORCEINLINE constexpr const_reference at(size_type n) const;
+    UWR_FORCEINLINE constexpr reference front();
+    UWR_FORCEINLINE constexpr const_reference front() const;
+    UWR_FORCEINLINE constexpr reference back();
+    UWR_FORCEINLINE constexpr const_reference back() const;
     UWR_FORCEINLINE constexpr T* data() noexcept;
     UWR_FORCEINLINE constexpr const T* data() const noexcept;
 
@@ -684,10 +684,10 @@ static_vector_alt<T, C>::swap(static_vector_alt<T, C>& other) {
     for (size_type i = 0; i < len1; ++i)
         std::swap((*this)[i], other[i]);
 
+    o1->m_end = o1->begin() + len2;
     mem::umove(o1->begin() + len1, o2->begin() + len1, o2->m_end);
     mem::destroy(o2->begin() + len1, o2->m_end);
-    o1->m_end = o1->data() + len2;
-    o2->m_end = o2->data() + len1;
+    o2->m_end = o2->begin() + len1;
 }
 
 template<class T, len_t C>
