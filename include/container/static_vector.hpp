@@ -659,16 +659,22 @@ static_vector<T, C>::erase(const_iterator first, const_iterator last) {
 template<class T, len_t C>
 constexpr void
 static_vector<T, C>::swap(static_vector<T, C>& other) {
-    static_vector<T, C> *o1 = this, *o2 = &other;
-    size_type min_len = std::min(o1->m_length, o2->m_length);
-    for (size_type i = 0; i < min_len; ++i)
+    static_vector<T, C> *o1, *o2;
+
+    if (m_length < other.m_length) {
+        o1 = this;
+        o2 = &other;
+    }
+    else {
+        o1 = &other;
+        o2 = this;
+    }
+
+    for (size_type i = 0; i < o1->m_length; ++i)
         std::swap((*this)[i], other[i]);
 
-    if (o1->m_length != min_len)
-        std::swap(o1, o2);
-
-    mem::umove(o1->begin() + min_len, o2->begin() + min_len, o2->end());
-    mem::destroy(o2->begin() + min_len, o2->end());
+    mem::umove(o1->begin() + o1->m_length, o2->begin() + o1->m_length, o2->end());
+    mem::destroy(o2->begin() + o1->m_length, o2->end());
     std::swap(o1->m_length, o2->m_length);
 }
 

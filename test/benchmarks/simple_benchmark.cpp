@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
+
 #include <functional>
 
 #include <static_vector.hpp>
@@ -15,14 +16,14 @@ constexpr uint C = 50000;
 using uwr_static_vector = uwr::static_vector<T, C>;
 using boost_static_vector = boost::container::static_vector<T, C>;
 
-static constexpr int PUSH_BACK_TIMES = 30000;
-#define PUSH_BACK_ITERS -1
-static constexpr int PUSH_BACK_POP_BACK_TIMES = 10000;
-#define PUSH_BACK_POP_BACK_ITERS -1
-static constexpr int SWAP_TIMES = 3000;
-#define SWAP_ITERS -1
+static constexpr int PUSH_BACK_TIMES = 50000;
+#define PUSH_BACK_ITERS 100
+static constexpr int PUSH_BACK_POP_BACK_TIMES = 50000;
+#define PUSH_BACK_POP_BACK_ITERS 100
+static constexpr int SWAP_TIMES = 5000;
+#define SWAP_ITERS 100
 static constexpr int RESIZE_TIMES = 3000000;
-#define RESIZE_ITERS -1
+#define RESIZE_ITERS 100
 
 template<class Vector>
 void BM_push_back(::benchmark::State& s) {
@@ -35,6 +36,7 @@ void BM_push_back(::benchmark::State& s) {
         for (int i = 0; i < times; ++i) {
             Vector v;
             ::benchmark::DoNotOptimize(v);
+            ::benchmark::ClobberMemory();
 
             for (int j = 0; j < times; ++j)
                 v.push_back(T());
