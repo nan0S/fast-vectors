@@ -667,24 +667,25 @@ static_vector_alt<T, C>::erase(const_iterator first, const_iterator last) {
 template<class T, len_t C>
 constexpr void
 static_vector_alt<T, C>::swap(static_vector_alt<T, C>& other) {
-    static_vector_alt<T, C> *o1 = this, *o2 = &other;
-    size_type len1 = o1->size();
-    size_type len2 = o2->size();
-    size_type min_len;
+    static_vector_alt<T, C> *o1, *o2;
+    size_type len1 = this->size();
+    size_type len2 = other.size();
 
-    if (len1 < len2)
-        min_len = len1;
+    if (len1 < len2) {
+        o1 = this;
+        o2 = &other;
+    }
     else {
-        min_len = len2;
-        std::swap(o1, o2);
+        o1 = &other;
+        o2 = this;
         std::swap(len1, len2);
     }
 
-    for (size_type i = 0; i < min_len; ++i)
+    for (size_type i = 0; i < len1; ++i)
         std::swap((*this)[i], other[i]);
 
-    mem::umove(o1->begin() + min_len, o2->begin() + min_len, o2->m_end);
-    mem::destroy(o2->begin() + min_len, o2->m_end);
+    mem::umove(o1->begin() + len1, o2->begin() + len1, o2->m_end);
+    mem::destroy(o2->begin() + len1, o2->m_end);
     o1->m_end = o1->data() + len2;
     o2->m_end = o2->data() + len1;
 }

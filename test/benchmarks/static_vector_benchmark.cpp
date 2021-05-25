@@ -14,15 +14,15 @@ using uwr_static_vector_alt = uwr::static_vector_alt<T, C>;
 template<class T>
 using boost_static_vector = boost::container::static_vector<T, C>;
 
-static constexpr int INT_TIMES = 600;
+static constexpr int INT_TIMES = 500;
 #define INT_ITERS -1
 static constexpr int STRING_TIMES = 300;
 #define STRING_ITERS -1
-static constexpr int TEST_TYPE_TIMES = 400;
+static constexpr int TEST_TYPE_TIMES = 300;
 #define TEST_TYPE_ITERS -1
 static constexpr int INT_STRING_TIMES = 200;
 #define INT_STRING_ITERS -1
-static constexpr int INT_STRING_ARRAY_TIMES = 200;
+static constexpr int INT_STRING_ARRAY_TIMES = 100;
 #define INT_STRING_ARRAY_ITERS -1
 
 BENCHMARK_TEMPLATE(BM_environment, boost_static_vector, int)
