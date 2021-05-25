@@ -667,27 +667,26 @@ static_vector_alt<T, C>::erase(const_iterator first, const_iterator last) {
 template<class T, len_t C>
 constexpr void
 static_vector_alt<T, C>::swap(static_vector_alt<T, C>& other) {
-    static_vector_alt<T, C> *o1, *o2;
-    size_type len1 = this->size();
-    size_type len2 = other.size();
+    T* m_begin = begin();
+    T* o_begin = other.begin();
 
-    if (len1 < len2) {
-        o1 = this;
-        o2 = &other;
+    while (true) {
+        if (m_begin == m_end) {
+            mem::umove(m_begin, o_begin, other.m_end);
+            mem::destroy(o_begin, other.m_end);
+            m_end += other.m_end - o_begin;
+            other.m_end = o_begin;
+            break;
+        }
+        if (o_begin == other.m_end) {
+            mem::umove(o_begin, m_begin, m_end);
+            mem::destroy(m_begin, m_end);
+            other.m_end += m_end - m_begin;
+            m_end = m_begin;
+            break;
+        }
+        std::swap(*m_begin++, *o_begin++);
     }
-    else {
-        o1 = &other;
-        o2 = this;
-        std::swap(len1, len2);
-    }
-
-    for (size_type i = 0; i < len1; ++i)
-        std::swap((*this)[i], other[i]);
-
-    o1->m_end = o1->begin() + len2;
-    mem::umove(o1->begin() + len1, o2->begin() + len1, o2->m_end);
-    mem::destroy(o2->begin() + len1, o2->m_end);
-    o2->m_end = o2->begin() + len1;
 }
 
 template<class T, len_t C>
