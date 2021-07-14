@@ -1,8 +1,9 @@
-CXX := g++ -std=c++17
+CXX := g++
 # check c++20, but write for at least c++17 compatibility
-# CXX := g++ -std=c++20
+VERSION := -std=c++17
+# VERSION := -std=c++20
 
-OFLAGS := -Ofast -march=native -flto -fomit-frame-pointer -s -DNDEBUG
+OFLAGS := $(VERSION) -Ofast -march=native -flto -fomit-frame-pointer -s -DNDEBUG
 WFLAGS := -Wall -Wextra
 IFLAGS := -I include -I src -I include/container
 DFLAGS := -ggdb -fsanitize=address
@@ -36,7 +37,7 @@ run-all: run-benchmarks run-tests
 
 run-benchmarks: $(BENCHMARKS)
 	@for benchmark in $(BENCHMARKS); do \
-		./$$benchmark; \
+		./$$benchmark --benchmark_color=yes --benchmark_counters_tabular=true; \
 		echo; \
 	done
 	
@@ -52,15 +53,15 @@ run-%: $(BIN_DIR)/tests/%
 
 -include $(DEPENDS)
 
-$(BIN_DIR)/tests/%: $(BUILD_DIR)/$(TEST_DIR)/tests/%.o $(OBJECTS) Makefile
+$(BIN_DIR)/tests/%: $(BUILD_DIR)/$(TEST_DIR)/tests/%.o $(OBJECTS)
 	@mkdir -p $(shell dirname $@)
 	$(CXX) $(CXXFLAGS) -lgtest -MMD -MP $< $(OBJECTS) -o $@
 
-$(BIN_DIR)/benchmarks/%: $(BUILD_DIR)/$(TEST_DIR)/benchmarks/%.o $(OBJECTS) Makefile
+$(BIN_DIR)/benchmarks/%: $(BUILD_DIR)/$(TEST_DIR)/benchmarks/%.o $(OBJECTS)
 	@mkdir -p $(shell dirname $@)
 	$(CXX) $(CXXFLAGS) -lbenchmark -MMD -MP $< $(OBJECTS) -o $@
 
-$(BUILD_DIR)/%.o: %.cpp Makefile
+$(BUILD_DIR)/%.o: %.cpp
 	@mkdir -p $(shell dirname $@)
 	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 
