@@ -9,6 +9,8 @@ Tests:
     - `compare_vector_t` is to compare different statistics against `tested_vector_t` - we have specially defigned
       type `test_type` that records statistics about member function usage
     - `tested_vector_t` should have less invocations that `compare_vector_t`
+    - use `temp_test.cpp` to run some simple, fast tests
+    - use ON/OFF macros to turn on/off `test_type` verbose printing
 
 Benchmarks:
     - we can specify to do specific number of iters with e.g. SWAP_ITERS macro variable - if it is set to -1
