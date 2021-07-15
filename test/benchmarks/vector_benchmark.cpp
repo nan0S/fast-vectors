@@ -2,6 +2,7 @@
 #include <boost/container/vector.hpp>
 #include <vector>
 #include <test_type/test_type.hpp>
+#include <rvector.h>
 
 #include "vector_benchmark_base.hpp"
 
@@ -30,6 +31,10 @@ BENCHMARK_TEMPLATE(BM_environment, uwr_vector, int)
     ->Unit(::benchmark::kMillisecond)
     ->MinTime(0.5)
     ->Args({INT_ITERS, 1});
+BENCHMARK_TEMPLATE(BM_environment, rvector, int)
+    ->Unit(::benchmark::kMillisecond)
+    ->MinTime(0.5)
+    ->Args({INT_ITERS, 1});
 
 BENCHMARK_TEMPLATE(BM_environment, std_vector, std::string)
     ->Unit(::benchmark::kMillisecond)
@@ -40,6 +45,10 @@ BENCHMARK_TEMPLATE(BM_environment, boost_vector, std::string)
     ->MinTime(0.5)
     ->Args({STRING_ITERS, 2});
 BENCHMARK_TEMPLATE(BM_environment, uwr_vector, std::string)
+    ->Unit(::benchmark::kMillisecond)
+    ->MinTime(0.5)
+    ->Args({STRING_ITERS, 2});
+BENCHMARK_TEMPLATE(BM_environment, rvector, std::string)
     ->Unit(::benchmark::kMillisecond)
     ->MinTime(0.5)
     ->Args({STRING_ITERS, 2});
@@ -56,6 +65,10 @@ BENCHMARK_TEMPLATE(BM_environment, uwr_vector, test_type)
     ->Unit(::benchmark::kMillisecond)
     ->MinTime(0.5)
     ->Args({TEST_TYPE_ITERS, 3});
+BENCHMARK_TEMPLATE(BM_environment, rvector, test_type)
+    ->Unit(::benchmark::kMillisecond)
+    ->MinTime(0.5)
+    ->Args({TEST_TYPE_ITERS, 3});
 
 BENCHMARK_TEMPLATE(BM_environment, std_vector, int, std::string)
     ->Unit(::benchmark::kMillisecond)
@@ -69,6 +82,10 @@ BENCHMARK_TEMPLATE(BM_environment, uwr_vector, int, std::string)
     ->Unit(::benchmark::kMillisecond)
     ->MinTime(0.5)
     ->Args({INT_STRING_ITERS, 4});
+BENCHMARK_TEMPLATE(BM_environment, rvector, int, std::string)
+    ->Unit(::benchmark::kMillisecond)
+    ->MinTime(0.5)
+    ->Args({INT_STRING_ITERS, 4});
 
 BENCHMARK_TEMPLATE(BM_environment, std_vector, int, std::string, std::array<int, 10>)
     ->Unit(::benchmark::kMillisecond)
@@ -79,6 +96,10 @@ BENCHMARK_TEMPLATE(BM_environment, boost_vector, int, std::string, std::array<in
     ->MinTime(0.5)
     ->Args({INT_STRING_ARRAY_ITERS, 5});
 BENCHMARK_TEMPLATE(BM_environment, uwr_vector, int, std::string, std::array<int, 10>)
+    ->Unit(::benchmark::kMillisecond)
+    ->MinTime(0.5)
+    ->Args({INT_STRING_ARRAY_ITERS, 5});
+BENCHMARK_TEMPLATE(BM_environment, rvector, int, std::string, std::array<int, 10>)
     ->Unit(::benchmark::kMillisecond)
     ->MinTime(0.5)
     ->Args({INT_STRING_ARRAY_ITERS, 5});
