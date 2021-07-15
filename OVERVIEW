@@ -1,0 +1,27 @@
+General:
+    - vectors should comply to C++20 standard but still should be compatible with C++17 standard
+
+Tests:
+    - we use generic `vector_test_base.hpp` tests to test vector as a container
+    - more specific tests should be placed in e.g. `static_vector_test.cpp`
+    - in tests we use two types: `tested_vector_t` and `compare_vector_t`
+    - `tested_vector_t` is vector to be tested
+    - `compare_vector_t` is to compare different statistics against `tested_vector_t` - we have specially defigned
+      type `test_type` that records statistics about member function usage
+    - `tested_vector_t` should have less invocations that `compare_vector_t`
+
+Benchmarks:
+    - we can specify to do specific number of iters with e.g. SWAP_ITERS macro variable - if it is set to -1
+      number of iterations is set to automatic (that's the way google-benchmark works)
+    - we can also disable static_vector/static_vector_alt tests by not defining DO_STATIC_VECTOR(_ALT)_BENCH variables
+    -- `simple_benchmark`:
+        - we have `simple_benchmark` with 4 specific benchmarks
+        - `BM_push_back` push backs elements multiple times
+        - `BM_push_back_pop_back` randomly pushes/pops back from the vector
+        - `BM_swap` swaps two vector multiple times
+        - `BM_resize` resizes vector to different sizes
+    -- `bechmark_env`:
+        - uses vector of vectors for every specified type e.g. `tuple<vector<vector<int>>, vector<vector<string>>, vector<vector<test_type>>>`
+          if `int`, `string` and `test_type` were specified
+        - `BM_environment` uses environment described above multiple times
+        - `BM_push_back` does push_back multiple times
