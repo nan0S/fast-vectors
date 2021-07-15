@@ -65,11 +65,11 @@ void BM_push_back_pop_back(::benchmark::State& s) {
             while (iters) {
                 size_type c = rand() % iters + 1;
                 iters -= c;
-                if (c > v.size() || (v.size() + c <= v.capacity() && rand() % 2 == 0))
+                if (v.size() + c <= v.capacity() && rand() % 2 == 0)
                     for (size_type j = 0; j < c; ++j)
                         v.push_back(j);
                 else
-                    while (c--)
+                    while (!v.empty() && c--)
                         v.pop_back();
             }
         }
