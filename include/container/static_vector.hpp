@@ -11,7 +11,8 @@ namespace uwr {
 
 using len_t = mem::len_t;
 // TODO: restore to uint
-static_assert(std::is_same_v<len_t, std::size_t>, "static_vector template type has to be the same as len_t!");
+static_assert(std::is_same_v<len_t, std::size_t>,
+    "static_vector template type has to be the same as len_t!");
 
 /* template type is uint insted of len_t clarity reasons
    (not to lookup what len_t is) */
