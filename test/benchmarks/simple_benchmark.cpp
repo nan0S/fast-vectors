@@ -18,14 +18,16 @@ using boost_static_vector = boost::container::static_vector<T, C>;
 using uwr_static_vector = uwr::static_vector<T, C>;
 using uwr_static_vector_alt = uwr::static_vector_alt<T, C>;
 
+#define COMMON_ITERS 100
+
 static constexpr int PUSH_BACK_TIMES = 10000;
-#define PUSH_BACK_ITERS -1
+#define PUSH_BACK_ITERS (COMMON_ITERS == -1 ? -1 : COMMON_ITERS)
 static constexpr int PUSH_BACK_POP_BACK_TIMES = 10000;
-#define PUSH_BACK_POP_BACK_ITERS -1
+#define PUSH_BACK_POP_BACK_ITERS (COMMON_ITERS == -1 ? -1 : COMMON_ITERS)
 static constexpr int SWAP_TIMES = 2000;
-#define SWAP_ITERS -1
+#define SWAP_ITERS (COMMON_ITERS == -1 ? -1 : COMMON_ITERS)
 static constexpr int RESIZE_TIMES = 1000000;
-#define RESIZE_ITERS -1
+#define RESIZE_ITERS (COMMON_ITERS == -1 ? -1 : COMMON_ITERS)
 
 #define DO_STATIC_VECTOR_BENCH
 #define DO_STATIC_VECTOR_ALT_BENCH
