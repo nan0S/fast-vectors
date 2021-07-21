@@ -542,11 +542,13 @@ template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, const T& value) {
     auto position = const_cast<T*>(pos);
+    auto eptr = end();
+
     // TODO: unlikely or do better
-    if (position == end())
+    if (position == eptr)
         new (position) T(value);
     else {
-        mem::shiftr(position + 1, position, end());
+        mem::shiftr(position + 1, position, eptr);
         *position = value;
     }
     ++m_length;
@@ -558,6 +560,8 @@ template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, T&& value) {
     auto position = const_cast<T*>(pos);
+    auto m_end = end();
+
     if (position == end())
         new (position) T(std::move(value));
     else {
@@ -573,6 +577,7 @@ template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, size_type count, const T& value) {
     auto position = const_cast<T*>(pos);
+
     // TODO: unlikely or can do better
     if (!count)
         return position;
@@ -601,6 +606,7 @@ template<class InputIterator, class>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, InputIterator first, InputIterator last) {
     auto position = const_cast<T*>(pos);
+
     // TODO: unlikely or can do better
     if (first == last)
         return position;
@@ -645,6 +651,7 @@ template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::erase(const_iterator first, const_iterator last) {
     auto f = const_cast<T*>(first);
+
     // TODO: unlikely, maybe can do better
     if (first != last) {
         auto l = const_cast<T*>(last);

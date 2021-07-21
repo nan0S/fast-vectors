@@ -14,7 +14,7 @@ using uwr_static_vector = uwr::static_vector<T, C>;
 template<class T>
 using uwr_static_vector_alt = uwr::static_vector_alt<T, C>;
 
-#define COMMON_ITERS 100
+#define COMMON_ITERS -1
 
 static constexpr int INT_TIMES = 500;
 #define INT_ITERS (COMMON_ITERS == -1 ? -1 : COMMON_ITERS)
