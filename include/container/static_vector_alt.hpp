@@ -553,11 +553,12 @@ template<class T, len_t C>
 constexpr typename static_vector_alt<T, C>::iterator
 static_vector_alt<T, C>::insert(const_iterator pos, const T& value) {
     auto position = const_cast<T*>(pos);
+
     // TODO: unlikely or do better
     if (position == m_end)
         new (position) T(value);
     else {
-        mem::shiftr(position + 1, position, end());
+        mem::shiftr(position + 1, position, m_end);
         *position = value;
     }
     ++m_end;
@@ -569,10 +570,11 @@ template<class T, len_t C>
 constexpr typename static_vector_alt<T, C>::iterator
 static_vector_alt<T, C>::insert(const_iterator pos, T&& value) {
     auto position = const_cast<T*>(pos);
+
     if (position == m_end)
         new (position) T(std::move(value));
     else {
-        mem::shiftr(position + 1, position, end());
+        mem::shiftr(position + 1, position, m_end);
         *position = std::move(value);
     }
     ++m_end;
@@ -611,6 +613,7 @@ template<class InputIterator, class>
 constexpr typename static_vector_alt<T, C>::iterator
 static_vector_alt<T, C>::insert(const_iterator pos, InputIterator first, InputIterator last) {
     auto position = const_cast<T*>(pos);
+
     // TODO: unlikely or can do better
     if (first == last)
         return position;
@@ -693,8 +696,9 @@ static_vector_alt<T, C>::swap(static_vector_alt<T, C>& other) {
 template<class T, len_t C>
 constexpr void
 static_vector_alt<T, C>::clear() noexcept {
-    mem::destroy(data(), m_end);
-    m_end = data();
+    auto m_begin = data();
+    mem::destroy(m_begin, m_end);
+    m_end = m_begin;
 }
 
 template<class T, len_t C>
@@ -702,6 +706,7 @@ template<class... Args>
 constexpr typename static_vector_alt<T, C>::iterator
 static_vector_alt<T, C>::emplace(const_iterator pos, Args&&... args) {
     auto position = const_cast<T*>(pos);
+
     // TODO: unlikely or do better
     if (position == m_end)
         new (position) T(std::forward<Args>(args)...);
@@ -859,9 +864,10 @@ template<class T, uwr::len_t C, class U>
 constexpr typename uwr::static_vector_alt<T, C>::size_type
 erase(uwr::static_vector_alt<T, C>& c, const U& value) {
     // TODO: possible optimizations?
-    auto it = std::remove(c.begin(), c.end(), value);
-    auto r = std::distance(it, c.end());
-    c.erase(it, c.end());
+    auto cend = c.end();
+    auto it = std::remove(c.begin(), cend, value);
+    auto r = std::distance(it, cend);
+    c.erase(it, cend);
 
     return r;
 }
@@ -870,9 +876,10 @@ template<class T, uwr::len_t C, class Pred>
 constexpr typename uwr::static_vector_alt<T, C>::size_type
 erase_if(uwr::static_vector_alt<T, C>& c, Pred pred) {
     // TODO: possible optimizations?
-    auto it = std::remove_if(c.begin(), c.end(), pred);
-    auto r = std::distance(it, c.end());
-    c.erase(it, c.end());
+    auto cend = c.end();
+    auto it = std::remove_if(c.begin(), cend, pred);
+    auto r = std::distance(it, cend);
+    c.erase(it, cend);
 
     return r;
 }

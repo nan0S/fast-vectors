@@ -562,10 +562,10 @@ static_vector<T, C>::insert(const_iterator pos, T&& value) {
     auto position = const_cast<T*>(pos);
     auto m_end = end();
 
-    if (position == end())
+    if (position == m_end)
         new (position) T(std::move(value));
     else {
-        mem::shiftr(position + 1, position, end());
+        mem::shiftr(position + 1, position, m_end);
         *position = std::move(value);
     }
     ++m_length;
@@ -698,6 +698,7 @@ template<class... Args>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::emplace(const_iterator pos, Args&&... args) {
     auto position = const_cast<T*>(pos);
+
     // TODO: unlikely or do better
     if (position == end())
         new (position) T(std::forward<Args>(args)...);
@@ -855,9 +856,10 @@ template<class T, uwr::len_t C, class U>
 constexpr typename uwr::static_vector<T, C>::size_type
 erase(uwr::static_vector<T, C>& c, const U& value) {
     // TODO: possible optimizations?
-    auto it = std::remove(c.begin(), c.end(), value);
-    auto r = std::distance(it, c.end());
-    c.erase(it, c.end());
+    auto cend = c.end();
+    auto it = std::remove(c.begin(), cend, value);
+    auto r = std::distance(it, cend);
+    c.erase(it, cend);
 
     return r;
 }
@@ -866,9 +868,10 @@ template<class T, uwr::len_t C, class Pred>
 constexpr typename uwr::static_vector<T, C>::size_type
 erase_if(uwr::static_vector<T, C>& c, Pred pred) {
     // TODO: possible optimizations?
-    auto it = std::remove_if(c.begin(), c.end(), pred);
-    auto r = std::distance(it, c.end());
-    c.erase(it, c.end());
+    auto cend = c.end();
+    auto it = std::remove_if(c.begin(), cend, pred);
+    auto r = std::distance(it, cend);
+    c.erase(it, cend);
 
     return r;
 }
