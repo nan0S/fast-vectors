@@ -106,10 +106,11 @@ void BM_swap(::benchmark::State& s) {
             ::benchmark::DoNotOptimize(v2.data());
 
             int many = times + rand() % 2;
-            for (int j = 0; j < many; ++j)
+            for (int j = 0; j < many; ++j) {
                 v1.swap(v2);
+                ::benchmark::ClobberMemory();
+            }
 
-            ::benchmark::ClobberMemory();
         }
 
     s.counters["t3"];
