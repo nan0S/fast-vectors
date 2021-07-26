@@ -4,10 +4,16 @@
 #include <random>
 #include <array>
 
-// TODO: remove
-template<class T>
-void info(const T& msg, int indent=0, bool reset=false);
+/*
+ * print separated by spaces and newline at the end
+ */
+template<class First, class... Rest>
+void log(First&& first, Rest&&... rest);
 
+/*
+ * map int to class T, e.g. get_value<str>(10) -> "test10"
+ * feel free to specify for your own types
+ */
 template<class T>
 T get_value(int id);
 
@@ -31,6 +37,24 @@ namespace Random {
         std::uniform_real_distribution<T>
     >;
 
+    /*
+     * random integer from [0, n - 1]
+     */
+    template<class T>
+    Int<T> rand(T n);
+    
+    /*
+     * random number from [a, b]
+     */
+    template<class T>
+    T rand(T a, T b);
+}
+
+/*
+ * implementations
+ */
+
+namespace Random {
     template<class T>
     Int<T> rand(T n) {
         return dist_t<T>{0, n - 1}(rng);
@@ -42,19 +66,23 @@ namespace Random {
     }
 }
 
-// TODO: remove
-template<class T>
-void info(const T& msg, int indent, bool reset) {
-    if (reset)
-        std::cout << '\r';
-    std::cout << std::string(3 * indent, ' ') << msg;
-    if (!reset)
-        std::cout << std::endl;
-    else
-        std::cout.flush();
-}
-
 template<class T>
 T get_value(int id) {
     return id;
+}
+
+template<class V>
+V get_container(int size) {
+    using T = typename V::value_type;
+    V v;
+    v.reserve(size);
+    for (int i = 0; i < size; ++i)
+        v.emplace_back(get_value<T>(i));
+    return v;
+}
+
+template<class First, class... Args>
+void log(First&& first, Args&&... args) {
+    std::cout << std::forward<First>(first) << " ";
+    log(std::forward<Args>(args)...);
 }
