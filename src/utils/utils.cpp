@@ -2,6 +2,10 @@
 
 std::mt19937 Random::rng(std::random_device{}());
 
+void Random::seed(int seed) {
+    rng.seed(seed);
+}
+
 template<>
 std::string get_value(int id) {
     return "test" + std::to_string(id);

@@ -38,6 +38,11 @@ namespace Random {
     >;
 
     /*
+     * set seed
+     */
+    void seed(int seed);
+
+    /*
      * random integer from [0, n - 1]
      */
     template<class T>
