@@ -3,10 +3,11 @@ CXX := g++
 VERSION := -std=c++17
 # VERSION := -std=c++20
 
-OFLAGS := -Ofast -march=native -flto -fomit-frame-pointer -s -DNDEBUG
+# OFLAGS := -Ofast -march=native -flto -fomit-frame-pointer -s -DNDEBUG
+OFLAGS := -O3 -DNDEBUG -march=native
 WFLAGS := -Wall -Wextra
 IFLAGS := -I include -I src -I include/container
-# DFLAGS := -ggdb -fsanitize=address -fno-omit-frame-pointer
+DFLAGS := -ggdb -fno-omit-frame-pointer
 CXXFLAGS := $(VERSION) $(IFLAGS) $(WFLAGS) $(OFLAGS) $(DFLAGS)
 
 SRC_DIR := src
