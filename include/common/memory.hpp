@@ -12,6 +12,9 @@ typedef unsigned int uint;
 // using len_t = uint;
 using len_t = std::size_t;
 
+/*
+ * construct (so should be uninitialized)
+ */
 template<class T>
 UWR_FORCEINLINE
 void construct(T* begin, T* end);
@@ -19,7 +22,9 @@ template<class T>
 UWR_FORCEINLINE
 void construct(T* begin, len_t n);
 
-/* regular fill */
+/*
+ * fill initialized memory
+ */
 template<class T>
 UWR_FORCEINLINE
 void fill(T* begin, T* end, const T& val);
@@ -27,7 +32,9 @@ template<class T>
 UWR_FORCEINLINE
 void fill(T* begin, len_t n, const T& val);
 
-/* uninitialized fill */
+/*
+ * fill unitialized memory
+ */
 template<class T>
 UWR_FORCEINLINE
 void ufill(T* begin, T* end, const T& val);
@@ -35,7 +42,9 @@ template<class T>
 UWR_FORCEINLINE
 void ufill(T* begin, len_t n, const T& val);
 
-/* regular copy */
+/*
+ * copy into initialized memory
+ */
 template<class T, class InputIterator>
 UWR_FORCEINLINE
 T_Copy_A<T> copy(T* dest, InputIterator begin, len_t n);
@@ -43,7 +52,9 @@ template<class T, class InputIterator>
 UWR_FORCEINLINE
 NT_Copy_A<T> copy(T* dest, InputIterator begin, len_t n);
 
-/* uninitialized copy */
+/*
+ * copy into uninitialized memory
+ */
 template<class T, class InputIterator>
 UWR_FORCEINLINE
 T_Copy_C<T> ucopy(T* dest, InputIterator begin, InputIterator end);
@@ -51,7 +62,9 @@ template<class T, class InputIterator>
 UWR_FORCEINLINE
 NT_Copy_C<T> ucopy(T* dest, InputIterator begin, InputIterator end);
 
-/* regular move */
+/*
+ * move into initialized memory
+ */
 template<class T, class InputIterator>
 UWR_FORCEINLINE
 T_Move_A<T> move(T* dest, InputIterator begin, InputIterator end);
@@ -59,7 +72,9 @@ template<class T, class InputIterator>
 UWR_FORCEINLINE
 NT_Move_A<T> move(T* dest, InputIterator begin, InputIterator end);
 
-/* uninitialized move */
+/*
+ * move into uninitialized memor
+ */
 template<class T, class InputIterator>
 UWR_FORCEINLINE
 T_Move_C<T> umove(T* dest, InputIterator begin, len_t n);
@@ -73,6 +88,9 @@ template<class T, class InputIterator>
 UWR_FORCEINLINE
 NT_Move_C<T> umove(T* dest, InputIterator begin, InputIterator end);
 
+/*
+ * destroy range of objects (so are initialized)
+ */
 template<class T>
 UWR_FORCEINLINE
 void destroy(T* begin, len_t n);
@@ -80,6 +98,9 @@ template<class T>
 UWR_FORCEINLINE
 void destroy(T* begin, T* end);
 
+/*
+ * destroy at specified adderss
+ */
 template<class T>
 UWR_FORCEINLINE
 void destroy_at(T* addr);
@@ -96,6 +117,32 @@ T&& create(T&& x);
 template<class T>
 UWR_FORCEINLINE
 T create();
+
+/*
+ * shifts data to the right,
+ * assumption: begin < dest <= end and addresses >= end are uninitialized 
+ */
+template<class T>
+UWR_FORCEINLINE
+T_Move<T> shiftr(T* dest, T* begin, T* end);
+template<class T>
+UWR_FORCEINLINE
+NT_Move<T> shiftr(T* dest, T* begin, T* end);
+
+/*
+ * shifts data to the left, assumption: dest < begin
+ */
+template<class T>
+UWR_FORCEINLINE
+T_Move_A<T> shiftl(T* dest, T* begin, T* end);
+template<class T>
+UWR_FORCEINLINE
+NT_Move_A<T> shiftl(T* dest, T* begin, T* end);
+
+
+/*
+ * implementations
+ */
 
 // TODO: remove
 template<class T>
@@ -114,24 +161,6 @@ NT_Move<T> shiftr_data(T* begin, len_t end)
     std::move_backward(begin, end_p - 1, end_p);
     begin->~T();
 }
-
-
-/* shifts data to the right,
- * assumption: begin < dest <= end and addresses >= end are uninitialized */
-template<class T>
-UWR_FORCEINLINE
-T_Move<T> shiftr(T* dest, T* begin, T* end);
-template<class T>
-UWR_FORCEINLINE
-NT_Move<T> shiftr(T* dest, T* begin, T* end);
-
-/* shifts data to the left, assumption: dest < begin */
-template<class T>
-UWR_FORCEINLINE
-T_Move_A<T> shiftl(T* dest, T* begin, T* end);
-template<class T>
-UWR_FORCEINLINE
-NT_Move_A<T> shiftl(T* dest, T* begin, T* end);
 
 template<class T>
 void construct(T* begin, T* end) {
