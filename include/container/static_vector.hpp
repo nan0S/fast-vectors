@@ -704,6 +704,15 @@ static_vector<T, C>::emplace(const_iterator pos, Args&&... args) {
         new (position) T(std::forward<Args>(args)...);
     else {
         mem::shiftr(position + 1, position, end());
+        // this strange construction is caused by the fact
+        // args can be either "proper" constructor arguments
+        // or it can be an object of type T, if it is, we don't want to do
+        // *position = T(args), because that would create unnecessary object,
+        // instead we would like to write *position = args
+        // note: this problem only happens when we use opeartor= (so we copy
+        // into initialized memory), when we copy into unitialized memory
+        // we have to call constructor in both situation so
+        // T(std::forward<Args>(args)...) will do
         *position = mem::create<T>(std::forward<Args>(args)...);
     }
     ++m_length;
