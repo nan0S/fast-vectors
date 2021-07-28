@@ -1,6 +1,8 @@
 #include <utils/utils.hpp>
 #include <benchmark/benchmark.h>
 
+using namespace benchmark;
+
 template<template<class> class V, class... Ts>
 class vector_bench_env {
 public:
@@ -51,8 +53,10 @@ private:
         int q = random(1, 3);
         std::uniform_int_distribution<> size_dist(1, i + 10);
 
-        while (q--)
+        while (q--) {
             typed_env.emplace_back(size_dist(gen));
+            DoNotOptimize(typed_env.back().data());
+        }
     }
 
     template<class T>
@@ -225,7 +229,7 @@ private:
 };
 
 template<class Vector>
-void BM_push_back(::benchmark::State& s) {
+void BM_push_back(State& s) {
     using T = typename Vector::value_type;
     int max_iters = s.range(0);
     int iters = s.range(0);
@@ -236,8 +240,12 @@ void BM_push_back(::benchmark::State& s) {
     for (auto _ : s)
         for (; iters < max_iters; iters *= 10) {
             Vector v;
+            DoNotOptimize(v.data());
+
             for (int i = 0; i < iters; ++i)
                 v.push_back(T());
+
+            ClobberMemory();
         }
 
     int id = s.range(1);
@@ -245,14 +253,18 @@ void BM_push_back(::benchmark::State& s) {
 }
 
 template<template<class> class V, class... Ts>
-void BM_environment(::benchmark::State& s) {
+void BM_environment(State& s) {
     constexpr int seed = 12345512;
     int iters = s.range(0);
     int r = 0;
 
     for (auto _ : s) {
         vector_bench_env<V, Ts...> v_env(seed + r++);
+        DoNotOptimize(v_env);
+
         v_env.run_simulation(iters);
+        
+        ClobberMemory();
     }
 
     int id = s.range(1);
