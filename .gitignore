@@ -7,3 +7,6 @@ compile_commands.json
 *.log
 run-benchmark
 do-tests
+
+perf.data
+perf.data.old
