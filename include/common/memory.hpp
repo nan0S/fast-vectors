@@ -17,10 +17,16 @@ using len_t = std::size_t;
  */
 template<class T>
 UWR_FORCEINLINE
-void construct(T* begin, T* end);
+T_Cons_D<T> construct(T* begin, T* end);
 template<class T>
 UWR_FORCEINLINE
-void construct(T* begin, len_t n);
+NT_Cons_D<T> construct(T* begin, T* end);
+template<class T>
+UWR_FORCEINLINE
+T_Cons_D<T> construct(T* begin, len_t n);
+template<class T>
+UWR_FORCEINLINE
+NT_Cons_D<T> construct(T* begin, len_t n);
 
 /*
  * fill initialized memory
@@ -105,6 +111,13 @@ template<class T>
 UWR_FORCEINLINE
 void destroy_at(T* addr);
 
+/*
+ * create object of type T (call its constructor)
+ * only if args are proper constructor arguemnts,
+ * if args is one object of type T, just return that
+ * object and don't call constructor
+ * note: would hapilly remove that function
+ */
 template<class T, class V, class... Args>
 UWR_FORCEINLINE
 T create(V&& x, Args&&... args);
@@ -163,15 +176,23 @@ NT_Move<T> shiftr_data(T* begin, len_t end)
 }
 
 template<class T>
-void construct(T* begin, T* end) {
-    while (begin != end)
-        new (begin++) T();
+T_Cons_D<T> construct(T* begin, T* end) {
+    std::memset(begin, 0, (end - begin) * sizeof(T));
 }
 
 template<class T>
-void construct(T* begin, len_t n) {
-    while (n--)
-        new (begin++) T();
+NT_Cons_D<T> construct(T* begin, T* end) {
+    std::uninitialized_default_construct(begin, end);
+}
+
+template<class T>
+T_Cons_D<T> construct(T* begin, len_t n) {
+    std::memset(begin, 0, n * sizeof(T));
+}
+
+template<class T>
+NT_Cons_D<T> construct(T* begin, len_t n) {
+    std::uninitialized_default_construct_n(begin, n);
 }
 
 template<class T>
