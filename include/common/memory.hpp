@@ -53,6 +53,12 @@ void ufill(T* begin, len_t n, const T& val);
  */
 template<class T, class InputIterator>
 UWR_FORCEINLINE
+T_Copy_A<T> copy(T* dest, InputIterator begin, InputIterator end);
+template<class T, class InputIterator>
+UWR_FORCEINLINE
+NT_Copy_A<T> copy(T* dest, InputIterator begin, InputIterator end);
+template<class T, class InputIterator>
+UWR_FORCEINLINE
 T_Copy_A<T> copy(T* dest, InputIterator begin, len_t n);
 template<class T, class InputIterator>
 UWR_FORCEINLINE
@@ -67,6 +73,12 @@ T_Copy_C<T> ucopy(T* dest, InputIterator begin, InputIterator end);
 template<class T, class InputIterator>
 UWR_FORCEINLINE
 NT_Copy_C<T> ucopy(T* dest, InputIterator begin, InputIterator end);
+template<class T, class InputIterator>
+UWR_FORCEINLINE
+T_Copy_C<T> ucopy(T* dest, InputIterator begin, len_t n);
+template<class T, class InputIterator>
+UWR_FORCEINLINE
+NT_Copy_C<T> ucopy(T* dest, InputIterator begin, len_t n);
 
 /*
  * move into initialized memory
@@ -77,32 +89,38 @@ T_Move_A<T> move(T* dest, InputIterator begin, InputIterator end);
 template<class T, class InputIterator>
 UWR_FORCEINLINE
 NT_Move_A<T> move(T* dest, InputIterator begin, InputIterator end);
+template<class T, class InputIterator>
+UWR_FORCEINLINE
+T_Move_A<T> move(T* dest, InputIterator begin, len_t n);
+template<class T, class InputIterator>
+UWR_FORCEINLINE
+NT_Move_A<T> move(T* dest, InputIterator begin, len_t n);
 
 /*
  * move into uninitialized memor
  */
 template<class T, class InputIterator>
 UWR_FORCEINLINE
-T_Move_C<T> umove(T* dest, InputIterator begin, len_t n);
-template<class T, class InputIterator>
-UWR_FORCEINLINE
-NT_Move_C<T> umove(T* dest, InputIterator begin, len_t n);
-template<class T, class InputIterator>
-UWR_FORCEINLINE
 T_Move_C<T> umove(T* dest, InputIterator begin, InputIterator end);
 template<class T, class InputIterator>
 UWR_FORCEINLINE
 NT_Move_C<T> umove(T* dest, InputIterator begin, InputIterator end);
+template<class T, class InputIterator>
+UWR_FORCEINLINE
+T_Move_C<T> umove(T* dest, InputIterator begin, len_t n);
+template<class T, class InputIterator>
+UWR_FORCEINLINE
+NT_Move_C<T> umove(T* dest, InputIterator begin, len_t n);
 
 /*
  * destroy range of objects (so are initialized)
  */
 template<class T>
 UWR_FORCEINLINE
-void destroy(T* begin, len_t n);
+void destroy(T* begin, T* end);
 template<class T>
 UWR_FORCEINLINE
-void destroy(T* begin, T* end);
+void destroy(T* begin, len_t n);
 
 /*
  * destroy at specified adderss
@@ -216,6 +234,16 @@ void ufill(T* begin, len_t n, const T& val) {
 }
 
 template<class T, class InputIterator>
+T_Copy_A<T> copy(T* dest, InputIterator begin, InputIterator end) {
+    std::memcpy(dest, &*begin, (end - begin) * sizeof(T));
+}
+
+template<class T, class InputIterator>
+NT_Copy_A<T> copy(T* dest, InputIterator begin, InputIterator end) {
+    std::copy(begin, end, dest);
+}
+
+template<class T, class InputIterator>
 T_Copy_A<T> copy(T* dest, InputIterator begin, len_t n) {
     std::memcpy(dest, &*begin, n * sizeof(T));
 }
@@ -236,6 +264,26 @@ NT_Copy_C<T> ucopy(T* dest, InputIterator begin, InputIterator end) {
 }
 
 template<class T, class InputIterator>
+T_Copy_C<T> ucopy(T* dest, InputIterator begin, len_t n) {
+    std::memcpy(dest, &*begin, n * sizeof(T));
+}
+
+template<class T, class InputIterator>
+NT_Copy_C<T> ucopy(T* dest, InputIterator begin, len_t n) {
+    std::uninitialized_copy_n(begin, n, dest);
+}
+
+template<class T, class InputIterator>
+T_Move_A<T> move(T* dest, InputIterator begin, InputIterator end) {
+    std::memcpy(dest, &*begin, (end - begin) * sizeof(T));
+}
+
+template<class T, class InputIterator>
+NT_Move_A<T> move(T* dest, InputIterator begin, InputIterator end) {
+    std::move(begin, end, dest);
+}
+
+template<class T, class InputIterator>
 T_Move_A<T> move(T* dest, InputIterator begin, len_t n) {
     std::memcpy(dest, &*begin, n * sizeof(T));
 }
@@ -243,16 +291,6 @@ T_Move_A<T> move(T* dest, InputIterator begin, len_t n) {
 template<class T, class InputIterator>
 NT_Move_A<T> move(T* dest, InputIterator begin, len_t n) {
     std::move(begin, begin + n, dest);
-}
-
-template<class T, class InputIterator>
-T_Move_C<T> umove(T* dest, InputIterator begin, len_t n) {
-    std::memcpy(dest, &*begin, n * sizeof(T));
-}
-
-template<class T, class InputIterator>
-NT_Move_C<T> umove(T* dest, InputIterator begin, len_t n) {
-    std::uninitialized_move_n(begin, n, dest);
 }
 
 template<class T, class InputIterator>
@@ -265,14 +303,24 @@ NT_Move_C<T> umove(T* dest, InputIterator begin, InputIterator end) {
     std::uninitialized_move(begin, end, dest);
 }
 
-template<class T>
-void destroy(T* begin, len_t n) {
-    std::destroy_n(begin, n);
+template<class T, class InputIterator>
+T_Move_C<T> umove(T* dest, InputIterator begin, len_t n) {
+    std::memcpy(dest, &*begin, n * sizeof(T));
+}
+
+template<class T, class InputIterator>
+NT_Move_C<T> umove(T* dest, InputIterator begin, len_t n) {
+    std::uninitialized_move_n(begin, n, dest);
 }
 
 template<class T>
 void destroy(T* begin, T* end) {
     std::destroy(begin, end);
+}
+
+template<class T>
+void destroy(T* begin, len_t n) {
+    std::destroy_n(begin, n);
 }
 
 template<class T>
