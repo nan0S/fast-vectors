@@ -38,6 +38,19 @@ template<class T>
 UWR_FORCEINLINE
 void fill(T* begin, len_t n, const T& val);
 
+// TODO: remove
+#define OPT_THRESHOLD 1
+template<class T>
+UWR_FORCEINLINE
+void _opt_fill(T* begin, len_t n, const T& val);
+
+/*
+ * optimized fill initialized memory
+ */
+template<class T>
+UWR_FORCEINLINE
+T_Copy_A<T> opt_fill(T* begin, len_t n, const T& val);
+
 /*
  * fill unitialized memory
  */
@@ -47,6 +60,13 @@ void ufill(T* begin, T* end, const T& val);
 template<class T>
 UWR_FORCEINLINE
 void ufill(T* begin, len_t n, const T& val);
+
+/*
+ * optimized fill uninitialized memory
+ */
+template<class T>
+UWR_FORCEINLINE
+T_Copy_C<T> opt_ufill(T* begin, len_t n, const T& val);
 
 /*
  * copy into initialized memory
@@ -224,6 +244,14 @@ void fill(T* begin, len_t n, const T& val) {
 }
 
 template<class T>
+T_Copy_A<T> opt_fill(T* begin, len_t n, const T& val) {
+    if (n <= OPT_THRESHOLD)
+        fill(begin, n, val);
+    else
+        _opt_fill(begin, n, val);
+}
+
+template<class T>
 void ufill(T* begin, T* end, const T& val) {
     std::uninitialized_fill(begin, end, val);
 }
@@ -231,6 +259,27 @@ void ufill(T* begin, T* end, const T& val) {
 template<class T>
 void ufill(T* begin, len_t n, const T& val) {
     std::uninitialized_fill_n(begin, n, val);
+}
+
+template<class T>
+T_Copy_C<T> opt_ufill(T* begin, len_t n, const T& val) {
+    if (n <= OPT_THRESHOLD)
+        ufill(begin, n, val);
+    else
+        _opt_fill(begin, n, val);
+}
+
+// TODO: temporary
+template<class T>
+void _opt_fill(T* begin, len_t n, const T& val) {
+    *begin = val;
+    len_t cur = 1;
+    while (2 * cur <= n) {
+        std::memcpy(begin + cur, begin, cur * sizeof(T));
+        cur *= 2;
+    }
+    int last = n - cur;
+    std::memcpy(begin + cur, begin + cur - last, last * sizeof(T));
 }
 
 template<class T, class InputIterator>
