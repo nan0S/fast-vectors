@@ -1,6 +1,7 @@
 #include <benchmark/benchmark.h>
 #include <common/memory.hpp>
 #include <test_type/test_type.hpp>
+#include <utils/utils.hpp>
 
 using namespace benchmark;
 using namespace uwr::mem;
@@ -10,17 +11,17 @@ using trivial_type_t = int;
 using non_trivial_type_t = test_type;
 
 /*
- * benchmark construct(begin, end)
+ * benchmark fill(begin, end)
  */
 template<class T>
-void BM_construct_range(State& s) {
+void BM_fill_range(State& s) {
     int n = s.range(0);
 
     for (auto _ : s) {
-        char t[n * sizeof(T)];
+        T t[n];
         DoNotOptimize((void*)t);
 
-        construct((T*)t, (T*)t + n);
+        fill(t, t + n, get_value<T>(13));
 
         ClobberMemory();
     }
@@ -29,17 +30,17 @@ void BM_construct_range(State& s) {
 }
 
 /*
- * benchmark construct(begin, n)
+ * benchmark fill(begin, n)
  */
 template<class T>
-void BM_construct_n(State& s) {
+void BM_fill_n(State& s) {
     int n = s.range(0);
 
     for (auto _ : s) {
-        char t[n * sizeof(T)];
+        T t[n];
         DoNotOptimize((void*)t);
 
-        construct((T*)t, n);
+        fill(t, n, get_value<T>(13));
 
         ClobberMemory();
     }
@@ -47,14 +48,14 @@ void BM_construct_n(State& s) {
     s.counters["2"];
 }
 
-BENCHMARK_TEMPLATE(BM_construct_range, trivial_type_t)
+BENCHMARK_TEMPLATE(BM_fill_range, trivial_type_t)
     ->Range(RANGE);
-BENCHMARK_TEMPLATE(BM_construct_range, non_trivial_type_t)
+BENCHMARK_TEMPLATE(BM_fill_range, non_trivial_type_t)
     ->Range(RANGE);
 
-BENCHMARK_TEMPLATE(BM_construct_n, trivial_type_t)
+BENCHMARK_TEMPLATE(BM_fill_n, trivial_type_t)
     ->Range(RANGE);
-BENCHMARK_TEMPLATE(BM_construct_n, non_trivial_type_t)
+BENCHMARK_TEMPLATE(BM_fill_n, non_trivial_type_t)
     ->Range(RANGE);
 
 BENCHMARK_MAIN();
