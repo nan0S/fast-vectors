@@ -18,3 +18,11 @@ std::array<int, 10> get_value(int id) {
 
     return arr;
 }
+
+template<>
+std::array<int, 100> get_value(int id) {
+    std::array<int, 100> arr;
+    arr.fill(id);
+
+    return arr;
+}

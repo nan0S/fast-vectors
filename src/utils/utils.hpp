@@ -21,6 +21,8 @@ template<>
 std::string get_value(int id);
 template<>
 std::array<int, 10> get_value(int id);
+template<>
+std::array<int, 100> get_value(int id);
 
 namespace Random {
     extern std::mt19937 rng;

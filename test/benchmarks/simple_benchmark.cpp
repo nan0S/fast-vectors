@@ -13,7 +13,7 @@
 using namespace benchmark; 
 
 constexpr uint C = 50000;
-using value_type = int;
+using value_type = std::array<int, 10>;
 
 using boost_static_vector = boost::container::static_vector<value_type, C>;
 using uwr_static_vector = uwr::static_vector<value_type, C>;
