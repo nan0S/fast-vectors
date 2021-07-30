@@ -6,19 +6,19 @@ using namespace uwr::mem;
 // should be trivial type
 using T = int;
 
-class OptFillTests : public ::testing::Test {
+class HybridFillTests : public ::testing::Test {
 private:
     void SetUp() {}
     void TearDown() {}
 
 public:
     void FillAndExpectAllTheSameAs(T* begin, int n, T val) {
-        opt_fill(begin, n, val);
+        hybrid_fill(begin, n, val);
         ExpectAllTheSameAs(begin, n, val);
     }
 
     void UFillAndExpectAllTheSameAs(T* begin, int n, T val) {
-        opt_ufill(begin, n, val);
+        hybrid_ufill(begin, n, val);
         ExpectAllTheSameAs(begin, n, val);
     }
 
@@ -29,7 +29,7 @@ public:
     }
 };
 
-TEST_F(OptFillTests, OptFillAndSmallValues) {
+TEST_F(HybridFillTests, HybridFillAndSmallValues) {
     const int N = 10;
     T t[N];
 
@@ -41,7 +41,7 @@ TEST_F(OptFillTests, OptFillAndSmallValues) {
     FillAndExpectAllTheSameAs(t, 10, 11);
 }
 
-TEST_F(OptFillTests, OptFillBigValues) {
+TEST_F(HybridFillTests, HybridFillBigValues) {
     const int N = 1e6;
     T t[N];
 
@@ -53,7 +53,7 @@ TEST_F(OptFillTests, OptFillBigValues) {
     FillAndExpectAllTheSameAs(t, 1e6, 11);
 }
 
-TEST_F(OptFillTests, OptUninitializedFillSmallValues) {
+TEST_F(HybridFillTests, HybridUninitializedFillSmallValues) {
     const int N = 10;
     char t[N * sizeof(T)];
 
@@ -65,7 +65,7 @@ TEST_F(OptFillTests, OptUninitializedFillSmallValues) {
     UFillAndExpectAllTheSameAs((T*)t, 10, 11);
 }
 
-TEST_F(OptFillTests, OptUninitializedFillBigValues) {
+TEST_F(HybridFillTests, HybridUninitializedFillBigValues) {
     const int N = 1e6;
     char t[N * sizeof(T)];
 

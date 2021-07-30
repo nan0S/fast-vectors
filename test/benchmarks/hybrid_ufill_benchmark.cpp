@@ -10,17 +10,17 @@ using namespace uwr::mem;
 using trivial_type_t = std::array<int, 10>;
 
 /*
- * benchmark fill(begin, n)
+ * benchmark ufill(begin, n)
  */
 template<class T>
-void BM_fill_n(State& s) {
+void BM_ufill_n(State& s) {
     int n = s.range(0);
 
     for (auto _ : s) {
-        T t[n];
+        char t[n * sizeof(T)];
         DoNotOptimize((void*)t);
 
-        fill(t, n, get_value<T>(13));
+        ufill((T*)t, n, get_value<T>(13));
 
         ClobberMemory();
     }
@@ -29,17 +29,17 @@ void BM_fill_n(State& s) {
 }
 
 /*
- * benchmark opt_fill(begin, n)
+ * benchmark hybrid_ufill(begin, n)
  */
 template<class T>
-void BM_opt_fill(State& s) {
+void BM_hybrid_ufill(State& s) {
     int n = s.range(0);
 
     for (auto _ : s) {
-        T t[n];
+        char t[n * sizeof(T)];
         DoNotOptimize((void*)t);
 
-        opt_fill(t, n, get_value<T>(13));
+        hybrid_ufill((T*)t, n, get_value<T>(13));
 
         ClobberMemory();
     }
@@ -47,10 +47,10 @@ void BM_opt_fill(State& s) {
     s.counters["2"];
 }
 
-BENCHMARK_TEMPLATE(BM_fill_n, trivial_type_t)
+BENCHMARK_TEMPLATE(BM_ufill_n, trivial_type_t)
     ->Range(RANGE);
 
-BENCHMARK_TEMPLATE(BM_opt_fill, trivial_type_t)
+BENCHMARK_TEMPLATE(BM_hybrid_ufill, trivial_type_t)
     ->Range(RANGE);
 
 BENCHMARK_MAIN();

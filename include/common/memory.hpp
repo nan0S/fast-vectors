@@ -39,17 +39,17 @@ UWR_FORCEINLINE
 void fill(T* begin, len_t n, const T& val);
 
 // TODO: remove
-#define OPT_THRESHOLD 1
+#define HYBRID_THRESHOLD 1
 template<class T>
 UWR_FORCEINLINE
-void _opt_fill(T* begin, len_t n, const T& val);
+void _hybrid_fill(T* begin, len_t n, const T& val);
 
 /*
- * optimized fill initialized memory
+ * hybrid fill initialized memory
  */
 template<class T>
 UWR_FORCEINLINE
-T_Copy_A<T> opt_fill(T* begin, len_t n, const T& val);
+T_Copy_A<T> hybrid_fill(T* begin, len_t n, const T& val);
 
 /*
  * fill unitialized memory
@@ -66,7 +66,7 @@ void ufill(T* begin, len_t n, const T& val);
  */
 template<class T>
 UWR_FORCEINLINE
-T_Copy_C<T> opt_ufill(T* begin, len_t n, const T& val);
+T_Copy_C<T> hybrid_ufill(T* begin, len_t n, const T& val);
 
 /*
  * copy into initialized memory
@@ -244,11 +244,11 @@ void fill(T* begin, len_t n, const T& val) {
 }
 
 template<class T>
-T_Copy_A<T> opt_fill(T* begin, len_t n, const T& val) {
-    if (n <= OPT_THRESHOLD)
+T_Copy_A<T> hybrid_fill(T* begin, len_t n, const T& val) {
+    if (n <= HYBRID_THRESHOLD)
         fill(begin, n, val);
     else
-        _opt_fill(begin, n, val);
+        _hybrid_fill(begin, n, val);
 }
 
 template<class T>
@@ -262,16 +262,16 @@ void ufill(T* begin, len_t n, const T& val) {
 }
 
 template<class T>
-T_Copy_C<T> opt_ufill(T* begin, len_t n, const T& val) {
-    if (n <= OPT_THRESHOLD)
+T_Copy_C<T> hybrid_ufill(T* begin, len_t n, const T& val) {
+    if (n <= HYBRID_THRESHOLD)
         ufill(begin, n, val);
     else
-        _opt_fill(begin, n, val);
+        _hybrid_fill(begin, n, val);
 }
 
 // TODO: temporary
 template<class T>
-void _opt_fill(T* begin, len_t n, const T& val) {
+void _hybrid_fill(T* begin, len_t n, const T& val) {
     *begin = val;
     len_t cur = 1;
     while (2 * cur <= n) {
