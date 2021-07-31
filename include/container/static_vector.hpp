@@ -68,14 +68,14 @@ public:
     UWR_FORCEINLINE constexpr const_reverse_iterator crbegin() const noexcept;
     UWR_FORCEINLINE constexpr const_reverse_iterator crend() const noexcept;
 
-    constexpr size_type size() const noexcept;
-    constexpr size_type max_size() const noexcept;
+    UWR_FORCEINLINE constexpr size_type size() const noexcept;
+    UWR_FORCEINLINE constexpr size_type max_size() const noexcept;
     constexpr void resize(size_type n);
     constexpr void resize(size_type n, const T& val);
-    constexpr size_type capacity() const noexcept;
-    [[nodiscard]] constexpr bool empty() const noexcept;
-    constexpr void reserve(size_type n) noexcept;
-    constexpr void shrink_to_fit() noexcept;
+    UWR_FORCEINLINE constexpr size_type capacity() const noexcept;
+    [[nodiscard]] UWR_FORCEINLINE constexpr bool empty() const noexcept;
+    UWR_FORCEINLINE constexpr void reserve(size_type n) noexcept;
+    UWR_FORCEINLINE constexpr void shrink_to_fit() noexcept;
 
     UWR_FORCEINLINE constexpr reference operator[](size_type n);
     UWR_FORCEINLINE constexpr const_reference operator[](size_type n) const;
@@ -92,36 +92,35 @@ public:
         class = typename std::iterator_traits<InputIterator>::value_type>
     constexpr void assign(InputIterator first, InputIterator last);
     constexpr void assign(size_type n, const T& val);
-    constexpr void assign(std::initializer_list<T> ilist);
+    UWR_FORCEINLINE constexpr void assign(std::initializer_list<T> ilist);
 
-    constexpr void push_back(const T& value);
-    constexpr void push_back(T&& value);
-    constexpr void fast_push_back(const T& value) noexcept;
-    constexpr void fast_push_back(T&& value) noexcept;
+    UWR_FORCEINLINE constexpr void push_back(const T& value);
+    UWR_FORCEINLINE constexpr void push_back(T&& value);
+    UWR_FORCEINLINE constexpr void fast_push_back(T&& value) noexcept;
 
-    constexpr void pop_back();
-    constexpr void safe_pop_back() noexcept;
+    UWR_FORCEINLINE constexpr void pop_back();
+    UWR_FORCEINLINE constexpr void safe_pop_back() noexcept;
 
-    constexpr iterator insert(const_iterator pos, const T& value);
-    constexpr iterator insert(const_iterator pos, T&& value);
+    UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, const T& value);
+    UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, T&& value);
     constexpr iterator insert(const_iterator pos, size_type count, const T& value);
     template<class InputIterator,
         class = typename std::iterator_traits<InputIterator>::value_type>
     constexpr iterator insert(const_iterator pos, InputIterator first, InputIterator last);
-    constexpr iterator insert(const_iterator pos, std::initializer_list<T> ilist);
+    UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, std::initializer_list<T> ilist);
 
     constexpr iterator erase(const_iterator pos);
     constexpr iterator erase(const_iterator first, const_iterator last);
 
     UWR_FORCEINLINE constexpr void swap(static_vector& other);
-    constexpr void clear() noexcept;
+    UWR_FORCEINLINE constexpr void clear() noexcept;
 
     template<class... Args>
     constexpr iterator emplace(const_iterator pos, Args&&... args);
     template<class... Args>
-    constexpr void emplace_back(Args&&... args);
+    UWR_FORCEINLINE constexpr reference emplace_back(Args&&... args);
     template<class... Args>
-    constexpr void fast_emplace_back(Args&&... args) noexcept;
+    UWR_FORCEINLINE constexpr reference fast_emplace_back(Args&&... args) noexcept;
 
 private:
     UWR_FORCEINLINE constexpr T* data_at(size_type n) noexcept;
@@ -498,31 +497,19 @@ static_vector<T, C>::assign(std::initializer_list<T> ilist) {
 template<class T, len_t C>
 constexpr void
 static_vector<T, C>::push_back(const_reference value) {
-    // TODO: uncomment
-    if (m_length == C)
-        throw std::out_of_range("Out of bounds");
-    new (data() + m_length++) T(value);
+    emplace_back(value);
 }
 
 template<class T, len_t C>
 constexpr void
 static_vector<T, C>::push_back(T&& value) {
-    // TODO: uncomment
-    if (m_length == C)
-        throw std::out_of_range("Out of bounds");
-    new (data() + m_length++) T(std::move(value));
-}
-
-template<class T, len_t C>
-constexpr void
-static_vector<T, C>::fast_push_back(const_reference value) noexcept {
-    new (data() + m_length++) T(value);
+    emplace_back(std::move(value));
 }
 
 template<class T, len_t C>
 constexpr void
 static_vector<T, C>::fast_push_back(T&& value) noexcept {
-    new (data() + m_length++) T(std::move(value));
+    fast_emplace_back(std::forward<T>(value));
 }
 
 template<class T, len_t C>
@@ -536,42 +523,19 @@ constexpr void
 static_vector<T, C>::safe_pop_back() noexcept {
     if (m_length == 0)
         return;
-    mem::destroy_at(data() + --m_length);
+    pop_back();
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, const T& value) {
-    auto position = const_cast<T*>(pos);
-    auto eptr = end();
-
-    // TODO: unlikely or do better
-    if (position == eptr)
-        new (position) T(value);
-    else {
-        mem::shiftr(position + 1, position, eptr);
-        *position = value;
-    }
-    ++m_length;
-
-    return position;
+    return emplace(pos, value);
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, T&& value) {
-    auto position = const_cast<T*>(pos);
-    auto m_end = end();
-
-    if (position == m_end)
-        new (position) T(std::move(value));
-    else {
-        mem::shiftr(position + 1, position, m_end);
-        *position = std::move(value);
-    }
-    ++m_length;
-
-    return position;
+    return emplace(pos, std::move(value));
 }
 
 template<class T, len_t C>
@@ -700,12 +664,13 @@ template<class... Args>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::emplace(const_iterator pos, Args&&... args) {
     auto position = const_cast<T*>(pos);
+    auto eptr = end();
 
     // TODO: unlikely or do better
-    if (position == end())
+    if (position == eptr)
         new (position) T(std::forward<Args>(args)...);
     else {
-        mem::shiftr(position + 1, position, end());
+        mem::shiftr(position + 1, position, eptr);
         // this strange construction is caused by the fact
         // args can be either "proper" constructor arguments
         // or it can be an object of type T, if it is, we don't want to do
@@ -724,19 +689,21 @@ static_vector<T, C>::emplace(const_iterator pos, Args&&... args) {
 
 template<class T, len_t C>
 template<class... Args>
-constexpr void
+constexpr typename static_vector<T, C>::reference
 static_vector<T, C>::emplace_back(Args&&... args) {
     // TODO: uncomment
     if (m_length == C)
         throw std::out_of_range("Out of bounds");
-    new (data() + m_length++) T(std::forward<Args>(args)...);
+    return fast_emplace_back(std::forward<Args>(args)...);
 }
 
 template<class T, len_t C>
 template<class... Args>
-constexpr void
+constexpr typename static_vector<T, C>::reference
 static_vector<T, C>::fast_emplace_back(Args&&... args) noexcept {
-    new (data() + m_length++) T(std::forward<Args>(args)...);
+    T* eptr = data() + m_length++;
+    new (eptr) T(std::forward<Args>(args)...);
+    return *eptr;
 }
 
 template<class T, len_t C>
