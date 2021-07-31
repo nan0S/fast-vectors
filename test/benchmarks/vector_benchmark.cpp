@@ -1,104 +1,88 @@
-#include <vector.hpp>
+#include <test_type/test_type.hpp>
 #include <boost/container/vector.hpp>
 #include <vector>
-#include <test_type/test_type.hpp>
 #include <rvector.h>
+#include <vector.hpp>
 
 #include "vector_benchmark_base.hpp"
 
-template<class T>
-using uwr_vector = uwr::vector<T>;
+using namespace benchmark;
+
+/*
+ * configurable parameters
+ */
+static  constexpr  int  INT_ARG               =  2000;
+static  constexpr  int  STRING_ARG            =  1000;
+static  constexpr  int  TEST_TYPE_ARG         =  1200;
+static  constexpr  int  ARRAY_ARG             =  1200;
+static  constexpr  int  INT_STRING_ARG        =  1000;
+static  constexpr  int  INT_STRING_ARRAY_ARG  =  1000;
+
+/* use the same number of iterations in all benchmarks */
+#define COMMON_ITERS 0
+
+#define  INT_ITERS               (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
+#define  STRING_ITERS            (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
+#define  TEST_TYPE_ITERS         (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
+#define  ARRAY_ITERS             (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
+#define  INT_STRING_ITERS        (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
+#define  INT_STRING_ARRAY_ITERS  (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
+
+#define DO_RVECTOR_BENCH
+#define DO_UWR_VECTOR_BENCH
+
+static constexpr int N = 10; // used in std::array<int, N>
+
+/*
+ * tested vectors
+ */
 template<class T>
 using boost_vector = boost::container::vector<T>;
 template<class T>
 using std_vector = std::vector<T>;
-
-static constexpr int N = 10;
-
-static constexpr int INT_TIMES = 2000;
-static constexpr int STRING_TIMES = 1000;
-static constexpr int TEST_TYPE_TIMES = 1200;
-static constexpr int ARRAY_TIMES = 1200;
-static constexpr int INT_STRING_ARRAY_TIMES = 1000;
+template<class T>
+using uwr_vector = uwr::vector<T>;
 
 /*
- * int benchmark
+ * some macro magic
  */
-BENCHMARK_TEMPLATE(BM_environment, std_vector, int)
-    ->Unit(::benchmark::kMillisecond)
-    ->Args({INT_TIMES, 1});
-BENCHMARK_TEMPLATE(BM_environment, boost_vector, int)
-    ->Unit(::benchmark::kMillisecond)
-    ->Args({INT_TIMES, 1});
-// BENCHMARK_TEMPLATE(BM_environment, uwr_vector, int)
-    // ->Unit(::benchmark::kMillisecond)
-    // ->Args({INT_TIMES, 1});
-BENCHMARK_TEMPLATE(BM_environment, rvector, int)
-    ->Unit(::benchmark::kMillisecond)
-    ->Args({INT_TIMES, 1});
+#define CONCAT(a, b) CONCAT_INNER(a, b)
+#define CONCAT_INNER(a, b) a ## b
+
+#define REGISTER_BENCHMARK_FOR_VECTOR(unit, varname, counter, vector, ...) \
+    BENCHMARK_TEMPLATE(BM_environment, vector, __VA_ARGS__) \
+        ->Unit(unit) \
+        ->Iterations(CONCAT(varname, _ITERS)) \
+        ->Args({CONCAT(varname, _ARG), counter})
+
+#ifdef DO_UWR_VECTOR_BENCH
+#define REGISTER_BENCHMARK_FOR_UWR_VECTOR(unit, varname, counter, ...) \
+    REGISTER_BENCHMARK_FOR_VECTOR(unit, varname, counter, uwr_vector, __VA_ARGS__)
+#else
+#define REGISTER_BENCHMARK_FOR_UWR_VECTOR(unit, varname, counter, ...)
+#endif
+
+#ifdef DO_RVECTOR_BENCH
+#define REGISTER_BENCHMARK_FOR_RVECTOR(unit, varname, counter, ...) \
+    REGISTER_BENCHMARK_FOR_VECTOR(unit, varname, counter, rvector, __VA_ARGS__)
+#else
+#define REGISTER_BENCHMARK_FOR_RVECTOR(unit, varname, counter, ...)
+#endif
+
+#define REGISTER_BENCHMARK(unit, varname, counter, ...) \
+    REGISTER_BENCHMARK_FOR_VECTOR(unit, varname, counter, boost_vector, __VA_ARGS__); \
+    REGISTER_BENCHMARK_FOR_VECTOR(unit, varname, counter, std_vector, __VA_ARGS__); \
+    REGISTER_BENCHMARK_FOR_RVECTOR(unit, varname, counter, __VA_ARGS__); \
+    REGISTER_BENCHMARK_FOR_UWR_VECTOR(unit, varname, counter, __VA_ARGS__)
 
 /*
- * std::string benchmark
+ * register all benchmarks
  */
-BENCHMARK_TEMPLATE(BM_environment, std_vector, std::string)
-    ->Unit(::benchmark::kMillisecond)
-    ->Args({STRING_TIMES, 2});
-BENCHMARK_TEMPLATE(BM_environment, boost_vector, std::string)
-    ->Unit(::benchmark::kMillisecond)
-    ->Args({STRING_TIMES, 2});
-// BENCHMARK_TEMPLATE(BM_environment, uwr_vector, std::string)
-    // ->Unit(::benchmark::kMillisecond)
-    // ->Args({STRING_TIMES, 2});
-BENCHMARK_TEMPLATE(BM_environment, rvector, std::string)
-    ->Unit(::benchmark::kMillisecond)
-    ->Args({STRING_TIMES, 2});
-
-/*
- * test_type benchmark
- */
-BENCHMARK_TEMPLATE(BM_environment, std_vector, test_type)
-    ->Unit(::benchmark::kMillisecond)
-    ->Args({TEST_TYPE_TIMES, 3});
-BENCHMARK_TEMPLATE(BM_environment, boost_vector, test_type)
-    ->Unit(::benchmark::kMillisecond)
-    ->Args({TEST_TYPE_TIMES, 3});
-// BENCHMARK_TEMPLATE(BM_environment, uwr_vector, test_type)
-    // ->Unit(::benchmark::kMillisecond)
-    // ->Args({TEST_TYPE_TIMES, 3});
-BENCHMARK_TEMPLATE(BM_environment, rvector, test_type)
-    ->Unit(::benchmark::kMillisecond)
-    ->Args({TEST_TYPE_TIMES, 3});
-
-/*
- * std::array<int, N> benchmark
- */
-BENCHMARK_TEMPLATE(BM_environment, std_vector, std::array<int, N>)
-    ->Unit(::benchmark::kMillisecond)
-    ->Args({ARRAY_TIMES, 4});
-BENCHMARK_TEMPLATE(BM_environment, boost_vector, std::array<int, N>)
-    ->Unit(::benchmark::kMillisecond)
-    ->Args({ARRAY_TIMES, 4});
-// BENCHMARK_TEMPLATE(BM_environment, uwr_vector, std::array<int, N>)
-    // ->Unit(::benchmark::kMillisecond)
-    // ->Args({INT_STRING_TIMES, 4});
-BENCHMARK_TEMPLATE(BM_environment, rvector, std::array<int, N>)
-    ->Unit(::benchmark::kMillisecond)
-    ->Args({ARRAY_TIMES, 4});
-
-/*
- * int, std::string, std::array<int, C> benchmark
- */
-BENCHMARK_TEMPLATE(BM_environment, std_vector, int, std::string, std::array<int, N>)
-    ->Unit(::benchmark::kMillisecond)
-    ->Args({INT_STRING_ARRAY_TIMES, 5});
-BENCHMARK_TEMPLATE(BM_environment, boost_vector, int, std::string, std::array<int, N>)
-    ->Unit(::benchmark::kMillisecond)
-    ->Args({INT_STRING_ARRAY_TIMES, 5});
-// BENCHMARK_TEMPLATE(BM_environment, uwr_vector, int, std::string, std::array<int, N>)
-    // ->Unit(::benchmark::kMillisecond)
-    // ->Args({INT_STRING_ARRAY_TIMES, 5});
-BENCHMARK_TEMPLATE(BM_environment, rvector, int, std::string, std::array<int, N>)
-    ->Unit(::benchmark::kMillisecond)
-    ->Args({INT_STRING_ARRAY_TIMES, 5});
+REGISTER_BENCHMARK(kMillisecond,  INT,               1,  int);                                            
+REGISTER_BENCHMARK(kMillisecond,  STRING,            2,  std::string);                                    
+REGISTER_BENCHMARK(kMillisecond,  TEST_TYPE,         3,  test_type);                                      
+REGISTER_BENCHMARK(kMillisecond,  ARRAY,             4,  std::array<int, N>);                            
+REGISTER_BENCHMARK(kMillisecond,  INT_STRING,        5,  int, std::string);                   
+REGISTER_BENCHMARK(kMillisecond,  INT_STRING_ARRAY,  6,  int, std::string, std::array<int, N>);
 
 BENCHMARK_MAIN();

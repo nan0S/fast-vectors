@@ -3,40 +3,49 @@
 #include <chrono>
 #include <functional>
 
-#include <static_vector.hpp>
-#include <static_vector_alt.hpp>
-#include <boost/container/static_vector.hpp>
+#include <benchmark/benchmark.h>
 #include <utils/utils.hpp>
 #include <test_type/test_type.hpp>
-#include <benchmark/benchmark.h>
+#include <boost/container/static_vector.hpp>
+#include <static_vector_alt.hpp>
+#include <static_vector.hpp>
 
 using namespace benchmark; 
 
-constexpr uint C = 50000;
+/*
+ * configurable parameters
+ */
 using value_type = std::array<int, 10>;
 
-using boost_static_vector = boost::container::static_vector<value_type, C>;
-using uwr_static_vector = uwr::static_vector<value_type, C>;
-using uwr_static_vector_alt = uwr::static_vector_alt<value_type, C>;
+static  constexpr  int  PUSH_BACK_ARG           =  10000;
+static  constexpr  int  PUSH_BACK_POP_BACK_ARG  =  10000;
+static  constexpr  int  SWAP_ARG                =  50000;
+static  constexpr  int  RESIZE_ARG              =  1000000;
 
-#define COMMON_ITERS -1
+/* use the same number of iterations in all benchmarks */
+#define COMMON_ITERS 0
 
-static constexpr int PUSH_BACK_TIMES = 10000;
-#define PUSH_BACK_ITERS (COMMON_ITERS == -1 ? -1 : COMMON_ITERS)
-static constexpr int PUSH_BACK_POP_BACK_TIMES = 10000;
-#define PUSH_BACK_POP_BACK_ITERS (COMMON_ITERS == -1 ? -1 : COMMON_ITERS)
-static constexpr int SWAP_TIMES = 50000;
-#define SWAP_ITERS (COMMON_ITERS == -1 ? -1 : COMMON_ITERS)
-static constexpr int RESIZE_TIMES = 1000000;
-#define RESIZE_ITERS (COMMON_ITERS == -1 ? -1 : COMMON_ITERS)
-
-static_assert(C > PUSH_BACK_TIMES, "PUSH_BACK_TIMES has to be bigger than C");
+#define  PUSH_BACK_ITERS           (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
+#define  PUSH_BACK_POP_BACK_ITERS  (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
+#define  SWAP_ITERS                (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
+#define  RESIZE_ITERS              (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 
 #define DO_STATIC_VECTOR_BENCH
 // #define DO_STATIC_VECTOR_ALT_BENCH
 
+static constexpr int C = 50000; // static_vector capacity
+
 /*
- * benchmark push_back member function
+ * tested vectors
+ */
+using boost_static_vector = boost::container::static_vector<value_type, C>;
+using uwr_static_vector = uwr::static_vector<value_type, C>;
+using uwr_static_vector_alt = uwr::static_vector_alt<value_type, C>;
+
+static_assert(C > PUSH_BACK_ARG, "PUSH_BACK_ARG has to be bigger than C");
+
+/*
+ * benchmark push_back
  */
 template<class Vector>
 void BM_push_back(State& s) {
@@ -107,7 +116,7 @@ void BM_swap(State& s) {
         ClobberMemory();
     }
 
-    s.counters["t5"];
+    s.counters["t3"];
 }
 
 /*
@@ -131,115 +140,43 @@ void BM_resize(State& s) {
 }
 
 /*
- * BM_push_back
+ * some macro magic
  */
-BENCHMARK_TEMPLATE(BM_push_back, boost_static_vector)
-    ->Unit(kMicrosecond)
-#if (PUSH_BACK_ITERS != -1)
-    ->Iterations(PUSH_BACK_ITERS)
-#endif
-    ->Arg(PUSH_BACK_TIMES);
+#define CONCAT(a, b) CONCAT_INNER(a, b)
+#define CONCAT_INNER(a, b) a ## b
+
+#define REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, vector) \
+    BENCHMARK_TEMPLATE(func, vector) \
+        ->Unit(unit) \
+        ->Iterations(CONCAT(varname, _ITERS)) \
+        ->Arg(CONCAT(varname, _ARG))
 
 #ifdef DO_STATIC_VECTOR_BENCH
-BENCHMARK_TEMPLATE(BM_push_back, uwr_static_vector)
-    ->Unit(kMicrosecond)
-#if (PUSH_BACK_ITERS != -1)
-    ->Iterations(PUSH_BACK_ITERS)
-#endif
-    ->Arg(PUSH_BACK_TIMES);
+#define REGISTER_BENCHMARK_FOR_STATIC_VECTOR(func, unit, varname) \
+    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, uwr_static_vector)
+#else
+#define REGISTER_BENCHMARK_FOR_STATIC_VECTOR(func, unit, varname)
 #endif
 
 #ifdef DO_STATIC_VECTOR_ALT_BENCH
-BENCHMARK_TEMPLATE(BM_push_back, uwr_static_vector_alt)
-    ->Unit(kMicrosecond)
-#if (PUSH_BACK_ITERS != -1)
-    ->Iterations(PUSH_BACK_ITERS)
+#define REGISTER_BENCHMARK_FOR_STATIC_VECTOR_ALT(func, unit, varname) \
+    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, uwr_static_vector_alt)
+#else
+#define REGISTER_BENCHMARK_FOR_STATIC_VECTOR_ALT(func, unit, varname)
 #endif
-    ->Arg(PUSH_BACK_TIMES);
-#endif
+
+#define REGISTER_BENCHMARK(func, unit, varname) \
+    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, boost_static_vector); \
+    REGISTER_BENCHMARK_FOR_STATIC_VECTOR(func, unit, varname); \
+    REGISTER_BENCHMARK_FOR_STATIC_VECTOR_ALT(func, unit, varname)
+
 
 /*
- * BM_push_back_pop_back
+ * register all benchmarks
  */
-BENCHMARK_TEMPLATE(BM_push_back_pop_back, boost_static_vector)
-    ->Unit(kMicrosecond)
-#if (PUSH_BACK_POP_BACK_ITERS != -1)
-    ->Iterations(PUSH_BACK_POP_BACK_ITERS)
-#endif
-    ->Arg(PUSH_BACK_POP_BACK_TIMES);
-
-#ifdef DO_STATIC_VECTOR_BENCH
-BENCHMARK_TEMPLATE(BM_push_back_pop_back, uwr_static_vector)
-    ->Unit(kMicrosecond)
-#if (PUSH_BACK_POP_BACK_ITERS != -1)
-    ->Iterations(PUSH_BACK_POP_BACK_ITERS)
-#endif
-    ->Arg(PUSH_BACK_POP_BACK_TIMES);
-#endif
-
-#ifdef DO_STATIC_VECTOR_ALT_BENCH
-BENCHMARK_TEMPLATE(BM_push_back_pop_back, uwr_static_vector_alt)
-    ->Unit(kMicrosecond)
-#if (PUSH_BACK_POP_BACK_ITERS != -1)
-    ->Iterations(PUSH_BACK_POP_BACK_ITERS)
-#endif
-    ->Arg(PUSH_BACK_POP_BACK_TIMES);
-#endif
-
-/*
- * BM_swap
- */
-BENCHMARK_TEMPLATE(BM_swap, boost_static_vector)
-    ->Unit(kMicrosecond)
-#if (SWAP_ITERS != -1)
-    ->Iterations(SWAP_ITERS)
-#endif
-    ->Arg(SWAP_TIMES);
-
-#ifdef DO_STATIC_VECTOR_BENCH
-BENCHMARK_TEMPLATE(BM_swap, uwr_static_vector)
-    ->Unit(kMicrosecond)
-#if (SWAP_ITERS != -1)
-    ->Iterations(SWAP_ITERS)
-#endif
-    ->Arg(SWAP_TIMES);
-#endif
-
-#ifdef DO_STATIC_VECTOR_ALT_BENCH
-BENCHMARK_TEMPLATE(BM_swap, uwr_static_vector_alt)
-    ->Unit(kMicrosecond)
-#if (SWAP_ITERS != -1)
-    ->Iterations(SWAP_ITERS)
-#endif
-    ->Arg(SWAP_TIMES);
-#endif
-
-/*
- * BM_resize
- */
-BENCHMARK_TEMPLATE(BM_resize, boost_static_vector)
-    ->Unit(kNanosecond)
-#if (RESIZE_ITERS != -1)
-    ->Iterations(RESIZE_ITERS)
-#endif
-    ->Arg(RESIZE_TIMES);
-
-#ifdef DO_STATIC_VECTOR_BENCH
-BENCHMARK_TEMPLATE(BM_resize, uwr_static_vector)
-    ->Unit(kNanosecond)
-#if (RESIZE_ITERS != -1)
-    ->Iterations(RESIZE_ITERS)
-#endif
-    ->Arg(RESIZE_TIMES);
-#endif
-
-#ifdef DO_STATIC_VECTOR_ALT_BENCH
-BENCHMARK_TEMPLATE(BM_resize, uwr_static_vector)
-    ->Unit(kNanosecond)
-#if (RESIZE_ITERS != -1)
-    ->Iterations(RESIZE_ITERS)
-#endif
-    ->Arg(RESIZE_TIMES);
-#endif
+REGISTER_BENCHMARK(BM_push_back,           kMicrosecond,  PUSH_BACK);
+REGISTER_BENCHMARK(BM_push_back_pop_back,  kMicrosecond,  PUSH_BACK_POP_BACK);
+REGISTER_BENCHMARK(BM_swap,                kMicrosecond,  SWAP);
+REGISTER_BENCHMARK(BM_resize,              kNanosecond,   RESIZE);
 
 BENCHMARK_MAIN();
