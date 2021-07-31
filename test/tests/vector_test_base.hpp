@@ -401,14 +401,31 @@ TYPED_TEST(VectorTestBaseFixture, FastPushBackByMove) {
     }
 }
 
-TYPED_TEST(VectorTestBaseFixture, EmplaceBack) {
+TYPED_TEST(VectorTestBaseFixture, EmplaceBackByCopy) {
     typename TestFixture::vector v(3);
     const typename TestFixture::size_type initial_size = v.size();
 
     for (typename TestFixture::size_type i = 0; i + initial_size < this->C; ++i) {
         int id = rand();
-        v.emplace_back(this->GetValue(id));
+        const auto val = this->GetValue(id);
+        auto& ret = v.emplace_back(val);
 
+        EXPECT_EQ(val, this->GetValue(id));
+        EXPECT_EQ(ret, this->GetValue(id));
+        EXPECT_EQ(v.size(), initial_size + i + 1);
+        EXPECT_EQ(v.back(), this->GetValue(id));
+    }
+}
+
+TYPED_TEST(VectorTestBaseFixture, EmplaceBackByMove) {
+    typename TestFixture::vector v(3);
+    const typename TestFixture::size_type initial_size = v.size();
+
+    for (typename TestFixture::size_type i = 0; i + initial_size < this->C; ++i) {
+        int id = rand();
+        auto& ret = v.emplace_back(this->GetValue(id));
+
+        EXPECT_EQ(ret, this->GetValue(id));
         EXPECT_EQ(v.size(), initial_size + i + 1);
         EXPECT_EQ(v.back(), this->GetValue(id));
     }
