@@ -33,7 +33,7 @@ static constexpr int RESIZE_TIMES = 1000000;
 static_assert(C > PUSH_BACK_TIMES, "PUSH_BACK_TIMES has to be bigger than C");
 
 #define DO_STATIC_VECTOR_BENCH
-#define DO_STATIC_VECTOR_ALT_BENCH
+// #define DO_STATIC_VECTOR_ALT_BENCH
 
 /*
  * benchmark push_back member function

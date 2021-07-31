@@ -8,6 +8,7 @@
 using namespace benchmark;
 
 static constexpr uint C = 500000;
+static constexpr int N = 10; // used in std::array<int, N>
 
 template<class T>
 using boost_static_vector = boost::container::static_vector<T, C>;
@@ -24,20 +25,21 @@ static constexpr int STRING_TIMES = 300;
 #define STRING_ITERS (COMMON_ITERS == -1 ? -1 : COMMON_ITERS)
 static constexpr int TEST_TYPE_TIMES = 300;
 #define TEST_TYPE_ITERS (COMMON_ITERS == -1 ? -1 : COMMON_ITERS)
+static constexpr int ARRAY_TIMES = 200;
+#define ARRAY_ITERS (COMMON_ITERS == -1 ? -1 : COMMON_ITERS)
 static constexpr int INT_STRING_TIMES = 200;
 #define INT_STRING_ITERS (COMMON_ITERS == -1 ? -1 : COMMON_ITERS)
 static constexpr int INT_STRING_ARRAY_TIMES = 100;
 #define INT_STRING_ARRAY_ITERS (COMMON_ITERS == -1 ? -1 : COMMON_ITERS)
 
 #define DO_STATIC_VECTOR_BENCH
-#define DO_STATIC_VECTOR_ALT_BENCH
+// #define DO_STATIC_VECTOR_ALT_BENCH
 
 /*
  * BM_environment<int>
  */
 BENCHMARK_TEMPLATE(BM_environment, boost_static_vector, int)
     ->Unit(kMillisecond)
-    ->MinTime(0.5)
 #if (INT_ITERS != -1)
     ->Iterations(INT_ITERS)
 #endif
@@ -46,7 +48,6 @@ BENCHMARK_TEMPLATE(BM_environment, boost_static_vector, int)
 #ifdef DO_STATIC_VECTOR_BENCH
 BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector, int)
     ->Unit(kMillisecond)
-    ->MinTime(0.5)
 #if (INT_ITERS != -1)
     ->Iterations(INT_ITERS)
 #endif
@@ -56,7 +57,6 @@ BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector, int)
 #ifdef DO_STATIC_VECTOR_ALT_BENCH
 BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector_alt, int)
     ->Unit(kMillisecond)
-    ->MinTime(0.5)
 #if (INT_ITERS != -1)
     ->Iterations(INT_ITERS)
 #endif
@@ -68,7 +68,6 @@ BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector_alt, int)
  */
 BENCHMARK_TEMPLATE(BM_environment, boost_static_vector, std::string)
     ->Unit(kMillisecond)
-    ->MinTime(0.5)
 #if (STRING_ITERS != -1)
     ->Iterations(STRING_ITERS)
 #endif
@@ -77,7 +76,6 @@ BENCHMARK_TEMPLATE(BM_environment, boost_static_vector, std::string)
 #ifdef DO_STATIC_VECTOR_BENCH
 BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector, std::string)
     ->Unit(kMillisecond)
-    ->MinTime(0.5)
 #if (STRING_ITERS != -1)
     ->Iterations(STRING_ITERS)
 #endif
@@ -87,7 +85,6 @@ BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector, std::string)
 #ifdef DO_STATIC_VECTOR_ALT_BENCH
 BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector_alt, std::string)
     ->Unit(kMillisecond)
-    ->MinTime(0.5)
 #if (STRING_ITERS != -1)
     ->Iterations(STRING_ITERS)
 #endif
@@ -99,7 +96,6 @@ BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector_alt, std::string)
  */
 BENCHMARK_TEMPLATE(BM_environment, boost_static_vector, test_type)
     ->Unit(kMillisecond)
-    ->MinTime(0.5)
 #if (TEST_TYPE_ITERS != -1)
     ->Iterations(TEST_TYPE_ITERS)
 #endif
@@ -108,7 +104,6 @@ BENCHMARK_TEMPLATE(BM_environment, boost_static_vector, test_type)
 #ifdef DO_STATIC_VECTOR_BENCH
 BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector, test_type)
     ->Unit(kMillisecond)
-    ->MinTime(0.5)
 #if (TEST_TYPE_ITERS != -1)
     ->Iterations(TEST_TYPE_ITERS)
 #endif
@@ -118,7 +113,6 @@ BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector, test_type)
 #ifdef DO_STATIC_VECTOR_ALT_BENCH
 BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector_alt, test_type)
     ->Unit(kMillisecond)
-    ->MinTime(0.5)
 #if (TEST_TYPE_ITERS != -1)
     ->Iterations(TEST_TYPE_ITERS)
 #endif
@@ -126,65 +120,87 @@ BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector_alt, test_type)
 #endif
 
 /*
+ * BM_environment<std::array<int, N>>
+ */
+BENCHMARK_TEMPLATE(BM_environment, boost_static_vector, std::array<int, N>)
+    ->Unit(kMillisecond)
+#if (INT_STRING_ITERS != -1)
+    ->Iterations(ARRAY_ITERS)
+#endif
+    ->Args({ARRAY_TIMES, 4});
+
+#ifdef DO_STATIC_VECTOR_BENCH
+BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector, std::array<int, N>)
+    ->Unit(kMillisecond)
+#if (INT_STRING_ITERS != -1)
+    ->Iterations(ARRAY_ITERS)
+#endif
+    ->Args({ARRAY_TIMES, 4});
+#endif
+
+#ifdef DO_STATIC_VECTOR_ALT_BENCH
+BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector_alt, std::array<int, N>)
+    ->Unit(kMillisecond)
+#if (INT_STRING_ITERS != -1)
+    ->Iterations(ARRAY_ITERS)
+#endif
+    ->Args({ARRAY_TIMES, 4});
+#endif
+
+/*
  * BM_environment<int, std::string>
  */
 BENCHMARK_TEMPLATE(BM_environment, boost_static_vector, int, std::string)
     ->Unit(kMillisecond)
-    ->MinTime(0.5)
 #if (INT_STRING_ITERS != -1)
     ->Iterations(INT_STRING_ITERS)
 #endif
-    ->Args({INT_STRING_TIMES, 4});
+    ->Args({INT_STRING_TIMES, 5});
 
 #ifdef DO_STATIC_VECTOR_BENCH
 BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector, int, std::string)
     ->Unit(kMillisecond)
-    ->MinTime(0.5)
 #if (INT_STRING_ITERS != -1)
     ->Iterations(INT_STRING_ITERS)
 #endif
-    ->Args({INT_STRING_TIMES, 4});
+    ->Args({INT_STRING_TIMES, 5});
 #endif
 
 #ifdef DO_STATIC_VECTOR_ALT_BENCH
 BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector_alt, int, std::string)
     ->Unit(kMillisecond)
-    ->MinTime(0.5)
 #if (INT_STRING_ITERS != -1)
     ->Iterations(INT_STRING_ITERS)
 #endif
-    ->Args({INT_STRING_TIMES, 4});
+    ->Args({INT_STRING_TIMES, 5});
 #endif
 
 /*
- * BM_environment<int, std::string, std::array<int, 10>>
+ * BM_environment<int, std::string, std::array<int, N>>
  */
-BENCHMARK_TEMPLATE(BM_environment, boost_static_vector, int, std::string, std::array<int, 10>)
+BENCHMARK_TEMPLATE(BM_environment, boost_static_vector, int, std::string, std::array<int, N>)
     ->Unit(kMillisecond)
-    ->MinTime(0.5)
 #if (INT_STRING_ARRAY_ITERS != -1)
     ->Iterations(INT_STRING_ARRAY_ITERS)
 #endif
-    ->Args({INT_STRING_ARRAY_TIMES, 5});
+    ->Args({INT_STRING_ARRAY_TIMES, 6});
 
 #ifdef DO_STATIC_VECTOR_BENCH
-BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector, int, std::string, std::array<int, 10>)
+BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector, int, std::string, std::array<int, N>)
     ->Unit(kMillisecond)
-    ->MinTime(0.5)
 #if (INT_STRING_ARRAY_ITERS != -1)
     ->Iterations(INT_STRING_ARRAY_ITERS)
 #endif
-    ->Args({INT_STRING_ARRAY_TIMES, 5});
+    ->Args({INT_STRING_ARRAY_TIMES, 6});
 #endif
 
 #ifdef DO_STATIC_VECTOR_ALT_BENCH
-BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector_alt, int, std::string, std::array<int, 10>)
+BENCHMARK_TEMPLATE(BM_environment, uwr_static_vector_alt, int, std::string, std::array<int, N>)
     ->Unit(kMillisecond)
-    ->MinTime(0.5)
 #if (INT_STRING_ARRAY_ITERS != -1)
     ->Iterations(INT_STRING_ARRAY_ITERS)
 #endif
-    ->Args({INT_STRING_ARRAY_TIMES, 5});
+    ->Args({INT_STRING_ARRAY_TIMES, 6});
 #endif
 
 BENCHMARK_MAIN();
