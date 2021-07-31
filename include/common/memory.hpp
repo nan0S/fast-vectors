@@ -2,7 +2,8 @@
 
 #include <algorithm>
 #include <cstring>
-#include "trivial.hpp"
+
+#include "type_traits.hpp"
 #include "define.hpp"
 
 namespace uwr::mem {
@@ -38,15 +39,14 @@ template<class T>
 UWR_FORCEINLINE
 void fill(T* begin, len_t n, const T& val);
 
-// TODO: remove
-#define HYBRID_THRESHOLD 1
-template<class T>
-UWR_FORCEINLINE
-void _hybrid_fill(T* begin, len_t n, const T& val);
 
 /*
  * hybrid fill initialized memory
  */
+// TODO: remove
+#define HYBRID_THRESHOLD 1
+template<class T>
+void _hybrid_fill(T* begin, len_t n, const T& val);
 template<class T>
 UWR_FORCEINLINE
 T_Copy_A<T> hybrid_fill(T* begin, len_t n, const T& val);

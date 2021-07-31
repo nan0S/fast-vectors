@@ -1,8 +1,8 @@
 #pragma once
 
-#include "define.hpp"
-
 #if CPP_ABOVE_17
+
+#include "define.hpp"
 
 #include <compare>
 

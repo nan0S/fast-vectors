@@ -2,11 +2,13 @@
 
 // TODO: make sure sys instead of linux
 #include <sys/mman.h>
+
 #include "define.hpp"
 #include "memory.hpp"
 
 namespace uwr::mem {
 
+// should use getpagesize() but want constexpr
 template<class T>
 constexpr len_t map_threshold = 4096 / sizeof(T);
 

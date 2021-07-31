@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iterator>
+
 #include "../common/memory.hpp"
 #include "../common/define.hpp"
 #if CPP_ABOVE_17
@@ -521,6 +522,7 @@ static_vector<T, C>::pop_back() {
 template<class T, len_t C>
 constexpr void
 static_vector<T, C>::safe_pop_back() noexcept {
+    // TODO: unlikely (?)
     if (m_length == 0)
         return;
     pop_back();
@@ -691,7 +693,7 @@ template<class T, len_t C>
 template<class... Args>
 constexpr typename static_vector<T, C>::reference
 static_vector<T, C>::emplace_back(Args&&... args) {
-    // TODO: uncomment
+    // TODO: unlikely (?)
     if (m_length == C)
         throw std::out_of_range("Out of bounds");
     return fast_emplace_back(std::forward<Args>(args)...);
