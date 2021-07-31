@@ -38,8 +38,7 @@ public:
     constexpr static_vector() noexcept;
     constexpr explicit static_vector(size_type n);
     constexpr static_vector(size_type n, const T& val);
-    template<class InputIterator,
-             class = typename std::iterator_traits<InputIterator>::value_type>
+    template<class InputIterator, class = typename std::iterator_traits<InputIterator>::value_type>
     constexpr static_vector(InputIterator first, InputIterator last);
     constexpr static_vector(const static_vector& x);
     constexpr static_vector(static_vector&& x) noexcept;
@@ -52,7 +51,7 @@ public:
 
     constexpr static_vector& operator=(const static_vector& other) noexcept;
     constexpr static_vector& operator=(static_vector&& other) noexcept;
-    constexpr static_vector& operator=(std::initializer_list<T> ilist) noexcept;
+    UWR_FORCEINLINE constexpr static_vector& operator=(std::initializer_list<T> ilist) noexcept;
 
     UWR_FORCEINLINE constexpr iterator begin() noexcept;
     UWR_FORCEINLINE constexpr const_iterator begin() const noexcept;
@@ -212,7 +211,7 @@ template<class T, len_t C>
 constexpr static_vector<T, C>&
 static_vector<T, C>::operator=(static_vector<T, C>&& other) noexcept {
     T* ptr = data();
-    const T* optr = other.data();
+    T* optr = other.data();
 
     if (other.m_length < m_length) {
         mem::destroy(ptr + other.m_length, ptr + m_length);
@@ -231,20 +230,7 @@ static_vector<T, C>::operator=(static_vector<T, C>&& other) noexcept {
 template<class T, len_t C>
 constexpr static_vector<T, C>&
 static_vector<T, C>::operator=(std::initializer_list<T> ilist) noexcept {
-    T* ptr = data();
-    auto optr = ilist.begin();
-    size_type ilist_len = static_cast<size_type>(ilist.size());
-
-    if (ilist_len < m_length) {
-        mem::destroy(ptr + ilist_len, ptr + m_length);
-        mem::copy(ptr, optr, ilist_len);
-    }
-    else {
-        mem::copy(ptr, optr, m_length);
-        mem::ucopy(ptr + m_length, optr + m_length, optr + ilist_len);
-    }
-
-    m_length = ilist_len;
+    assign(ilist.begin(), ilist.end());
 
     return *this;
 }
@@ -336,11 +322,12 @@ static_vector<T, C>::max_size() const noexcept {
 template<class T, len_t C>
 constexpr void
 static_vector<T, C>::resize(size_type n) {
-    if (n > m_length) {
+    if (m_length < n) {
         T* ptr = data();
         mem::construct(ptr + m_length, ptr + n);
         m_length = n;
     }
+    // TODO: remove second check (?)
     else if (n < m_length) {
         T* ptr = data();
         mem::destroy(ptr + n, ptr + m_length);
@@ -351,11 +338,12 @@ static_vector<T, C>::resize(size_type n) {
 template<class T, len_t C>
 constexpr void
 static_vector<T, C>::resize(size_type n, const T& val) {
-    if (n > m_length) {
+    if (m_length < n) {
         T* ptr = data();
         mem::ufill(ptr + m_length, ptr + n, val);
         m_length = n;
     }
+    // TODO: remove second check (?)
     else if (n < m_length) {
         T* ptr = data();
         mem::destroy(ptr + n, ptr + m_length);
@@ -400,7 +388,7 @@ constexpr static_vector<T, C>::operator[](size_type n) const {
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::reference
 static_vector<T, C>::at(size_type n) {
-    // TODO: unlikely
+    // TODO: unlikely (?)
     if (n >= m_length)
         throw std::out_of_range("Index out of range: " + std::to_string(n));
     return *data_at(n);
@@ -409,7 +397,7 @@ static_vector<T, C>::at(size_type n) {
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::const_reference
 static_vector<T, C>::at(size_type n) const {
-    // TODO: unlikely
+    // TODO: unlikely (?)
     if (n >= m_length)
         throw std::out_of_range("Index out of range: " + std::to_string(n));
     return *data_at(n);
@@ -543,14 +531,14 @@ constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, size_type count, const T& value) {
     T* position = const_cast<T*>(pos);
 
-    // TODO: unlikely or can do better
+    // TODO: unlikely or can do better (?)
     if (!count)
         return position;
 
     T* eptr = end();
     size_type rest = static_cast<size_type>(std::distance(position, eptr));
 
-    // TODO: likely?
+    // TODO: likely (?)
     if (count < rest) {
         mem::shiftr(position + count, position, eptr);
         mem::fill(position, count, value);
@@ -572,7 +560,7 @@ constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, InputIterator first, InputIterator last) {
     T* position = const_cast<T*>(pos);
 
-    // TODO: unlikely or can do better
+    // TODO: unlikely or can do better (?)
     if (first == last)
         return position;
 
@@ -580,7 +568,7 @@ static_vector<T, C>::insert(const_iterator pos, InputIterator first, InputIterat
     size_type count = static_cast<size_type>(std::distance(first, last));
     size_type rest = static_cast<size_type>(std::distance(position, eptr));
 
-    // TODO: likely?
+    // TODO: likely (?)
     if (count < rest) {
         mem::shiftr(position + count, position, eptr);
         mem::copy(position, first, count);
@@ -617,7 +605,7 @@ constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::erase(const_iterator first, const_iterator last) {
     T* f = const_cast<T*>(first);
 
-    // TODO: unlikely, maybe can do better
+    // TODO: unlikely, maybe can do better (?)
     if (first != last) {
         T* l = const_cast<T*>(last);
         T* e = end();
@@ -666,7 +654,7 @@ static_vector<T, C>::emplace(const_iterator pos, Args&&... args) {
     T* position = const_cast<T*>(pos);
     T* eptr = end();
 
-    // TODO: unlikely or do better
+    // TODO: unlikely or do better (?)
     if (position == eptr)
         new (position) T(std::forward<Args>(args)...);
     else {
@@ -843,7 +831,7 @@ constexpr typename uwr::static_vector<T, C>::size_type
 erase(uwr::static_vector<T, C>& c, const U& value) {
     using size_type = typename uwr::static_vector<T, C>::size_type;
 
-    // TODO: possible optimizations?
+    // TODO: possible optimizations (?)
     T* const cend = c.end();
     T* const it = std::remove(c.begin(), cend, value);
     c.erase(it, cend);
@@ -856,7 +844,7 @@ constexpr typename uwr::static_vector<T, C>::size_type
 erase_if(uwr::static_vector<T, C>& c, Pred pred) {
     using size_type = typename uwr::static_vector<T, C>::size_type;
 
-    // TODO: possible optimizations?
+    // TODO: possible optimizations (?)
     T* const cend = c.end();
     T* const it = std::remove_if(c.begin(), cend, pred);
     c.erase(it, cend);
