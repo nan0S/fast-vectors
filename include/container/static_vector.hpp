@@ -113,7 +113,7 @@ public:
     constexpr iterator erase(const_iterator pos);
     constexpr iterator erase(const_iterator first, const_iterator last);
 
-    constexpr void swap(static_vector& other);
+    UWR_FORCEINLINE constexpr void swap(static_vector& other);
     constexpr void clear() noexcept;
 
     template<class... Args>
@@ -126,6 +126,7 @@ public:
 private:
     UWR_FORCEINLINE constexpr T* data_at(size_type n) noexcept;
     UWR_FORCEINLINE constexpr const T* data_at(size_type n) const noexcept;
+    constexpr void priv_swap(static_vector& shorter, static_vector& longer);
 
 private:
     typename std::aligned_storage<sizeof(T), alignof(T)>::type m_data[C];
@@ -667,23 +668,24 @@ static_vector<T, C>::erase(const_iterator first, const_iterator last) {
 template<class T, len_t C>
 constexpr void
 static_vector<T, C>::swap(static_vector<T, C>& other) {
-    static_vector<T, C> *o1, *o2;
+    if (m_length < other.m_length)
+        priv_swap(*this, other);
+    else
+        priv_swap(other, *this);
+}
 
-    if (m_length < other.m_length) {
-        o1 = this;
-        o2 = &other;
-    }
-    else {
-        o1 = &other;
-        o2 = this;
-    }
+template<class T, len_t C>
+constexpr void
+static_vector<T, C>::priv_swap(static_vector<T, C>& shorter, static_vector<T, C>& longer) {
+    T* const s_begin = shorter.begin();
+    T* const s_end = shorter.end();
+    T* const l_begin = longer.begin();
+    T* const l_end = longer.end();
 
-    for (size_type i = 0; i < o1->m_length; ++i)
-        std::swap((*this)[i], other[i]);
-
-    mem::umove(o1->begin() + o1->m_length, o2->begin() + o1->m_length, o2->end());
-    mem::destroy(o2->begin() + o1->m_length, o2->end());
-    std::swap(o1->m_length, o2->m_length);
+    std::swap_ranges(s_begin, s_end, l_begin);
+    mem::umove(s_end, l_begin + shorter.m_length, l_end);
+    mem::destroy(l_begin + shorter.m_length, l_end);
+    std::swap(shorter.m_length, longer.m_length);
 }
 
 template<class T, len_t C>
