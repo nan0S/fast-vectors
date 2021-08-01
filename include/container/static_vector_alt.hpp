@@ -11,22 +11,12 @@
 namespace uwr {
 
 using len_t = mem::len_t;
-// TODO: restore to uint
-static_assert(std::is_same_v<len_t, std::size_t>,
-    "static_vector_alt template type has to be the same as len_t!");
 
-/*
- * template type is uint insted of len_t clarity reasons
- * (not to lookup what len_t is)
- */
-// TODO: restore to uint
 template<class T, std::size_t C>
 class static_vector_alt {
 public:
     using value_type = T;
-    // TODO: restore to uint...
-    // using size_type = uint_fast32_t;
-    using size_type = std::size_t;
+    using size_type = len_t;
     using difference_type = std::ptrdiff_t;
     using reference = T&;
     using const_reference = const T&;

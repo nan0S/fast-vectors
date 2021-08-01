@@ -8,9 +8,8 @@
 
 namespace uwr::mem {
 
-typedef unsigned int uint;
-// TODO: restore to uint
-// using len_t = uint;
+// TODO: toogle comments
+// using len_t = std::uint_fast32_t;
 using len_t = std::size_t;
 
 /*
@@ -43,7 +42,7 @@ void fill(T* begin, len_t n, const T& val);
 /*
  * hybrid fill initialized memory
  */
-// TODO: remove
+// TODO: temporaty
 #define HYBRID_THRESHOLD 1
 template<class T>
 void _hybrid_fill(T* begin, len_t n, const T& val);
@@ -195,7 +194,7 @@ NT_Move_A<T> shiftl(T* dest, T* begin, T* end);
  * implementations
  */
 
-// TODO: remove
+// TODO: temporary
 template<class T>
 UWR_FORCEINLINE
 T_Move<T> shiftr_data(T* begin, len_t end)

@@ -13,13 +13,11 @@ namespace uwr {
 
 using len_t = mem::len_t;
 
-template<class T>
+template<class T, len_t C>
 class vector {
 public:
     using value_type = T;
-    // TODO: restore to uing
-    // using size_type = uint_fast32_t;
-    using size_type = std::size_t;
+    using size_type = len_t;
     using difference_type = std::ptrdiff_t;
     using reference = T&;
     using const_reference = const T&;
