@@ -12,6 +12,9 @@ namespace uwr::mem {
 // using len_t = std::uint_fast32_t;
 using len_t = std::size_t;
 
+// should use getpagesize() but want constexpr
+inline constexpr len_t page_size = 4096;
+
 /*
  * construct (so should be uninitialized)
  */
