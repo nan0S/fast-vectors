@@ -51,10 +51,16 @@ namespace Random {
     Int<T> rand(T n);
     
     /*
-     * random number from [a, b]
+     * random integer number from [a, b)
      */
     template<class T>
-    T rand(T a, T b);
+    Int<T> rand(T a, T b);
+
+    /*
+     * random decimal number from [a, b]
+     */
+    template<class T>
+    N_Int<T> rand(T a, T b);
 }
 
 /*
@@ -68,7 +74,12 @@ namespace Random {
     }
 
     template<class T>
-    T rand(T a, T b) {
+    Int<T> rand(T a, T b) {
+        return dist_t<T>{a, b - 1}(rng);
+    }
+
+    template<class T>
+    N_Int<T> rand(T a, T b) {
         return dist_t<T>{a, b}(rng);
     }
 }

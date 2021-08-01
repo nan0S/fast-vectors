@@ -24,29 +24,17 @@ int main() {
     using T = test_type;
     using Vector1 = boost::container::static_vector<T, C>;
     using Vector2 = uwr::static_vector<T, C>;
-
-    // Vector1 v1 { 1, 2, 3, 4, 5 };
-    // Vector2 v2 { 1, 2, 3, 4, 5 };
-    // const test_type val = 13;
-    // int pos = 0;
+    
+    const T val = 3;
+    Vector2 v {3, 1, 2, 3, 2, 3, 2};
 
     ON;
     
-    uvector<int> v1(5);
-    print(v1);
-
-    bvector<int> v2(5);
-    print(v2);
-
-    vector<int> v3(5);
-    print(v3);
-
-    // auto s = sizeof(test_type);
-    // int n = 5;
-    // char t[n * s];
-    // std::uninitialized_default_construct_n((test_type*)t, n);
+    erase_if(v, [&](const auto& x){ return x == val; });
 
     OFF;
+ 
+    cout << v << endl;
 
     return 0;
 }
