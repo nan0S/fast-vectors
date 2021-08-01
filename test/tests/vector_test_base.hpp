@@ -104,6 +104,36 @@ TYPED_TEST(VectorTestBaseFixture, InitializerListOperator) {
         EXPECT_EQ(v[i], il.begin()[i]);
 }
 
+TYPED_TEST(VectorTestBaseFixture, CopyOperatorToTheSameVector) {
+    const auto val = this->GetValue(10);
+    const int size = 5;
+
+    typename TestFixture::vector v(size, val);
+    auto& v1 = v;
+    auto& v2 = v;
+
+    v1 = v2;
+
+    EXPECT_EQ(v.size(), size);
+    for (typename TestFixture::size_type i = 0; i < v.size(); ++i)
+        EXPECT_EQ(v[i], val);
+}
+
+TYPED_TEST(VectorTestBaseFixture, MoveOperatorToTheSameVector) {
+    const auto val = this->GetValue(10);
+    const int size = 5;
+
+    typename TestFixture::vector v(size, val);
+    auto& v1 = v;
+    auto& v2 = v;
+
+    v1 = std::move(v2);
+
+    EXPECT_EQ(v.size(), size);
+    for (typename TestFixture::size_type i = 0; i < v.size(); ++i)
+        EXPECT_EQ(v[i], val);
+}
+
 TYPED_TEST(VectorTestBaseFixture, BeginEndInEmptyVector) {
     typename TestFixture::vector v;
     
