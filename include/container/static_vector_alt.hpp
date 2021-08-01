@@ -183,21 +183,23 @@ static_vector_alt<T, C, size_t>::~static_vector_alt() {
 template<class T, len_t C, class size_t>
 constexpr static_vector_alt<T, C, size_t>&
 static_vector_alt<T, C, size_t>::operator=(const static_vector_alt<T, C, size_t>& other) noexcept {
-    T* ptr = this->data();
-    const T* optr = other.data();
-    size_type len = this->size();
-    size_type olen = other.size();
+    if (LIKELY(this != &other)) {
+        T* ptr = this->data();
+        const T* optr = other.data();
+        size_type len = this->size();
+        size_type olen = other.size();
 
-    if (olen < len) {
-        mem::destroy(ptr + olen, this->m_end);
-        mem::copy(ptr, optr, olen);
-    }
-    else {
-        mem::copy(ptr, optr, len);
-        mem::ucopy<T, const T*>(this->m_end, optr + len, other.m_end);
-    }
+        if (olen < len) {
+            mem::destroy(ptr + olen, this->m_end);
+            mem::copy(ptr, optr, olen);
+        }
+        else {
+            mem::copy(ptr, optr, len);
+            mem::ucopy<T, const T*>(this->m_end, optr + len, other.m_end);
+        }
 
-    this->m_end = ptr + olen;
+        this->m_end = ptr + olen;
+    }
 
     return *this;
 }
@@ -205,22 +207,23 @@ static_vector_alt<T, C, size_t>::operator=(const static_vector_alt<T, C, size_t>
 template<class T, len_t C, class size_t>
 constexpr static_vector_alt<T, C, size_t>&
 static_vector_alt<T, C, size_t>::operator=(static_vector_alt<T, C, size_t>&& other) noexcept {
-    T* ptr = this->data();
-    T* optr = other.data();
-    size_type len = this->size();
-    size_type olen = other.size();
+    if (LIKELY(this != &other)) {
+        T* ptr = this->data();
+        T* optr = other.data();
+        size_type len = this->size();
+        size_type olen = other.size();
 
-    if (olen < len) {
-        mem::destroy(ptr + olen, this->m_end);
-        mem::move(ptr, optr, olen);
+        if (olen < len) {
+            mem::destroy(ptr + olen, this->m_end);
+            mem::move(ptr, optr, olen);
+        }
+        else {
+            mem::move(ptr, optr, len);
+            mem::umove(this->m_end, optr + len, other.m_end);
+        }
+
+        this->m_end = ptr + olen;
     }
-    else {
-        mem::move(ptr, optr, len);
-        mem::umove(this->m_end, optr + len, other.m_end);
-    }
-
-    this->m_end = ptr + olen;
-
     return *this;
 }
 

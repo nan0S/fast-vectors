@@ -182,19 +182,21 @@ static_vector<T, C, size_t>::~static_vector() {
 template<class T, len_t C, class size_t>
 constexpr static_vector<T, C, size_t>&
 static_vector<T, C, size_t>::operator=(const static_vector<T, C, size_t>& other) noexcept {
-    T* ptr = this->data();
-    const T* optr = other.data();
+    if (LIKELY(this != &other)) {
+        T* ptr = this->data();
+        const T* optr = other.data();
 
-    if (other.m_length < this->m_length) {
-        mem::destroy(ptr + other.m_length, ptr + this->m_length);
-        mem::copy(ptr, optr, other.m_length);
-    }
-    else {
-        mem::copy(ptr, optr, this->m_length);
-        mem::ucopy(ptr + this->m_length, optr + this->m_length, optr + other.m_length);
-    }
+        if (other.m_length < this->m_length) {
+            mem::destroy(ptr + other.m_length, ptr + this->m_length);
+            mem::copy(ptr, optr, other.m_length);
+        }
+        else {
+            mem::copy(ptr, optr, this->m_length);
+            mem::ucopy(ptr + this->m_length, optr + this->m_length, optr + other.m_length);
+        }
 
-    this->m_length = other.m_length;
+        this->m_length = other.m_length;
+    }
 
     return *this;
 }
@@ -202,19 +204,21 @@ static_vector<T, C, size_t>::operator=(const static_vector<T, C, size_t>& other)
 template<class T, len_t C, class size_t>
 constexpr static_vector<T, C, size_t>&
 static_vector<T, C, size_t>::operator=(static_vector<T, C, size_t>&& other) noexcept {
-    T* ptr = this->data();
-    T* optr = other.data();
+    if (LIKELY(this != &other)) {
+        T* ptr = this->data();
+        T* optr = other.data();
 
-    if (other.m_length < this->m_length) {
-        mem::destroy(ptr + other.m_length, ptr + this->m_length);
-        mem::move(ptr, optr, other.m_length);
-    }
-    else {
-        mem::move(ptr, optr, this->m_length);
-        mem::umove(ptr + this->m_length, optr + this->m_length, optr + other.m_length);
-    }
+        if (other.m_length < this->m_length) {
+            mem::destroy(ptr + other.m_length, ptr + this->m_length);
+            mem::move(ptr, optr, other.m_length);
+        }
+        else {
+            mem::move(ptr, optr, this->m_length);
+            mem::umove(ptr + this->m_length, optr + this->m_length, optr + other.m_length);
+        }
 
-    this->m_length = other.m_length;
+        this->m_length = other.m_length;
+    }
 
     return *this;
 }
