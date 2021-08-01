@@ -70,8 +70,10 @@ public:
 
     UWR_FORCEINLINE constexpr size_type size() const noexcept;
     UWR_FORCEINLINE constexpr size_type max_size() const noexcept;
-    constexpr void resize(size_type n);
-    constexpr void resize(size_type n, const T& val);
+    constexpr void resize1(size_type n);
+    constexpr void resize2(size_type n);
+    constexpr void resize1(size_type n, const T& val);
+    constexpr void resize2(size_type n, const T& val);
     UWR_FORCEINLINE constexpr size_type capacity() const noexcept;
     [[nodiscard]] UWR_FORCEINLINE constexpr bool empty() const noexcept;
     UWR_FORCEINLINE constexpr void reserve(size_type n) noexcept;
@@ -79,7 +81,8 @@ public:
 
     UWR_FORCEINLINE constexpr reference operator[](size_type n);
     UWR_FORCEINLINE constexpr const_reference operator[](size_type n) const;
-    UWR_FORCEINLINE constexpr reference at(size_type n);
+    UWR_FORCEINLINE constexpr reference at1(size_type n);
+    UWR_FORCEINLINE constexpr reference at2(size_type n);
     UWR_FORCEINLINE constexpr const_reference at(size_type n) const;
     UWR_FORCEINLINE constexpr reference front();
     UWR_FORCEINLINE constexpr const_reference front() const;
@@ -90,7 +93,8 @@ public:
 
     template<class InputIterator, class = typename std::iterator_traits<InputIterator>::value_type>
     constexpr void assign(InputIterator first, InputIterator last);
-    constexpr void assign(size_type n, const T& val);
+    constexpr void assign1(size_type n, const T& val);
+    constexpr void assign2(size_type n, const T& val);
     UWR_FORCEINLINE constexpr void assign(std::initializer_list<T> ilist);
 
     UWR_FORCEINLINE constexpr void push_back(const T& value);
@@ -98,17 +102,21 @@ public:
     UWR_FORCEINLINE constexpr void fast_push_back(T&& value) noexcept;
 
     UWR_FORCEINLINE constexpr void pop_back();
-    UWR_FORCEINLINE constexpr void safe_pop_back() noexcept;
+    UWR_FORCEINLINE constexpr bool safe_pop_back1() noexcept;
+    UWR_FORCEINLINE constexpr bool safe_pop_back2() noexcept;
 
     UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, const T& value);
     UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, T&& value);
-    constexpr iterator insert(const_iterator pos, size_type count, const T& value);
+    constexpr iterator insert1(const_iterator pos, size_type count, const T& value);
+    constexpr iterator insert2(const_iterator pos, size_type count, const T& value);
     template<class InputIterator, class = typename std::iterator_traits<InputIterator>::value_type>
     constexpr iterator insert(const_iterator pos, InputIterator first, InputIterator last);
     UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, std::initializer_list<T> ilist);
 
     constexpr iterator erase(const_iterator pos);
     constexpr iterator erase(const_iterator first, const_iterator last);
+    constexpr iterator erase1(const_iterator first, const_iterator last);
+    constexpr iterator erase2(const_iterator first, const_iterator last);
 
     UWR_FORCEINLINE constexpr void swap(static_vector& other);
     UWR_FORCEINLINE constexpr void clear() noexcept;
@@ -116,7 +124,9 @@ public:
     template<class... Args>
     constexpr iterator emplace(const_iterator pos, Args&&... args);
     template<class... Args>
-    UWR_FORCEINLINE constexpr reference emplace_back(Args&&... args);
+    UWR_FORCEINLINE constexpr reference emplace_back1(Args&&... args);
+    template<class... Args>
+    UWR_FORCEINLINE constexpr reference emplace_back2(Args&&... args);
     template<class... Args>
     UWR_FORCEINLINE constexpr reference fast_emplace_back(Args&&... args) noexcept;
 
@@ -321,7 +331,7 @@ static_vector<T, C>::max_size() const noexcept {
 
 template<class T, len_t C>
 constexpr void
-static_vector<T, C>::resize(size_type n) {
+static_vector<T, C>::resize1(size_type n) {
     if (m_length < n) {
         T* ptr = data();
         mem::construct(ptr + m_length, ptr + n);
@@ -335,9 +345,25 @@ static_vector<T, C>::resize(size_type n) {
     }
 }
 
+// MARK: better
 template<class T, len_t C>
 constexpr void
-static_vector<T, C>::resize(size_type n, const T& val) {
+static_vector<T, C>::resize2(size_type n) {
+    if (m_length < n) {
+        T* ptr = data();
+        mem::construct(ptr + m_length, ptr + n);
+        m_length = n;
+    }
+    else {
+        T* ptr = data();
+        mem::destroy(ptr + n, ptr + m_length);
+        m_length = n;
+    }
+}
+
+template<class T, len_t C>
+constexpr void
+static_vector<T, C>::resize1(size_type n, const T& val) {
     if (m_length < n) {
         T* ptr = data();
         mem::ufill(ptr + m_length, ptr + n, val);
@@ -345,6 +371,23 @@ static_vector<T, C>::resize(size_type n, const T& val) {
     }
     // TODO: remove second check (?)
     else if (n < m_length) {
+        T* ptr = data();
+        mem::destroy(ptr + n, ptr + m_length);
+        m_length = n;
+    }
+}
+
+// MARK: better
+template<class T, len_t C>
+constexpr void
+static_vector<T, C>::resize2(size_type n, const T& val) {
+    if (m_length < n) {
+        T* ptr = data();
+        mem::ufill(ptr + m_length, ptr + n, val);
+        m_length = n;
+    }
+    // TODO: remove second check (?)
+    else {
         T* ptr = data();
         mem::destroy(ptr + n, ptr + m_length);
         m_length = n;
@@ -385,9 +428,10 @@ constexpr static_vector<T, C>::operator[](size_type n) const {
     return *data_at(n);
 }
 
+// MARK: better
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::reference
-static_vector<T, C>::at(size_type n) {
+static_vector<T, C>::at1(size_type n) {
     // TODO: unlikely (?)
     if (n >= m_length)
         throw std::out_of_range("Index out of range: " + std::to_string(n));
@@ -395,9 +439,18 @@ static_vector<T, C>::at(size_type n) {
 }
 
 template<class T, len_t C>
+constexpr typename static_vector<T, C>::reference
+static_vector<T, C>::at2(size_type n) {
+    // TODO: unlikely (?)
+    if (UNLIKELY(n >= m_length))
+        throw std::out_of_range("Index out of range: " + std::to_string(n));
+    return *data_at(n);
+}
+
+template<class T, len_t C>
 constexpr typename static_vector<T, C>::const_reference
 static_vector<T, C>::at(size_type n) const {
-    // TODO: unlikely (?)
+    // TODO: unlikely (?) - should not
     if (n >= m_length)
         throw std::out_of_range("Index out of range: " + std::to_string(n));
     return *data_at(n);
@@ -450,6 +503,7 @@ static_vector<T, C>::assign(InputIterator first, InputIterator last) {
         mem::destroy(ptr + n, ptr + m_length);
         mem::copy(ptr, first, n);
     }
+    // TODO: maybe add if (?) - maybe not :)
     else {
         mem::copy(ptr, first, m_length);
         mem::ucopy(ptr + m_length, first + m_length, last);
@@ -460,13 +514,35 @@ static_vector<T, C>::assign(InputIterator first, InputIterator last) {
 
 template<class T, len_t C>
 constexpr void
-static_vector<T, C>::assign(size_type n, const T& val) {
+static_vector<T, C>::assign1(size_type n, const T& val) {
+    
+    if (n < m_length) {
+        T* ptr = data();
+        mem::destroy(ptr + n, ptr + m_length);
+        mem::fill(ptr, n, val);
+        m_length = n;
+    }
+    // TODO: maybe add if (?)
+    else if (m_length < n) {
+        T* ptr = data();
+        mem::fill(ptr, m_length, val);
+        mem::ufill(ptr + m_length, n - m_length, val);
+        m_length = n;
+    }
+
+}
+
+// MARK: better
+template<class T, len_t C>
+constexpr void
+static_vector<T, C>::assign2(size_type n, const T& val) {
     T* ptr = data();
     
     if (n < m_length) {
         mem::destroy(ptr + n, ptr + m_length);
         mem::fill(ptr, n, val);
     }
+    // TODO: maybe add if (?)
     else {
         mem::fill(ptr, m_length, val);
         mem::ufill(ptr + m_length, n - m_length, val);
@@ -506,12 +582,24 @@ static_vector<T, C>::pop_back() {
 }
 
 template<class T, len_t C>
-constexpr void
-static_vector<T, C>::safe_pop_back() noexcept {
+constexpr bool
+static_vector<T, C>::safe_pop_back1() noexcept {
     // TODO: unlikely (?)
     if (m_length == 0)
-        return;
+        return false;
     pop_back();
+    return true;
+}
+
+// MARK: better
+template<class T, len_t C>
+constexpr bool
+static_vector<T, C>::safe_pop_back2() noexcept {
+    // TODO: unlikely (?)
+    if (UNLIKELY(m_length == 0))
+        return false;
+    pop_back();
+    return true;
 }
 
 template<class T, len_t C>
@@ -528,7 +616,7 @@ static_vector<T, C>::insert(const_iterator pos, T&& value) {
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
-static_vector<T, C>::insert(const_iterator pos, size_type count, const T& value) {
+static_vector<T, C>::insert1(const_iterator pos, size_type count, const T& value) {
     T* position = const_cast<T*>(pos);
 
     // TODO: unlikely or can do better (?)
@@ -538,7 +626,34 @@ static_vector<T, C>::insert(const_iterator pos, size_type count, const T& value)
     T* eptr = end();
     size_type rest = static_cast<size_type>(std::distance(position, eptr));
 
-    // TODO: likely (?)
+    if (count < rest) {
+        mem::shiftr(position + count, position, eptr);
+        mem::fill(position, count, value);
+    }
+    else {
+        mem::umove(position + count, position, eptr);
+        mem::fill(position, rest, value);
+        mem::ufill(eptr, count - rest, value);
+    }
+
+    m_length += count;
+
+    return position;
+}
+
+// MARK: better
+template<class T, len_t C>
+constexpr typename static_vector<T, C>::iterator
+static_vector<T, C>::insert2(const_iterator pos, size_type count, const T& value) {
+    T* position = const_cast<T*>(pos);
+
+    // TODO: unlikely or can do better (?)
+    if (UNLIKELY(!count))
+        return position;
+
+    T* eptr = end();
+    size_type rest = static_cast<size_type>(std::distance(position, eptr));
+
     if (count < rest) {
         mem::shiftr(position + count, position, eptr);
         mem::fill(position, count, value);
@@ -560,7 +675,7 @@ constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, InputIterator first, InputIterator last) {
     T* position = const_cast<T*>(pos);
 
-    // TODO: unlikely or can do better (?)
+    // TODO: unlikely or can do better (?) - unlikely
     if (first == last)
         return position;
 
@@ -568,7 +683,6 @@ static_vector<T, C>::insert(const_iterator pos, InputIterator first, InputIterat
     size_type count = static_cast<size_type>(std::distance(first, last));
     size_type rest = static_cast<size_type>(std::distance(position, eptr));
 
-    // TODO: likely (?)
     if (count < rest) {
         mem::shiftr(position + count, position, eptr);
         mem::copy(position, first, count);
@@ -618,6 +732,41 @@ static_vector<T, C>::erase(const_iterator first, const_iterator last) {
 }
 
 template<class T, len_t C>
+constexpr typename static_vector<T, C>::iterator
+static_vector<T, C>::erase1(const_iterator first, const_iterator last) {
+    T* f = const_cast<T*>(first);
+
+    // TODO: unlikely, maybe can do better (?)
+    if (first != last) {
+        T* l = const_cast<T*>(last);
+        T* e = end();
+        mem::shiftl(f, l, e);
+        mem::destroy(f + (e - l), e);
+        m_length -= l - f;
+    }
+
+    return f;
+}
+
+// MARK: similar/better
+template<class T, len_t C>
+constexpr typename static_vector<T, C>::iterator
+static_vector<T, C>::erase2(const_iterator first, const_iterator last) {
+    T* f = const_cast<T*>(first);
+
+    // TODO: unlikely, maybe can do better (?)
+    if (UNLIKELY(first != last)) {
+        T* l = const_cast<T*>(last);
+        T* e = end();
+        mem::shiftl(f, l, e);
+        mem::destroy(f + (e - l), e);
+        m_length -= l - f;
+    }
+
+    return f;
+}
+
+template<class T, len_t C>
 constexpr void
 static_vector<T, C>::swap(static_vector<T, C>& other) {
     if (m_length < other.m_length)
@@ -654,7 +803,6 @@ static_vector<T, C>::emplace(const_iterator pos, Args&&... args) {
     T* position = const_cast<T*>(pos);
     T* eptr = end();
 
-    // TODO: unlikely or do better (?)
     if (position == eptr)
         new (position) T(std::forward<Args>(args)...);
     else {
@@ -678,9 +826,20 @@ static_vector<T, C>::emplace(const_iterator pos, Args&&... args) {
 template<class T, len_t C>
 template<class... Args>
 constexpr typename static_vector<T, C>::reference
-static_vector<T, C>::emplace_back(Args&&... args) {
+static_vector<T, C>::emplace_back1(Args&&... args) {
     // TODO: unlikely (?)
     if (m_length == C)
+        throw std::out_of_range("Out of bounds");
+    return fast_emplace_back(std::forward<Args>(args)...);
+}
+
+// MARK: better
+template<class T, len_t C>
+template<class... Args>
+constexpr typename static_vector<T, C>::reference
+static_vector<T, C>::emplace_back2(Args&&... args) {
+    // TODO: unlikely (?)
+    if (UNLIKELY(m_length == C))
         throw std::out_of_range("Out of bounds");
     return fast_emplace_back(std::forward<Args>(args)...);
 }
@@ -831,7 +990,6 @@ constexpr typename uwr::static_vector<T, C>::size_type
 erase(uwr::static_vector<T, C>& c, const U& value) {
     using size_type = typename uwr::static_vector<T, C>::size_type;
 
-    // TODO: possible optimizations (?)
     T* const cend = c.end();
     T* const it = std::remove(c.begin(), cend, value);
     c.erase(it, cend);
@@ -844,7 +1002,6 @@ constexpr typename uwr::static_vector<T, C>::size_type
 erase_if(uwr::static_vector<T, C>& c, Pred pred) {
     using size_type = typename uwr::static_vector<T, C>::size_type;
 
-    // TODO: possible optimizations (?)
     T* const cend = c.end();
     T* const it = std::remove_if(c.begin(), cend, pred);
     c.erase(it, cend);
