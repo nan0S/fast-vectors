@@ -228,7 +228,6 @@ template<class T, len_t C, class size_t>
 constexpr static_vector_alt<T, C, size_t>&
 static_vector_alt<T, C, size_t>::operator=(std::initializer_list<T> ilist) noexcept {
     this->assign(ilist.begin(), ilist.end());
-
     return *this;
 }
 
