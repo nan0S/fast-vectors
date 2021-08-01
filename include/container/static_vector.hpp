@@ -322,31 +322,27 @@ static_vector<T, C>::max_size() const noexcept {
 template<class T, len_t C>
 constexpr void
 static_vector<T, C>::resize(size_type n) {
-    if (m_length < n) {
-        T* ptr = data();
+    T* ptr = data();
+
+    if (m_length < n)
         mem::construct(ptr + m_length, ptr + n);
-        m_length = n;
-    }
-    else {
-        T* ptr = data();
+    else
         mem::destroy(ptr + n, ptr + m_length);
-        m_length = n;
-    }
+
+    m_length = n;
 }
 
 template<class T, len_t C>
 constexpr void
 static_vector<T, C>::resize(size_type n, const T& val) {
-    if (m_length < n) {
-        T* ptr = data();
+    T* ptr = data();
+
+    if (m_length < n)
         mem::ufill(ptr + m_length, ptr + n, val);
-        m_length = n;
-    }
-    else {
-        T* ptr = data();
+    else
         mem::destroy(ptr + n, ptr + m_length);
-        m_length = n;
-    }
+
+    m_length = n;
 }
 
 template<class T, len_t C>
@@ -597,7 +593,7 @@ constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::erase(const_iterator first, const_iterator last) {
     T* f = const_cast<T*>(first);
 
-    if (UNLIKELY(first != last)) {
+    if (LIKELY(first != last)) {
         T* l = const_cast<T*>(last);
         T* e = end();
         mem::shiftl(f, l, e);
