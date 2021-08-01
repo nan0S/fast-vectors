@@ -100,7 +100,7 @@ public:
     UWR_FORCEINLINE constexpr void fast_push_back(T&& value) noexcept;
 
     UWR_FORCEINLINE constexpr void pop_back();
-    UWR_FORCEINLINE constexpr void safe_pop_back() noexcept;
+    UWR_FORCEINLINE constexpr bool safe_pop_back() noexcept;
 
     UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, const T& value);
     UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, T&& value);
@@ -125,6 +125,8 @@ public:
 private:
     UWR_FORCEINLINE constexpr T* data_at(size_type n) noexcept;
     UWR_FORCEINLINE constexpr const T* data_at(size_type n) const noexcept;
+    constexpr void priv_swap(static_vector_alt& shorter, static_vector_alt& longer,
+            size_type s_length, size_type l_length);
 
 private:
     typename std::aligned_storage<sizeof(T), alignof(T)>::type m_data[C];
@@ -327,36 +329,29 @@ static_vector_alt<T, C>::max_size() const noexcept {
 template<class T, len_t C>
 constexpr void
 static_vector_alt<T, C>::resize(size_type n) {
+    T* ptr = data();
     size_type len = size();
 
-    if (n > len) {
-        T* ptr = data();
+    if (n > len)
         mem::construct(m_end, ptr + n);
-        m_end = ptr + n;
-    }
-    else if (n < len) {
-        T* ptr = data();
+    else
         mem::destroy(ptr + n, m_end);
-        m_end = ptr + n;
-    }
+
+    m_end = ptr + n;
 }
 
 template<class T, len_t C>
 constexpr void
 static_vector_alt<T, C>::resize(size_type n, const T& val) {
+    T* ptr = data();
     size_type len = size();
 
-    if (n > len) {
-        T* ptr = data();
+    if (n > len)
         mem::ufill(m_end, ptr + n, val);
-        m_end = ptr + n;
-    }
-    // TODO: remove second check (?)
-    else if (n < len) {
-        T* ptr = data();
+    else
         mem::destroy(ptr + n, m_end);
-        m_end = ptr + n;
-    }
+
+    m_end = ptr + n;
 }
 
 template<class T, len_t C>
@@ -396,7 +391,6 @@ constexpr static_vector_alt<T, C>::operator[](size_type n) const {
 template<class T, len_t C>
 constexpr typename static_vector_alt<T, C>::reference
 static_vector_alt<T, C>::at(size_type n) {
-    // TODO: unlikely (?)
     if (data() + n >= m_end)
         throw std::out_of_range("Index out of range: " + std::to_string(n));
     return *data_at(n);
@@ -405,7 +399,6 @@ static_vector_alt<T, C>::at(size_type n) {
 template<class T, len_t C>
 constexpr typename static_vector_alt<T, C>::const_reference
 static_vector_alt<T, C>::at(size_type n) const {
-    // TODO: unlikely (?)
     if (data() + n >= m_end)
         throw std::out_of_range("Index out of range: " + std::to_string(n));
     return *data_at(n);
@@ -516,12 +509,12 @@ static_vector_alt<T, C>::pop_back() {
 }
 
 template<class T, len_t C>
-constexpr void
+constexpr bool
 static_vector_alt<T, C>::safe_pop_back() noexcept {
-    // TODO: unlikely (?)
-    if (m_end == data())
-        return;
+    if (UNLIKELY(m_end == data()))
+        return false;
     pop_back();
+    return true;
 }
 
 template<class T, len_t C>
@@ -540,13 +533,12 @@ template<class T, len_t C>
 constexpr typename static_vector_alt<T, C>::iterator
 static_vector_alt<T, C>::insert(const_iterator pos, size_type count, const T& value) {
     T* position = const_cast<T*>(pos);
-    // TODO: unlikely or can do better (?)
-    if (!count)
+
+    if (UNLIKELY(!count))
         return position;
 
     size_type rest = static_cast<size_type>(std::distance(position, m_end));
 
-    // TODO: likely (?)
     if (count < rest) {
         mem::shiftr(position + count, position, m_end);
         mem::fill(position, count, value);
@@ -568,14 +560,12 @@ constexpr typename static_vector_alt<T, C>::iterator
 static_vector_alt<T, C>::insert(const_iterator pos, InputIterator first, InputIterator last) {
     T* position = const_cast<T*>(pos);
 
-    // TODO: unlikely or can do better (?)
-    if (first == last)
+    if (UNLIKELY(first == last))
         return position;
 
     size_type count = static_cast<size_type>(std::distance(first, last));
     size_type rest = static_cast<size_type>(std::distance(position, m_end));
 
-    // TODO: likely (?)
     if (count < rest) {
         mem::shiftr(position + count, position, m_end);
         mem::copy(position, first, count);
@@ -611,8 +601,8 @@ template<class T, len_t C>
 constexpr typename static_vector_alt<T, C>::iterator
 static_vector_alt<T, C>::erase(const_iterator first, const_iterator last) {
     T* f = const_cast<T*>(first);
-    // TODO: unlikely, maybe can do better (?)
-    if (first != last) {
+
+    if (LIKELY(first != last)) {
         T* l = const_cast<T*>(last);
         mem::shiftl(f, l, m_end);
         mem::destroy(f + (m_end - l), m_end);
@@ -625,27 +615,30 @@ static_vector_alt<T, C>::erase(const_iterator first, const_iterator last) {
 template<class T, len_t C>
 constexpr void
 static_vector_alt<T, C>::swap(static_vector_alt<T, C>& other) {
-    // TODO: change implementation (?)
-    T* m_begin = begin();
-    T* o_begin = other.begin();
+    size_type m_length = size();
+    size_type o_length = other.size();
 
-    while (true) {
-        if (m_begin == m_end) {
-            mem::umove(m_begin, o_begin, other.m_end);
-            mem::destroy(o_begin, other.m_end);
-            m_end += other.m_end - o_begin;
-            other.m_end = o_begin;
-            break;
-        }
-        if (o_begin == other.m_end) {
-            mem::umove(o_begin, m_begin, m_end);
-            mem::destroy(m_begin, m_end);
-            other.m_end += m_end - m_begin;
-            m_end = m_begin;
-            break;
-        }
-        std::swap(*m_begin++, *o_begin++);
-    }
+    if (m_length < o_length)
+        priv_swap(*this, other, m_length, o_length);
+    else
+        priv_swap(other, *this, o_length, m_length);
+}
+
+template<class T, len_t C>
+constexpr void
+static_vector_alt<T, C>::priv_swap(
+        static_vector_alt<T, C>& shorter,
+        static_vector_alt<T, C>& longer,
+        size_type s_length,
+        size_type l_length) {
+    T* const s_begin = shorter.begin();
+    T* const l_begin = longer.begin();
+
+    std::swap_ranges(s_begin, shorter.m_end, l_begin);
+    mem::umove(shorter.m_end, l_begin + s_length, longer.m_end);
+    mem::destroy(l_begin + s_length, longer.m_end);
+    shorter.m_end = s_begin + l_length;
+    longer.m_end = l_begin + s_length;
 }
 
 template<class T, len_t C>
@@ -662,7 +655,6 @@ constexpr typename static_vector_alt<T, C>::iterator
 static_vector_alt<T, C>::emplace(const_iterator pos, Args&&... args) {
     T* position = const_cast<T*>(pos);
 
-    // TODO: unlikely or do better (?)
     if (position == m_end)
         new (position) T(std::forward<Args>(args)...);
     else {
@@ -687,8 +679,7 @@ template<class T, len_t C>
 template<class... Args>
 constexpr typename static_vector_alt<T, C>::reference
 static_vector_alt<T, C>::emplace_back(Args&&... args) {
-    // TODO: unlikely (?)
-    if (m_end == data() + C)
+    if (UNLIKELY(m_end == data() + C))
         throw std::out_of_range("Out of bounds");
     return fast_emplace_back(std::forward<Args>(args)...);
 }
@@ -838,7 +829,6 @@ constexpr typename uwr::static_vector_alt<T, C>::size_type
 erase(uwr::static_vector_alt<T, C>& c, const U& value) {
     using size_type = typename uwr::static_vector_alt<T, C>::size_type;
 
-    // TODO: possible optimizations (?)
     T* const cend = c.end();
     T* const it = std::remove(c.begin(), cend, value);
     c.erase(it, cend);
@@ -851,7 +841,6 @@ constexpr typename uwr::static_vector_alt<T, C>::size_type
 erase_if(uwr::static_vector_alt<T, C>& c, Pred pred) {
     using size_type = typename uwr::static_vector_alt<T, C>::size_type;
 
-    // TODO: possible optimizations (?)
     T* const cend = c.end();
     T* const it = std::remove_if(c.begin(), cend, pred);
     c.erase(it, cend);
