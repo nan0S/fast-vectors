@@ -18,9 +18,9 @@ using namespace benchmark;
 using value_type = std::array<int, 10>;
 
 static  constexpr  int  PUSH_BACK_ARG           =  1000;
-static  constexpr  int  PUSH_BACK_POP_BACK_ARG  =  100;
+static  constexpr  int  PUSH_BACK_POP_BACK_ARG  =  50;
 static  constexpr  int  SWAP_ARG                =  100;
-static  constexpr  int  RESIZE_ARG              =  1000;
+static  constexpr  int  RESIZE_ARG              =  50;
 
 /* use the same number of iterations in all benchmarks */
 #define COMMON_ITERS 0
@@ -33,7 +33,7 @@ static  constexpr  int  RESIZE_ARG              =  1000;
 #define DO_STATIC_VECTOR_BENCH
 #define DO_STATIC_VECTOR_ALT_BENCH
 
-static constexpr int C = 5000; // static_vector capacity
+static constexpr int C = 1000; // static_vector capacity
 
 /*
  * tested vectors
@@ -42,7 +42,7 @@ using boost_static_vector = boost::container::static_vector<value_type, C>;
 using uwr_static_vector = uwr::static_vector<value_type, C>;
 using uwr_static_vector_alt = uwr::static_vector_alt<value_type, C>;
 
-static_assert(C > PUSH_BACK_ARG, "C has to be bigger than PUSH_BACK_ARG!");
+static_assert(C >= PUSH_BACK_ARG, "C cannot be smaller than PUSH_BACK_ARG!");
 
 /*
  * benchmark push_back
@@ -138,16 +138,19 @@ void BM_swap(State& s) {
  */
 template<class Vector>
 void BM_resize(State& s) {
+    Random::seed(31231);
+    int times = s.range(0);
 
     for (auto _ : s) {
-        int s = rand() % 10 + 5;
         Vector v;
+
         DoNotOptimize(v.data());
 
-        v.resize(s);
-        v.resize(rand() % (s - 3));
-
-        ClobberMemory();
+        for (int i = 0; i < times; ++i) {
+            int new_size = Random::rand(v.capacity() + 1);
+            v.resize(new_size);
+            ClobberMemory();
+        }
     }
 
     s.counters["t4"];

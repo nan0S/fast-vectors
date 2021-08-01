@@ -28,7 +28,7 @@ static  constexpr  int  INT_STRING_ARRAY_ARG  =  100;
 #define  INT_STRING_ARRAY_ITERS  (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 
 #define DO_STATIC_VECTOR_BENCH
-// #define DO_STATIC_VECTOR_ALT_BENCH
+#define DO_STATIC_VECTOR_ALT_BENCH
 
 static constexpr int C = 500000; // static_vector capacity
 static constexpr int N = 10;     // used in std::array<int, N>
