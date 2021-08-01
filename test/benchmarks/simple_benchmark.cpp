@@ -170,7 +170,6 @@ void BM_resize(State& s) {
     REGISTER_BENCHMARK_FOR_STATIC_VECTOR(func, unit, varname); \
     REGISTER_BENCHMARK_FOR_STATIC_VECTOR_ALT(func, unit, varname)
 
-
 /*
  * register all benchmarks
  */
