@@ -17,10 +17,10 @@ using namespace benchmark;
  */
 using value_type = std::array<int, 10>;
 
-static  constexpr  int  PUSH_BACK_ARG           =  10000;
-static  constexpr  int  PUSH_BACK_POP_BACK_ARG  =  10000;
-static  constexpr  int  SWAP_ARG                =  50000;
-static  constexpr  int  RESIZE_ARG              =  1000000;
+static  constexpr  int  PUSH_BACK_ARG           =  1000;
+static  constexpr  int  PUSH_BACK_POP_BACK_ARG  =  100;
+static  constexpr  int  SWAP_ARG                =  100;
+static  constexpr  int  RESIZE_ARG              =  1000;
 
 /* use the same number of iterations in all benchmarks */
 #define COMMON_ITERS 0
@@ -31,9 +31,9 @@ static  constexpr  int  RESIZE_ARG              =  1000000;
 #define  RESIZE_ITERS              (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 
 #define DO_STATIC_VECTOR_BENCH
-// #define DO_STATIC_VECTOR_ALT_BENCH
+#define DO_STATIC_VECTOR_ALT_BENCH
 
-static constexpr int C = 50000; // static_vector capacity
+static constexpr int C = 5000; // static_vector capacity
 
 /*
  * tested vectors
@@ -42,7 +42,7 @@ using boost_static_vector = boost::container::static_vector<value_type, C>;
 using uwr_static_vector = uwr::static_vector<value_type, C>;
 using uwr_static_vector_alt = uwr::static_vector_alt<value_type, C>;
 
-static_assert(C > PUSH_BACK_ARG, "PUSH_BACK_ARG has to be bigger than C");
+static_assert(C > PUSH_BACK_ARG, "C has to be bigger than PUSH_BACK_ARG!");
 
 /*
  * benchmark push_back
@@ -56,10 +56,10 @@ void BM_push_back(State& s) {
         Vector v;
         DoNotOptimize(v.data());
         
-        for (int j = 0; j < times; ++j)
+        for (int j = 0; j < times; ++j) {
             v.push_back(get_value<T>(j));
-
-        ClobberMemory();
+            ClobberMemory();
+        }
     }
 
     s.counters["t1"];
@@ -70,27 +70,36 @@ void BM_push_back(State& s) {
  */
 template<class Vector>
 void BM_push_back_pop_back(State& s) {
-    using size_type = typename Vector::size_type;
     using T = typename Vector::value_type;
-    size_type times = s.range(0);
+    using size_type = typename Vector::size_type;
+    Random::seed(12321);
+
+    int times = s.range(0);
 
     for (auto _ : s) {
         Vector v;
-        size_type iters = times;
+
         DoNotOptimize(v.data());
 
-        while (iters) {
-            size_type c = rand() % iters + 1;
-            iters -= c;
-            if (v.size() + c <= v.capacity() && rand() % 2 == 0)
-                for (size_type j = 0; j < c; ++j)
-                    v.push_back(get_value<T>(j));
-            else
-                while (!v.empty() && c--)
-                    v.pop_back();
-        }
+        for (int i = 0; i < times; ++i) {
+            if (Random::rand(2)) {
+                size_type rest = v.capacity() - v.size();
+                size_type c = Random::rand<size_type>(0, rest + 1);
 
-        ClobberMemory();
+                while (c--) {
+                    v.push_back(get_value<T>(c));
+                    ClobberMemory();
+                }
+            }
+            else {
+                size_type c = Random::rand<size_type>(0, v.size() + 1);
+                
+                while (c--) {
+                    v.pop_back();
+                    ClobberMemory();
+                }
+            }
+        }
     }
 
     s.counters["t2"];
@@ -101,8 +110,13 @@ void BM_push_back_pop_back(State& s) {
  */
 template<class Vector>
 void BM_swap(State& s) {
+    Random::seed(3213121);
+
     int size1 = s.range(0);
     int size2 = size1 * 3 / 4;
+
+    if (Random::rand(2))
+        std::swap(size1, size2);
 
     for (auto _ : s) {
         Vector v1 = get_container<Vector>(size1);
