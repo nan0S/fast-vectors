@@ -319,7 +319,7 @@ constexpr void
 static_vector<T, C, size_t>::resize(size_type n) {
     T* ptr = this->data();
 
-    if (this->m_length < n)
+    if (n > this->m_length)
         mem::construct(ptr + this->m_length, ptr + n);
     else
         mem::destroy(ptr + n, ptr + this->m_length);
@@ -332,7 +332,7 @@ constexpr void
 static_vector<T, C, size_t>::resize(size_type n, const T& val) {
     T* ptr = this->data();
 
-    if (this->m_length < n)
+    if (n > this->m_length)
         mem::ufill(ptr + this->m_length, ptr + n, val);
     else
         mem::destroy(ptr + n, ptr + this->m_length);
@@ -433,13 +433,13 @@ static_vector<T, C, size_t>::assign(InputIterator first, InputIterator last) {
     T* ptr = this->data();
     size_type n = static_cast<size_type>(std::distance(first, last));
 
-    if (n < this->m_length) {
-        mem::destroy(ptr + n, ptr + this->m_length);
-        mem::copy(ptr, first, n);
-    }
-    else {
+    if (n > this->m_length) {
         mem::copy(ptr, first, this->m_length);
         mem::ucopy(ptr + this->m_length, first + this->m_length, last);
+    }
+    else {
+        mem::destroy(ptr + n, ptr + this->m_length);
+        mem::copy(ptr, first, n);
     }
 
     this->m_length = n;
@@ -450,13 +450,13 @@ constexpr void
 static_vector<T, C, size_t>::assign(size_type n, const T& val) {
     T* ptr = this->data();
     
-    if (n < this->m_length) {
-        mem::destroy(ptr + n, ptr + this->m_length);
-        mem::fill(ptr, n, val);
-    }
-    else {
+    if (n > this->m_length) {
         mem::fill(ptr, this->m_length, val);
         mem::ufill(ptr + this->m_length, n - this->m_length, val);
+    }
+    else {
+        mem::destroy(ptr + n, ptr + this->m_length);
+        mem::fill(ptr, n, val);
     }
 
     this->m_length = n;
@@ -495,12 +495,12 @@ static_vector<T, C, size_t>::pop_back() {
 template<class T, len_t C, class size_t>
 constexpr bool
 static_vector<T, C, size_t>::safe_pop_back() noexcept {
-    if (UNLIKELY(this->m_length == 0))
-        return false;
-    else {
+    if (LIKELY(this->m_length != 0)) {
         this->pop_back();
         return true;
     }
+    else
+        return false;
 }
 
 template<class T, len_t C, class size_t>
@@ -663,9 +663,10 @@ template<class T, len_t C, class size_t>
 template<class... Args>
 constexpr typename static_vector<T, C, size_t>::reference
 static_vector<T, C, size_t>::emplace_back(Args&&... args) {
-    if (UNLIKELY(this->m_length == C))
+    if (LIKELY(this->m_length != C))
+        return this->fast_emplace_back(std::forward<Args>(args)...);
+    else
         throw std::out_of_range("Out of bounds");
-    return this->fast_emplace_back(std::forward<Args>(args)...);
 }
 
 template<class T, len_t C, class size_t>

@@ -383,17 +383,19 @@ constexpr static_vector_alt<T, C, size_t>::operator[](size_type n) const {
 template<class T, len_t C, class size_t>
 constexpr typename static_vector_alt<T, C, size_t>::reference
 static_vector_alt<T, C, size_t>::at(size_type n) {
-    if (this->data() + n >= this->m_end)
+    if (this->data() + n < this->m_end)
+        return *this->data_at(n);
+    else
         throw std::out_of_range("Index out of range: " + std::to_string(n));
-    return *this->data_at(n);
 }
 
 template<class T, len_t C, class size_t>
 constexpr typename static_vector_alt<T, C, size_t>::const_reference
 static_vector_alt<T, C, size_t>::at(size_type n) const {
-    if (this->data() + n >= this->m_end)
+    if (this->data() + n < this->m_end)
+        return *this->data_at(n);
+    else
         throw std::out_of_range("Index out of range: " + std::to_string(n));
-    return *this->data_at(n);
 }
 
 template<class T, len_t C, class size_t>
@@ -440,13 +442,13 @@ static_vector_alt<T, C, size_t>::assign(InputIterator first, InputIterator last)
     size_type len = this->size();
     size_type n = static_cast<size_type>(std::distance(first, last));
 
-    if (n < len) {
-        mem::destroy(ptr + n, this->m_end);
-        mem::copy(ptr, first, n);
-    }
-    else {
+    if (n > len) {
         mem::copy(ptr, first, len);
         mem::ucopy(this->m_end, first + len, last);
+    }
+    else {
+        mem::destroy(ptr + n, this->m_end);
+        mem::copy(ptr, first, n);
     }
 
     this->m_end = ptr + n;
@@ -458,13 +460,13 @@ static_vector_alt<T, C, size_t>::assign(size_type n, const T& val) {
     T* ptr = this->data();
     size_type len = this->size();
     
-    if (n < len) {
-        mem::destroy(ptr + n, this->m_end);
-        mem::fill(ptr, n, val);
-    }
-    else {
+    if (n > len) {
         mem::fill(ptr, len, val);
         mem::ufill(this->m_end, n - len, val);
+    }
+    else {
+        mem::destroy(ptr + n, this->m_end);
+        mem::fill(ptr, n, val);
     }
 
     this->m_end = ptr + n;
@@ -503,12 +505,12 @@ static_vector_alt<T, C, size_t>::pop_back() {
 template<class T, len_t C, class size_t>
 constexpr bool
 static_vector_alt<T, C, size_t>::safe_pop_back() noexcept {
-    if (UNLIKELY(this->m_end == this->data()))
-        return false;
-    else {
+    if (LIKELY(this->m_end != this->data())) {
         this->pop_back();
         return true;
     }
+    else
+        return false;
 }
 
 template<class T, len_t C, class size_t>
@@ -674,9 +676,10 @@ template<class T, len_t C, class size_t>
 template<class... Args>
 constexpr typename static_vector_alt<T, C, size_t>::reference
 static_vector_alt<T, C, size_t>::emplace_back(Args&&... args) {
-    if (UNLIKELY(this->m_end == this->data() + C))
+    if (LIKELY(this->m_end != this->data_at(C)))
+        return this->fast_emplace_back(std::forward<Args>(args)...);
+    else
         throw std::out_of_range("Out of bounds");
-    return this->fast_emplace_back(std::forward<Args>(args)...);
 }
 
 template<class T, len_t C, class size_t>
