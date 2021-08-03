@@ -8,6 +8,19 @@
 
 namespace uwr::mem {
 
+/*
+ * For now most of functions like
+ * construct, fill, ufill, copy,
+ * ucopy, move, umove are wrappers.
+ * So why even use them - one reason
+ * is to be independent - it is easy to
+ * replace one function with different
+ * implementation. The other one is more
+ * practical - std::uninitialized_default_construct
+ * does not zero initialize memory for
+ * trivial types - our construct(...) does.
+ */
+
 // TODO: toogle comments
 // using len_t = std::uint_fast32_t;
 using len_t = std::size_t;
@@ -16,7 +29,7 @@ using len_t = std::size_t;
 inline constexpr len_t page_size = 4096;
 
 /*
- * construct (so should be uninitialized)
+ * construct (so should be uninitialized) continuous memory
  */
 template<class T>
 UWR_FORCEINLINE
@@ -32,7 +45,7 @@ UWR_FORCEINLINE
 NT_Cons_D<T> construct(T* begin, len_t n);
 
 /*
- * fill initialized memory
+ * fill initialized, continuous memory
  */
 template<class T>
 UWR_FORCEINLINE
@@ -43,7 +56,8 @@ void fill(T* begin, len_t n, const T& val);
 
 
 /*
- * hybrid fill initialized memory
+ * hybrid fill continuous memory,
+ * initialized and unitialized variants
  */
 // TODO: temporaty
 #define HYBRID_THRESHOLD 1
@@ -52,9 +66,12 @@ void _hybrid_fill(T* begin, len_t n, const T& val);
 template<class T>
 UWR_FORCEINLINE
 T_Copy_A<T> hybrid_fill(T* begin, len_t n, const T& val);
+template<class T>
+UWR_FORCEINLINE
+T_Copy_C<T> hybrid_ufill(T* begin, len_t n, const T& val);
 
 /*
- * fill unitialized memory
+ * fill unitialized continuous memory
  */
 template<class T>
 UWR_FORCEINLINE
@@ -64,75 +81,44 @@ UWR_FORCEINLINE
 void ufill(T* begin, len_t n, const T& val);
 
 /*
- * optimized fill uninitialized memory
- */
-template<class T>
-UWR_FORCEINLINE
-T_Copy_C<T> hybrid_ufill(T* begin, len_t n, const T& val);
-
-/*
  * copy into initialized memory
  */
 template<class T, class InputIterator>
 UWR_FORCEINLINE
-T_Copy_A<T> copy(T* dest, InputIterator begin, InputIterator end);
+void copy(T* dest, InputIterator begin, InputIterator end);
 template<class T, class InputIterator>
 UWR_FORCEINLINE
-NT_Copy_A<T> copy(T* dest, InputIterator begin, InputIterator end);
-template<class T, class InputIterator>
-UWR_FORCEINLINE
-T_Copy_A<T> copy(T* dest, InputIterator begin, len_t n);
-template<class T, class InputIterator>
-UWR_FORCEINLINE
-NT_Copy_A<T> copy(T* dest, InputIterator begin, len_t n);
+void copy(T* dest, InputIterator begin, len_t n);
 
 /*
- * copy into uninitialized memory
+ * copy into uninitialized, continuous memory
  */
 template<class T, class InputIterator>
 UWR_FORCEINLINE
-T_Copy_C<T> ucopy(T* dest, InputIterator begin, InputIterator end);
+void ucopy(T* dest, InputIterator begin, InputIterator end);
 template<class T, class InputIterator>
 UWR_FORCEINLINE
-NT_Copy_C<T> ucopy(T* dest, InputIterator begin, InputIterator end);
-template<class T, class InputIterator>
-UWR_FORCEINLINE
-T_Copy_C<T> ucopy(T* dest, InputIterator begin, len_t n);
-template<class T, class InputIterator>
-UWR_FORCEINLINE
-NT_Copy_C<T> ucopy(T* dest, InputIterator begin, len_t n);
+void ucopy(T* dest, InputIterator begin, len_t n);
 
 /*
- * move into initialized memory
+ * move into initialized, continuous memory
  */
 template<class T, class InputIterator>
 UWR_FORCEINLINE
-T_Move_A<T> move(T* dest, InputIterator begin, InputIterator end);
+void move(T* dest, InputIterator begin, InputIterator end);
 template<class T, class InputIterator>
 UWR_FORCEINLINE
-NT_Move_A<T> move(T* dest, InputIterator begin, InputIterator end);
-template<class T, class InputIterator>
-UWR_FORCEINLINE
-T_Move_A<T> move(T* dest, InputIterator begin, len_t n);
-template<class T, class InputIterator>
-UWR_FORCEINLINE
-NT_Move_A<T> move(T* dest, InputIterator begin, len_t n);
+void move(T* dest, InputIterator begin, len_t n);
 
 /*
  * move into uninitialized memor
  */
 template<class T, class InputIterator>
 UWR_FORCEINLINE
-T_Move_C<T> umove(T* dest, InputIterator begin, InputIterator end);
+void umove(T* dest, InputIterator begin, InputIterator end);
 template<class T, class InputIterator>
 UWR_FORCEINLINE
-NT_Move_C<T> umove(T* dest, InputIterator begin, InputIterator end);
-template<class T, class InputIterator>
-UWR_FORCEINLINE
-T_Move_C<T> umove(T* dest, InputIterator begin, len_t n);
-template<class T, class InputIterator>
-UWR_FORCEINLINE
-NT_Move_C<T> umove(T* dest, InputIterator begin, len_t n);
+void umove(T* dest, InputIterator begin, len_t n);
 
 /*
  * destroy range of objects (so are initialized)
@@ -145,7 +131,7 @@ UWR_FORCEINLINE
 void destroy(T* begin, len_t n);
 
 /*
- * destroy at specified adderss
+ * destroy at specified address
  */
 template<class T>
 UWR_FORCEINLINE
@@ -156,7 +142,7 @@ void destroy_at(T* addr);
  * only if args are proper constructor arguemnts,
  * if args is one object of type T, just return that
  * object and don't call constructor
- * note: would hapilly remove that function
+ * NOTE: would hapilly remove that function
  */
 template<class T, class V, class... Args>
 UWR_FORCEINLINE
@@ -173,7 +159,9 @@ T create();
 
 /*
  * shifts data to the right,
- * assumption: begin < dest <= end and addresses >= end are uninitialized 
+ * assumption: begin < dest <= end 
+ * and addresses >= end are uninitialized,
+ * NOTE: all memory is continuous
  */
 template<class T>
 UWR_FORCEINLINE
@@ -183,7 +171,9 @@ UWR_FORCEINLINE
 NT_Move<T> shiftr(T* dest, T* begin, T* end);
 
 /*
- * shifts data to the left, assumption: dest < begin
+ * shifts data to the left,
+ * assumption: dest < begin
+ * NOTE: all memory is continuous
  */
 template<class T>
 UWR_FORCEINLINE
@@ -191,7 +181,6 @@ T_Move_A<T> shiftl(T* dest, T* begin, T* end);
 template<class T>
 UWR_FORCEINLINE
 NT_Move_A<T> shiftl(T* dest, T* begin, T* end);
-
 
 /*
  * implementations
@@ -205,6 +194,7 @@ T_Move<T> shiftr_data(T* begin, len_t end)
     memmove(begin + 1, begin, end * sizeof(T));
 }
 
+// TODO: remove
 template<class T>
 UWR_FORCEINLINE
 NT_Move<T> shiftr_data(T* begin, len_t end)
@@ -245,6 +235,7 @@ void fill(T* begin, len_t n, const T& val) {
     std::fill_n(begin, n, val);
 }
 
+// TODO: remove or standarize
 template<class T>
 T_Copy_A<T> hybrid_fill(T* begin, len_t n, const T& val) {
     if (n <= HYBRID_THRESHOLD)
@@ -253,16 +244,7 @@ T_Copy_A<T> hybrid_fill(T* begin, len_t n, const T& val) {
         _hybrid_fill(begin, n, val);
 }
 
-template<class T>
-void ufill(T* begin, T* end, const T& val) {
-    std::uninitialized_fill(begin, end, val);
-}
-
-template<class T>
-void ufill(T* begin, len_t n, const T& val) {
-    std::uninitialized_fill_n(begin, n, val);
-}
-
+// TODO: remove or standarize
 template<class T>
 T_Copy_C<T> hybrid_ufill(T* begin, len_t n, const T& val) {
     if (n <= HYBRID_THRESHOLD)
@@ -271,7 +253,7 @@ T_Copy_C<T> hybrid_ufill(T* begin, len_t n, const T& val) {
         _hybrid_fill(begin, n, val);
 }
 
-// TODO: temporary
+// TODO: remove or standarize
 template<class T>
 void _hybrid_fill(T* begin, len_t n, const T& val) {
     *begin = val;
@@ -284,83 +266,54 @@ void _hybrid_fill(T* begin, len_t n, const T& val) {
     std::memcpy(begin + cur, begin + cur - last, last * sizeof(T));
 }
 
-template<class T, class InputIterator>
-T_Copy_A<T> copy(T* dest, InputIterator begin, InputIterator end) {
-    std::memcpy(dest, &*begin, (end - begin) * sizeof(T));
+template<class T>
+void ufill(T* begin, T* end, const T& val) {
+    std::uninitialized_fill(begin, end, val);
 }
 
+template<class T>
+void ufill(T* begin, len_t n, const T& val) {
+    std::uninitialized_fill_n(begin, n, val);
+}
+
+
 template<class T, class InputIterator>
-NT_Copy_A<T> copy(T* dest, InputIterator begin, InputIterator end) {
+void copy(T* dest, InputIterator begin, InputIterator end) {
     std::copy(begin, end, dest);
 }
 
 template<class T, class InputIterator>
-T_Copy_A<T> copy(T* dest, InputIterator begin, len_t n) {
-    std::memcpy(dest, &*begin, n * sizeof(T));
-}
-
-template<class T, class InputIterator>
-NT_Copy_A<T> copy(T* dest, InputIterator begin, len_t n) {
+void copy(T* dest, InputIterator begin, len_t n) {
     std::copy_n(begin, n, dest);
 }
 
 template<class T, class InputIterator>
-T_Copy_C<T> ucopy(T* dest, InputIterator begin, InputIterator end) {
-    std::memcpy(dest, &*begin, (end - begin) * sizeof(T));
-}
-
-template<class T, class InputIterator>
-NT_Copy_C<T> ucopy(T* dest, InputIterator begin, InputIterator end) {
+void ucopy(T* dest, InputIterator begin, InputIterator end) {
     std::uninitialized_copy(begin, end, dest);
 }
 
 template<class T, class InputIterator>
-T_Copy_C<T> ucopy(T* dest, InputIterator begin, len_t n) {
-    std::memcpy(dest, &*begin, n * sizeof(T));
-}
-
-template<class T, class InputIterator>
-NT_Copy_C<T> ucopy(T* dest, InputIterator begin, len_t n) {
+void ucopy(T* dest, InputIterator begin, len_t n) {
     std::uninitialized_copy_n(begin, n, dest);
 }
 
 template<class T, class InputIterator>
-T_Move_A<T> move(T* dest, InputIterator begin, InputIterator end) {
-    std::memcpy(dest, &*begin, (end - begin) * sizeof(T));
-}
-
-template<class T, class InputIterator>
-NT_Move_A<T> move(T* dest, InputIterator begin, InputIterator end) {
+void move(T* dest, InputIterator begin, InputIterator end) {
     std::move(begin, end, dest);
 }
 
 template<class T, class InputIterator>
-T_Move_A<T> move(T* dest, InputIterator begin, len_t n) {
-    std::memcpy(dest, &*begin, n * sizeof(T));
-}
-
-template<class T, class InputIterator>
-NT_Move_A<T> move(T* dest, InputIterator begin, len_t n) {
+void move(T* dest, InputIterator begin, len_t n) {
     std::move(begin, begin + n, dest);
 }
 
 template<class T, class InputIterator>
-T_Move_C<T> umove(T* dest, InputIterator begin, InputIterator end) {
-    std::memcpy(dest, &*begin, (end - begin) * sizeof(T));
-}
-
-template<class T, class InputIterator>
-NT_Move_C<T> umove(T* dest, InputIterator begin, InputIterator end) {
+void umove(T* dest, InputIterator begin, InputIterator end) {
     std::uninitialized_move(begin, end, dest);
 }
 
 template<class T, class InputIterator>
-T_Move_C<T> umove(T* dest, InputIterator begin, len_t n) {
-    std::memcpy(dest, &*begin, n * sizeof(T));
-}
-
-template<class T, class InputIterator>
-NT_Move_C<T> umove(T* dest, InputIterator begin, len_t n) {
+void umove(T* dest, InputIterator begin, len_t n) {
     std::uninitialized_move_n(begin, n, dest);
 }
 

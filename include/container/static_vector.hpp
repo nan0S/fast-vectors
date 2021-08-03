@@ -41,8 +41,8 @@ public:
     #endif
     ~static_vector();
 
-    constexpr static_vector& operator=(const static_vector& other) noexcept;
-    constexpr static_vector& operator=(static_vector&& other) noexcept;
+    UWR_FORCEINLINE constexpr static_vector& operator=(const static_vector& other) noexcept;
+    UWR_FORCEINLINE constexpr static_vector& operator=(static_vector&& other) noexcept;
     UWR_FORCEINLINE constexpr static_vector& operator=(std::initializer_list<T> ilist) noexcept;
 
     UWR_FORCEINLINE constexpr iterator begin() noexcept;
@@ -81,7 +81,7 @@ public:
     UWR_FORCEINLINE constexpr const T* data() const noexcept;
 
     template<class InputIterator, class = typename std::iterator_traits<InputIterator>::value_type>
-    constexpr void assign(InputIterator first, InputIterator last);
+    UWR_FORCEINLINE constexpr void assign(InputIterator first, InputIterator last);
     constexpr void assign(size_type n, const T& val);
     UWR_FORCEINLINE constexpr void assign(std::initializer_list<T> ilist);
 
@@ -115,7 +115,12 @@ public:
 private:
     UWR_FORCEINLINE constexpr T* data_at(size_type n) noexcept;
     UWR_FORCEINLINE constexpr const T* data_at(size_type n) const noexcept;
+
     constexpr void priv_swap(static_vector& shorter, static_vector& longer) const;
+    template<class InputIterator, class = typename std::iterator_traits<InputIterator>::value_type>
+    constexpr void priv_copy_assign(InputIterator first, InputIterator last, size_type n);
+    template<class InputIterator, class = typename std::iterator_traits<InputIterator>::value_type>
+    constexpr void priv_move_assign(InputIterator first, InputIterator last, size_type n);
 
 private:
     typename std::aligned_storage<sizeof(T), alignof(T)>::type m_data[C];
@@ -182,44 +187,16 @@ static_vector<T, C, size_t>::~static_vector() {
 template<class T, len_t C, class size_t>
 constexpr static_vector<T, C, size_t>&
 static_vector<T, C, size_t>::operator=(const static_vector<T, C, size_t>& other) noexcept {
-    if (LIKELY(this != &other)) {
-        T* ptr = this->data();
-        const T* optr = other.data();
-
-        if (other.m_length < this->m_length) {
-            mem::destroy(ptr + other.m_length, ptr + this->m_length);
-            mem::copy(ptr, optr, other.m_length);
-        }
-        else {
-            mem::copy(ptr, optr, this->m_length);
-            mem::ucopy(ptr + this->m_length, optr + this->m_length, optr + other.m_length);
-        }
-
-        this->m_length = other.m_length;
-    }
-
+    if (LIKELY(this != &other))
+        this->priv_copy_assign(other.begin(), other.end(), other.m_length);
     return *this;
 }
 
 template<class T, len_t C, class size_t>
 constexpr static_vector<T, C, size_t>&
 static_vector<T, C, size_t>::operator=(static_vector<T, C, size_t>&& other) noexcept {
-    if (LIKELY(this != &other)) {
-        T* ptr = this->data();
-        T* optr = other.data();
-
-        if (other.m_length < this->m_length) {
-            mem::destroy(ptr + other.m_length, ptr + this->m_length);
-            mem::move(ptr, optr, other.m_length);
-        }
-        else {
-            mem::move(ptr, optr, this->m_length);
-            mem::umove(ptr + this->m_length, optr + this->m_length, optr + other.m_length);
-        }
-
-        this->m_length = other.m_length;
-    }
-
+    if (LIKELY(this != &other))
+        this->priv_move_assign(other.begin(), other.end(), other.m_length);
     return *this;
 }
 
@@ -317,12 +294,13 @@ static_vector<T, C, size_t>::max_size() const noexcept {
 template<class T, len_t C, class size_t>
 constexpr void
 static_vector<T, C, size_t>::resize(size_type n) {
-    T* ptr = this->data();
+    T* const m_end = this->data() + this->m_length;
+    T* const new_end = this->data() + n;
 
     if (n > this->m_length)
-        mem::construct(ptr + this->m_length, ptr + n);
+        mem::construct(m_end, new_end);
     else
-        mem::destroy(ptr + n, ptr + this->m_length);
+        mem::destroy(new_end, m_end);
 
     this->m_length = n;
 }
@@ -330,12 +308,13 @@ static_vector<T, C, size_t>::resize(size_type n) {
 template<class T, len_t C, class size_t>
 constexpr void
 static_vector<T, C, size_t>::resize(size_type n, const T& val) {
-    T* ptr = this->data();
+    T* const m_end = this->data() + this->m_length;
+    T* const new_end = this->data() + n;
 
     if (n > this->m_length)
-        mem::ufill(ptr + this->m_length, ptr + n, val);
+        mem::ufill(m_end, new_end, val);
     else
-        mem::destroy(ptr + n, ptr + this->m_length);
+        mem::destroy(new_end, m_end);
 
     this->m_length = n;
 }
@@ -377,17 +356,19 @@ constexpr static_vector<T, C, size_t>::operator[](size_type n) const {
 template<class T, len_t C, class size_t>
 constexpr typename static_vector<T, C, size_t>::reference
 static_vector<T, C, size_t>::at(size_type n) {
-    if (n >= this->m_length)
+    if (n < this->m_length)
+        return *this->data_at(n);
+    else
         throw std::out_of_range("Index out of range: " + std::to_string(n));
-    return *this->data_at(n);
 }
 
 template<class T, len_t C, class size_t>
 constexpr typename static_vector<T, C, size_t>::const_reference
 static_vector<T, C, size_t>::at(size_type n) const {
-    if (n >= this->m_length)
+    if (n < this->m_length)
+        return *this->data_at(n);
+    else
         throw std::out_of_range("Index out of range: " + std::to_string(n));
-    return *this->data_at(n);
 }
 
 template<class T, len_t C, class size_t>
@@ -430,33 +411,24 @@ template<class T, len_t C, class size_t>
 template<class InputIterator, class>
 constexpr void
 static_vector<T, C, size_t>::assign(InputIterator first, InputIterator last) {
-    T* ptr = this->data();
-    size_type n = static_cast<size_type>(std::distance(first, last));
-
-    if (n > this->m_length) {
-        mem::copy(ptr, first, this->m_length);
-        mem::ucopy(ptr + this->m_length, first + this->m_length, last);
-    }
-    else {
-        mem::destroy(ptr + n, ptr + this->m_length);
-        mem::copy(ptr, first, n);
-    }
-
-    this->m_length = n;
+    this->priv_copy_assign(first, last,
+            static_cast<size_type>(std::distance(first, last)));
 }
 
 template<class T, len_t C, class size_t>
 constexpr void
 static_vector<T, C, size_t>::assign(size_type n, const T& val) {
-    T* ptr = this->data();
+    T* const m_data = this->data();
+    T* const m_end = this->end();
+    T* const split = m_data + n;
     
     if (n > this->m_length) {
-        mem::fill(ptr, this->m_length, val);
-        mem::ufill(ptr + this->m_length, n - this->m_length, val);
+        mem::fill(m_data, m_end, val);
+        mem::ufill(m_end, split, val);
     }
     else {
-        mem::destroy(ptr + n, ptr + this->m_length);
-        mem::fill(ptr, n, val);
+        mem::destroy(split, m_end);
+        mem::fill(m_data, split, val);
     }
 
     this->m_length = n;
@@ -518,22 +490,22 @@ static_vector<T, C, size_t>::insert(const_iterator pos, T&& value) {
 template<class T, len_t C, class size_t>
 constexpr typename static_vector<T, C, size_t>::iterator
 static_vector<T, C, size_t>::insert(const_iterator pos, size_type count, const T& value) {
-    T* position = const_cast<T*>(pos);
+    T* const position = const_cast<T* const>(pos);
 
     if (UNLIKELY(!count))
         return position;
 
-    T* eptr = this->end();
-    size_type rest = static_cast<size_type>(std::distance(position, eptr));
+    T* const m_end = this->end();
+    T* const spill = position + count;
 
-    if (count < rest) {
-        mem::shiftr(position + count, position, eptr);
-        mem::fill(position, count, value);
+    if (spill < m_end) {
+        mem::shiftr(spill, position, m_end);
+        mem::fill(position, spill, value);
     }
     else {
-        mem::umove(position + count, position, eptr);
-        mem::fill(position, rest, value);
-        mem::ufill(eptr, count - rest, value);
+        mem::umove(spill, position, m_end);
+        mem::fill(position, m_end, value);
+        mem::ufill(m_end, spill, value);
     }
 
     this->m_length += count;
@@ -545,23 +517,26 @@ template<class T, len_t C, class size_t>
 template<class InputIterator, class>
 constexpr typename static_vector<T, C, size_t>::iterator
 static_vector<T, C, size_t>::insert(const_iterator pos, InputIterator first, InputIterator last) {
-    T* position = const_cast<T*>(pos);
+    T* const position = const_cast<T* const>(pos);
+    size_type count = static_cast<size_type>(std::distance(first, last));
 
-    if (UNLIKELY(first == last))
+    if (UNLIKELY(count == 0))
         return position;
 
-    T* eptr = this->end();
-    size_type count = static_cast<size_type>(std::distance(first, last));
-    size_type rest = static_cast<size_type>(std::distance(position, eptr));
+    T* const m_end = this->end();
+    T* const spill = position + count;
 
-    if (count < rest) {
-        mem::shiftr(position + count, position, eptr);
-        mem::copy(position, first, count);
+    if (spill < m_end) {
+        mem::shiftr(spill, position, m_end);
+        mem::copy(position, first, last);
     }
     else {
-        mem::umove(position + count, position, eptr);
-        mem::copy(position, first, rest);
-        mem::ucopy(eptr, first + rest, last);
+        size_type rest = static_cast<size_type>(std::distance(position, m_end));
+        InputIterator split = std::next(first, rest);
+
+        mem::umove(spill, position, m_end);
+        mem::copy(position, first, split);
+        mem::ucopy(m_end, split, last);
     }
 
     this->m_length += count;
@@ -578,7 +553,7 @@ static_vector<T, C, size_t>::insert(const_iterator pos, std::initializer_list<T>
 template<class T, len_t C, class size_t>
 constexpr typename static_vector<T, C, size_t>::iterator
 static_vector<T, C, size_t>::erase(const_iterator pos) {
-    T* position = const_cast<T*>(pos);
+    T* const position = const_cast<T* const>(pos);
     mem::shiftl(position, position + 1, this->end());
     this->pop_back();
 
@@ -588,14 +563,16 @@ static_vector<T, C, size_t>::erase(const_iterator pos) {
 template<class T, len_t C, class size_t>
 constexpr typename static_vector<T, C, size_t>::iterator
 static_vector<T, C, size_t>::erase(const_iterator first, const_iterator last) {
-    T* f = const_cast<T*>(first);
+    T* const f = const_cast<T* const>(first);
+    size_type count = static_cast<size_type>(std::distance(first, last));
 
-    if (LIKELY(first != last)) {
-        T* l = const_cast<T*>(last);
-        T* e = this->end();
+    if (LIKELY(count != 0)) {
+        T* const l = const_cast<T* const>(last);
+        T* const e = this->end();
+
         mem::shiftl(f, l, e);
-        mem::destroy(f + (e - l), e);
-        this->m_length -= l - f;
+        mem::destroy(e - count, e);
+        this->m_length -= count;
     }
 
     return f;
@@ -617,10 +594,12 @@ static_vector<T, C, size_t>::priv_swap(static_vector<T, C, size_t>& shorter, sta
     T* const s_end = shorter.end();
     T* const l_begin = longer.begin();
     T* const l_end = longer.end();
+    T* const split = l_begin + shorter.m_length;
 
     std::swap_ranges(s_begin, s_end, l_begin);
-    mem::umove(s_end, l_begin + shorter.m_length, l_end);
-    mem::destroy(l_begin + shorter.m_length, l_end);
+    mem::umove(s_end, split, l_end);
+    mem::destroy(split, l_end);
+
     std::swap(shorter.m_length, longer.m_length);
 }
 
@@ -635,13 +614,11 @@ template<class T, len_t C, class size_t>
 template<class... Args>
 constexpr typename static_vector<T, C, size_t>::iterator
 static_vector<T, C, size_t>::emplace(const_iterator pos, Args&&... args) {
-    T* position = const_cast<T*>(pos);
-    T* eptr = this->end();
+    T* const position = const_cast<T* const>(pos);
+    T* const m_end = this->end();
 
-    if (position == eptr)
-        new (position) T(std::forward<Args>(args)...);
-    else {
-        mem::shiftr(position + 1, position, eptr);
+    if (position != m_end) {
+        mem::shiftr(position + 1, position, m_end);
         // this strange construction is caused by the fact
         // args can be either "proper" constructor arguments
         // or it can be an object of type T, if it is, we don't want to do
@@ -653,6 +630,8 @@ static_vector<T, C, size_t>::emplace(const_iterator pos, Args&&... args) {
         // T(std::forward<Args>(args)...) will do
         *position = mem::create<T>(std::forward<Args>(args)...);
     }
+    else
+        new (position) T(std::forward<Args>(args)...);
     
     ++this->m_length;
 
@@ -673,9 +652,9 @@ template<class T, len_t C, class size_t>
 template<class... Args>
 constexpr typename static_vector<T, C, size_t>::reference
 static_vector<T, C, size_t>::fast_emplace_back(Args&&... args) noexcept {
-    T* eptr = this->data() + this->m_length++;
-    new (eptr) T(std::forward<Args>(args)...);
-    return *eptr;
+    T* last_end = this->data() + this->m_length++;
+    new (last_end) T(std::forward<Args>(args)...);
+    return *last_end;
 }
 
 template<class T, len_t C, class size_t>
@@ -688,6 +667,52 @@ template<class T, len_t C, class size_t>
 constexpr const T*
 static_vector<T, C, size_t>::data_at(size_type n) const noexcept {
     return reinterpret_cast<const T*>(&this->m_data[n]);
+}
+
+template<class T, len_t C, class size_t>
+template<class InputIterator, class>
+constexpr void
+static_vector<T, C, size_t>::priv_copy_assign(InputIterator first, InputIterator last, size_type n) {
+    UWR_ASSERT(std::distance(first, last) == n);
+
+    T* const m_data = this->data();
+    T* const m_end = this->end();
+
+    if (n < this->m_length) {
+        mem::destroy(m_data + n, m_end);
+        mem::copy(m_data, first, last);
+    }
+    else {
+        InputIterator split = std::next(first, this->m_length);
+
+        mem::copy(m_data, first, split);
+        mem::ucopy(m_end, split, last);
+    }
+
+    this->m_length = n;
+}
+
+template<class T, len_t C, class size_t>
+template<class InputIterator, class>
+constexpr void
+static_vector<T, C, size_t>::priv_move_assign(InputIterator first, InputIterator last, size_type n) {
+    UWR_ASSERT(std::distance(first, last) == n);
+
+    T* const m_data = this->data();
+    T* const m_end = this->end();
+
+    if (n < this->m_length) {
+        mem::destroy(m_data + n, m_end);
+        mem::move(m_data, first, last);
+    }
+    else {
+        InputIterator split = std::next(first, this->m_length);
+
+        mem::move(m_data, first, split);
+        mem::umove(m_end, split, last);
+    }
+
+    this->m_length = n;
 }
 
 /*

@@ -17,8 +17,8 @@ using namespace benchmark;
  */
 using value_type = std::array<int, 10>;
 
-static  constexpr  int  PUSH_BACK_ARG           =  1000;
-static  constexpr  int  PUSH_BACK_POP_BACK_ARG  =  50;
+static  constexpr  int  PUSH_BACK_ARG           =  10000;
+static  constexpr  int  PUSH_BACK_POP_BACK_ARG  =  500;
 static  constexpr  int  SWAP_ARG                =  100;
 static  constexpr  int  RESIZE_ARG              =  50;
 
@@ -33,7 +33,7 @@ static  constexpr  int  RESIZE_ARG              =  50;
 #define DO_STATIC_VECTOR_BENCH
 #define DO_STATIC_VECTOR_ALT_BENCH
 
-static constexpr int C = 1000; // static_vector capacity
+static constexpr int C = 50000; // static_vector capacity
 
 /*
  * tested vectors
