@@ -187,7 +187,7 @@ static_vector<T, C, size_t>::~static_vector() {
 template<class T, len_t C, class size_t>
 constexpr static_vector<T, C, size_t>&
 static_vector<T, C, size_t>::operator=(const static_vector<T, C, size_t>& other) noexcept {
-    if (LIKELY(this != &other))
+    if (UWR_LIKELY(this != &other))
         this->priv_copy_assign(other.begin(), other.end(), other.m_length);
     return *this;
 }
@@ -195,7 +195,7 @@ static_vector<T, C, size_t>::operator=(const static_vector<T, C, size_t>& other)
 template<class T, len_t C, class size_t>
 constexpr static_vector<T, C, size_t>&
 static_vector<T, C, size_t>::operator=(static_vector<T, C, size_t>&& other) noexcept {
-    if (LIKELY(this != &other))
+    if (UWR_LIKELY(this != &other))
         this->priv_move_assign(other.begin(), other.end(), other.m_length);
     return *this;
 }
@@ -467,7 +467,7 @@ static_vector<T, C, size_t>::pop_back() {
 template<class T, len_t C, class size_t>
 constexpr bool
 static_vector<T, C, size_t>::safe_pop_back() noexcept {
-    if (LIKELY(this->m_length != 0)) {
+    if (UWR_LIKELY(this->m_length != 0)) {
         this->pop_back();
         return true;
     }
@@ -492,7 +492,7 @@ constexpr typename static_vector<T, C, size_t>::iterator
 static_vector<T, C, size_t>::insert(const_iterator pos, size_type count, const T& value) {
     T* const position = const_cast<T* const>(pos);
 
-    if (UNLIKELY(!count))
+    if (UWR_UNLIKELY(!count))
         return position;
 
     T* const m_end = this->end();
@@ -520,7 +520,7 @@ static_vector<T, C, size_t>::insert(const_iterator pos, InputIterator first, Inp
     T* const position = const_cast<T* const>(pos);
     size_type count = static_cast<size_type>(std::distance(first, last));
 
-    if (UNLIKELY(count == 0))
+    if (UWR_UNLIKELY(count == 0))
         return position;
 
     T* const m_end = this->end();
@@ -566,7 +566,7 @@ static_vector<T, C, size_t>::erase(const_iterator first, const_iterator last) {
     T* const f = const_cast<T* const>(first);
     size_type count = static_cast<size_type>(std::distance(first, last));
 
-    if (LIKELY(count != 0)) {
+    if (UWR_LIKELY(count != 0)) {
         T* const l = const_cast<T* const>(last);
         T* const e = this->end();
 
@@ -642,7 +642,7 @@ template<class T, len_t C, class size_t>
 template<class... Args>
 constexpr typename static_vector<T, C, size_t>::reference
 static_vector<T, C, size_t>::emplace_back(Args&&... args) {
-    if (LIKELY(this->m_length != C))
+    if (UWR_LIKELY(this->m_length != C))
         return this->fast_emplace_back(std::forward<Args>(args)...);
     else
         throw std::out_of_range("Out of bounds");
