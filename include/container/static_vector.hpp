@@ -718,23 +718,25 @@ static_vector<T, C, size_t>::priv_move_assign(InputIterator first, InputIterator
  * non-member operators 
  */
 template<class T, len_t C, class size_t>
-constexpr inline bool operator==(const static_vector<T, C, size_t>& lhs, const static_vector<T, C, size_t>& rhs);
+UWR_FORCEINLINE constexpr bool operator==(const static_vector<T, C, size_t>& lhs, const static_vector<T, C, size_t>& rhs);
 template<class T, len_t C, class size_t>
-constexpr inline bool operator!=(const static_vector<T, C, size_t>& lhs, const static_vector<T, C, size_t>& rhs);
+UWR_FORCEINLINE constexpr bool operator!=(const static_vector<T, C, size_t>& lhs, const static_vector<T, C, size_t>& rhs);
 template<class T, len_t C, class size_t>
 constexpr inline bool operator<(const static_vector<T, C, size_t>& lhs, const static_vector<T, C, size_t>& rhs);
 template<class T, len_t C, class size_t>
-constexpr inline bool operator<=(const static_vector<T, C, size_t>& lhs, const static_vector<T, C, size_t>& rhs);
+UWR_FORCEINLINE constexpr bool operator<=(const static_vector<T, C, size_t>& lhs, const static_vector<T, C, size_t>& rhs);
 template<class T, len_t C, class size_t>
-constexpr inline bool operator>(const static_vector<T, C, size_t>& lhs, const static_vector<T, C, size_t>& rhs);
+UWR_FORCEINLINE constexpr bool operator>(const static_vector<T, C, size_t>& lhs, const static_vector<T, C, size_t>& rhs);
 template<class T, len_t C, class size_t>
-constexpr inline bool operator>=(const static_vector<T, C, size_t>& lhs, const static_vector<T, C, size_t>& rhs);
+UWR_FORCEINLINE constexpr bool operator>=(const static_vector<T, C, size_t>& lhs, const static_vector<T, C, size_t>& rhs);
 template<class T, len_t C, class size_t>
 constexpr std::ostream& operator<<(std::ostream& out, const static_vector<T, C, size_t>& v);
 
 #if CPP_ABOVE_17
+
 template<class T, len_t C, class size_t>
-constexpr inline auto operator<=>(const static_vector<T, C, size_t>& lhs, const static_vector<T, C, size_t>& rhs);
+constexpr auto operator<=>(const static_vector<T, C, size_t>& lhs, const static_vector<T, C, size_t>& rhs);
+
 #endif
 
 /*
@@ -743,9 +745,7 @@ constexpr inline auto operator<=>(const static_vector<T, C, size_t>& lhs, const 
 template<class T, len_t C, class size_t>
 constexpr bool
 operator==(const static_vector<T, C, size_t>& lhs, const static_vector<T, C, size_t>& rhs) {
-    if (lhs.size() != rhs.size())
-        return false;
-    return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+    return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
 template<class T, len_t C, class size_t>
