@@ -35,7 +35,6 @@ public:
     constexpr static_vector(const static_vector& x);
     constexpr static_vector(static_vector&& x) noexcept;
     constexpr static_vector(std::initializer_list<T> ilist);
-
     #if CPP_ABOVE_17
     constexpr
     #endif
@@ -80,7 +79,7 @@ public:
     UWR_FORCEINLINE constexpr T* data() noexcept;
     UWR_FORCEINLINE constexpr const T* data() const noexcept;
 
-    template<class InputIterator, class = typename std::iterator_traits<InputIterator>::value_type>
+    template<class InputIterator>
     UWR_FORCEINLINE constexpr void assign(InputIterator first, InputIterator last);
     constexpr void assign(size_type n, const T& val);
     UWR_FORCEINLINE constexpr void assign(std::initializer_list<T> ilist);
@@ -95,7 +94,7 @@ public:
     UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, const T& value);
     UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, T&& value);
     constexpr iterator insert(const_iterator pos, size_type count, const T& value);
-    template<class InputIterator, class = typename std::iterator_traits<InputIterator>::value_type>
+    template<class InputIterator>
     constexpr iterator insert(const_iterator pos, InputIterator first, InputIterator last);
     UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, std::initializer_list<T> ilist);
 
@@ -117,9 +116,9 @@ private:
     UWR_FORCEINLINE constexpr const T* data_at(size_type n) const noexcept;
 
     constexpr void priv_swap(static_vector& shorter, static_vector& longer) const;
-    template<class InputIterator, class = typename std::iterator_traits<InputIterator>::value_type>
+    template<class InputIterator>
     constexpr void priv_copy_assign(InputIterator first, InputIterator last, size_type n);
-    template<class InputIterator, class = typename std::iterator_traits<InputIterator>::value_type>
+    template<class InputIterator>
     constexpr void priv_move_assign(InputIterator first, InputIterator last, size_type n);
 
 private:
@@ -408,7 +407,7 @@ static_vector<T, C, size_t>::data() const noexcept {
 }
 
 template<class T, len_t C, class size_t>
-template<class InputIterator, class>
+template<class InputIterator>
 constexpr void
 static_vector<T, C, size_t>::assign(InputIterator first, InputIterator last) {
     this->priv_copy_assign(first, last,
@@ -514,7 +513,7 @@ static_vector<T, C, size_t>::insert(const_iterator pos, size_type count, const T
 }
 
 template<class T, len_t C, class size_t>
-template<class InputIterator, class>
+template<class InputIterator>
 constexpr typename static_vector<T, C, size_t>::iterator
 static_vector<T, C, size_t>::insert(const_iterator pos, InputIterator first, InputIterator last) {
     T* const position = const_cast<T* const>(pos);
@@ -670,7 +669,7 @@ static_vector<T, C, size_t>::data_at(size_type n) const noexcept {
 }
 
 template<class T, len_t C, class size_t>
-template<class InputIterator, class>
+template<class InputIterator>
 constexpr void
 static_vector<T, C, size_t>::priv_copy_assign(InputIterator first, InputIterator last, size_type n) {
     UWR_ASSERT(std::distance(first, last) == n);
@@ -693,7 +692,7 @@ static_vector<T, C, size_t>::priv_copy_assign(InputIterator first, InputIterator
 }
 
 template<class T, len_t C, class size_t>
-template<class InputIterator, class>
+template<class InputIterator>
 constexpr void
 static_vector<T, C, size_t>::priv_move_assign(InputIterator first, InputIterator last, size_type n) {
     UWR_ASSERT(std::distance(first, last) == n);

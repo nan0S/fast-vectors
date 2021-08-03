@@ -35,7 +35,6 @@ public:
     constexpr static_vector_alt(const static_vector_alt& x);
     constexpr static_vector_alt(static_vector_alt&& x) noexcept;
     constexpr static_vector_alt(std::initializer_list<T> ilist);
-
     #if CPP_ABOVE_17
     constexpr
     #endif
@@ -80,7 +79,7 @@ public:
     UWR_FORCEINLINE constexpr T* data() noexcept;
     UWR_FORCEINLINE constexpr const T* data() const noexcept;
 
-    template<class InputIterator, class = typename std::iterator_traits<InputIterator>::value_type>
+    template<class InputIterator>
     UWR_FORCEINLINE constexpr void assign(InputIterator first, InputIterator last);
     constexpr void assign(size_type n, const T& val);
     UWR_FORCEINLINE constexpr void assign(std::initializer_list<T> ilist);
@@ -95,7 +94,7 @@ public:
     UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, const T& value);
     UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, T&& value);
     constexpr iterator insert(const_iterator pos, size_type count, const T& value);
-    template<class InputIterator, class = typename std::iterator_traits<InputIterator>::value_type>
+    template<class InputIterator>
     constexpr iterator insert(const_iterator pos, InputIterator first, InputIterator last);
     UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, std::initializer_list<T> ilist);
 
@@ -117,9 +116,9 @@ private:
     UWR_FORCEINLINE constexpr const T* data_at(size_type n) const noexcept;
     constexpr void priv_swap(static_vector_alt& shorter, static_vector_alt& longer,
             size_type s_length, size_type l_length) const;
-    template<class InputIterator, class = typename std::iterator_traits<InputIterator>::value_type>
+    template<class InputIterator>
     constexpr void priv_copy_assign(InputIterator first, InputIterator last, size_type n);
-    template<class InputIterator, class = typename std::iterator_traits<InputIterator>::value_type>
+    template<class InputIterator>
     constexpr void priv_move_assign(InputIterator first, InputIterator last, size_type n);
 
 private:
@@ -295,9 +294,8 @@ template<class T, len_t C, class size_t>
 constexpr void
 static_vector_alt<T, C, size_t>::resize(size_type n) {
     T* const new_end = this->data() + n;
-    size_type m_len = this->size();
 
-    if (n > m_len)
+    if (new_end > this->m_end)
         mem::construct(this->m_end, new_end);
     else
         mem::destroy(new_end, this->m_end);
@@ -309,9 +307,8 @@ template<class T, len_t C, class size_t>
 constexpr void
 static_vector_alt<T, C, size_t>::resize(size_type n, const T& val) {
     T* const new_end = this->data() + n;
-    size_type m_len = this->size();
 
-    if (n > m_len)
+    if (new_end > this->m_end)
         mem::ufill(this->m_end, new_end, val);
     else
         mem::destroy(new_end, this->m_end);
@@ -408,7 +405,7 @@ static_vector_alt<T, C, size_t>::data() const noexcept {
 }
 
 template<class T, len_t C, class size_t>
-template<class InputIterator, class>
+template<class InputIterator>
 constexpr void
 static_vector_alt<T, C, size_t>::assign(InputIterator first, InputIterator last) {
     this->priv_copy_assign(first, last,
@@ -420,9 +417,8 @@ constexpr void
 static_vector_alt<T, C, size_t>::assign(size_type n, const T& val) {
     T* const m_data = this->data();
     T* const split = m_data + n;
-    size_type len = this->size();
     
-    if (n > len) {
+    if (split > this->m_end) {
         mem::fill(m_data, this->m_end, val);
         mem::ufill(this->m_end, split, val);
     }
@@ -513,7 +509,7 @@ static_vector_alt<T, C, size_t>::insert(const_iterator pos, size_type count, con
 }
 
 template<class T, len_t C, class size_t>
-template<class InputIterator, class>
+template<class InputIterator>
 constexpr typename static_vector_alt<T, C, size_t>::iterator
 static_vector_alt<T, C, size_t>::insert(const_iterator pos, InputIterator first, InputIterator last) {
     T* const position = const_cast<T* const>(pos);
@@ -530,7 +526,7 @@ static_vector_alt<T, C, size_t>::insert(const_iterator pos, InputIterator first,
     }
     else {
         size_type rest = static_cast<size_type>(std::distance(position, this->m_end));
-        T* const split = first + rest;
+        InputIterator split = std::next(first, rest);
 
         mem::umove(spill, position, this->m_end);
         mem::copy(position, first, split);
@@ -669,49 +665,51 @@ static_vector_alt<T, C, size_t>::data_at(size_type n) const noexcept {
 }
 
 template<class T, len_t C, class size_t>
-template<class InputIterator, class>
+template<class InputIterator>
 constexpr void
 static_vector_alt<T, C, size_t>::priv_copy_assign(InputIterator first, InputIterator last, size_type n) {
     UWR_ASSERT(std::distance(first, last) == n);
 
     T* const m_data = this->data();
-    size_type m_len = this->size();
+    T* const new_end = m_data + n;
 
-    if (n < m_len) {
-        mem::destroy(m_data + n, this->m_end);
+    if (new_end < this->m_end) {
+        mem::destroy(new_end, this->m_end);
         mem::copy(m_data, first, last);
     }
     else {
+        size_type m_len = this->size();
         InputIterator split = std::next(first, m_len);
 
         mem::copy(m_data, first, split);
         mem::ucopy(this->m_end, split, last);
     }
 
-    this->m_end = m_data + n;
+    this->m_end = new_end;
 }
 
 template<class T, len_t C, class size_t>
-template<class InputIterator, class>
+template<class InputIterator>
 constexpr void
 static_vector_alt<T, C, size_t>::priv_move_assign(InputIterator first, InputIterator last, size_type n) {
     UWR_ASSERT(std::distance(first, last) == n);
 
     T* const m_data = this->data();
-    size_type m_len = this->size();
+    T* const new_end = m_data + n;
 
-    if (n < m_len) {
-        mem::destroy(m_data + n, this->m_end);
+    if (new_end < this->m_end) {
+        mem::destroy(new_end, this->m_end);
         mem::move(m_data, first, last);
     }
     else {
+        size_type m_len = this->size();
         InputIterator split = std::next(first, m_len);
 
         mem::move(m_data, first, split);
         mem::umove(this->m_end, split, last);
     }
 
-    this->m_end = m_data + n;
+    this->m_end = new_end;
 }
 
 /*

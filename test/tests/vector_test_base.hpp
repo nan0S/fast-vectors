@@ -1,7 +1,8 @@
 #pragma once
 
-#include "vector_test_base_fixture.hpp"
+#include <list>
 #include <utils/utils.hpp>
+#include "vector_test_base_fixture.hpp"
 
 TYPED_TEST(VectorTestBaseFixture, DefaultConstructor) {
     typename TestFixture::vector v;
@@ -26,16 +27,50 @@ TYPED_TEST(VectorTestBaseFixture, CountValueConstructor) {
         EXPECT_EQ(x, val);
 }
 
-TYPED_TEST(VectorTestBaseFixture, RangeConstructor) {
+TYPED_TEST(VectorTestBaseFixture, RangeConstructorWithPointer) {
     const typename TestFixture::value_type a[] = {
         this->GetValue(0), this->GetValue(1), this->GetValue(2)
     };
     const int s = sizeof(a) / sizeof(a[0]);
     typename TestFixture::vector v(a, a + s);
 
+    for (size_t i = 0; i < s; ++i)
+        EXPECT_EQ(a[i], this->GetValue(i));
     EXPECT_EQ(v.size(), s);
     for (size_t i = 0; i < v.size(); ++i)
         EXPECT_EQ(v[i], a[i]);
+}
+
+TYPED_TEST(VectorTestBaseFixture, RangeConstructorWithContinuousIterator) {
+    std::vector<typename TestFixture::value_type> stl_vector {
+        this->GetValue(0), this->GetValue(1), this->GetValue(2)
+    };
+    const auto s = stl_vector.size();
+    typename TestFixture::vector v(stl_vector.begin(), stl_vector.end());
+
+    for (size_t i = 0; i < v.size(); ++i)
+        EXPECT_EQ(stl_vector[i], this->GetValue(i));
+    EXPECT_EQ(v.size(), s);
+    for (size_t i = 0; i < v.size(); ++i)
+        EXPECT_EQ(v[i], stl_vector[i]);
+}
+
+TYPED_TEST(VectorTestBaseFixture, RangeConstructorWithNonContinuousIterator) {
+    std::list<typename TestFixture::value_type> stl_list {
+        this->GetValue(0),
+        this->GetValue(1),
+        this->GetValue(2)
+    };
+    const auto s = stl_list.size();
+    typename TestFixture::vector v(stl_list.begin(), stl_list.end());
+    
+    auto it = stl_list.begin();
+    int i = 0;
+    for (; it != stl_list.end(); ++it, ++i)
+        EXPECT_EQ(*it, this->GetValue(i));
+    EXPECT_EQ(v.size(), s);
+    for (it = stl_list.begin(), i = 0; it != stl_list.end(); ++it, ++i)
+        EXPECT_EQ(v[i], *it);
 }
 
 TYPED_TEST(VectorTestBaseFixture, CopyConstructor) {
@@ -334,7 +369,7 @@ TYPED_TEST(VectorTestBaseFixture, ConstData) {
         EXPECT_EQ(data[i], v[i]);
 }
 
-TYPED_TEST(VectorTestBaseFixture, RangeAssign) {
+TYPED_TEST(VectorTestBaseFixture, RangeAssignWithPointer) {
     const typename TestFixture::value_type a[] = {
         this->GetValue(0), this->GetValue(1), this->GetValue(2)
     };
@@ -346,6 +381,42 @@ TYPED_TEST(VectorTestBaseFixture, RangeAssign) {
     EXPECT_EQ(v.size(), s);
     for (size_t i = 0; i < v.size(); ++i)
         EXPECT_EQ(v[i], a[i]);
+}
+
+TYPED_TEST(VectorTestBaseFixture, RangeAssignWithContinuousIterator) {
+    std::vector<typename TestFixture::value_type> stl_vector {
+        this->GetValue(0), this->GetValue(1), this->GetValue(2)
+    };
+    const auto s = stl_vector.size();
+    auto v =  this->GetVectorOfSize(5);
+
+    v.assign(stl_vector.begin(), stl_vector.end());
+
+    for (size_t i = 0; i < v.size(); ++i)
+        EXPECT_EQ(stl_vector[i], this->GetValue(i));
+    EXPECT_EQ(v.size(), s);
+    for (size_t i = 0; i < v.size(); ++i)
+        EXPECT_EQ(v[i], stl_vector[i]);
+}
+
+TYPED_TEST(VectorTestBaseFixture, RangeAssignWithNonContinuousIterator) {
+    std::list<typename TestFixture::value_type> stl_list {
+        this->GetValue(0),
+        this->GetValue(1),
+        this->GetValue(2)
+    };
+    const auto s = stl_list.size();
+    auto v = this->GetVectorOfSize(5);
+    
+    v.assign(stl_list.begin(), stl_list.end());
+    
+    auto it = stl_list.begin();
+    int i = 0;
+    for (; it != stl_list.end(); ++it, ++i)
+        EXPECT_EQ(*it, this->GetValue(i));
+    EXPECT_EQ(v.size(), s);
+    for (i = 0, it = stl_list.begin(); it != stl_list.end(); ++i, ++it)
+        EXPECT_EQ(v[i], *it);
 }
 
 TYPED_TEST(VectorTestBaseFixture, FillAssign) {
@@ -742,7 +813,7 @@ TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByFillInMiddleToNonEmpty
     this->InsertMultipleElementsByFill(v, pos, count, 13);
 }
 
-TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeToEmptyVector) {
+TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithPointerToEmptyVector) {
     typename TestFixture::vector v;
     typename TestFixture::value_type a[] = {
         this->GetValue(0), this->GetValue(13), this->GetValue(10)
@@ -751,7 +822,29 @@ TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeToEmptyVector) {
     this->InsertMultipleElementsByRange(v, 0, a, a);
 }
 
-TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeAtBeginToNonEmptyVector) {
+TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithCotinuousIteratorAtBeginToEmptyVector) {
+    typename TestFixture::vector v;
+    std::vector<typename TestFixture::value_type> stl_vector {
+        this->GetValue(0), this->GetValue(13), this->GetValue(10)
+    };
+    
+    this->InsertMultipleElementsByRange(v, 0,
+            stl_vector.begin(), stl_vector.begin());
+}
+
+TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithNonContinuousIteratorAtBeginToEmptyVector) {
+    typename TestFixture::vector v;
+    std::list<typename TestFixture::value_type> stl_list {
+        this->GetValue(0),
+        this->GetValue(13),
+        this->GetValue(10)
+    };
+    
+    this->InsertMultipleElementsByRange(v, 0,
+            stl_list.begin(), stl_list.begin());
+}
+
+TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithPointerAtBeginToNonEmptyVector) {
     auto v = this->GetVectorOfSize(6);
     typename TestFixture::value_type a[] = {
         this->GetValue(0), this->GetValue(13), this->GetValue(10)
@@ -760,7 +853,29 @@ TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeAtBeginToNonEmptyVect
     this->InsertMultipleElementsByRange(v, 0, a, a);
 }
 
-TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeAtEndToNonEmptyVector) {
+TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithCotinuousIteratorAtBeginToNonEmptyVector) {
+    auto v = this->GetVectorOfSize(6);
+    std::vector<typename TestFixture::value_type> stl_vector {
+        this->GetValue(0), this->GetValue(13), this->GetValue(10)
+    };
+    
+    this->InsertMultipleElementsByRange(v, 0,
+            stl_vector.begin(), stl_vector.begin());
+}
+
+TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithNonContinuousIteratorAtBeginToNonEmptyVector) {
+    auto v = this->GetVectorOfSize(6);
+    std::list<typename TestFixture::value_type> stl_list {
+        this->GetValue(0),
+        this->GetValue(13),
+        this->GetValue(10)
+    };
+    
+    this->InsertMultipleElementsByRange(v, 0,
+            stl_list.begin(), stl_list.begin());
+}
+
+TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithPointerAtEndToNonEmptyVector) {
     const int initial_size = 6;
     auto v = this->GetVectorOfSize(initial_size);
     typename TestFixture::value_type a[] = {
@@ -770,7 +885,31 @@ TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeAtEndToNonEmptyVector
     this->InsertMultipleElementsByRange(v, initial_size, a, a);
 }
 
-TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeInMiddleToNonEmptyVector) {
+TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithCotinuousIteratorAtEndToNonEmptyVector) {
+    const int initial_size = 6;
+    auto v = this->GetVectorOfSize(initial_size);
+    std::vector<typename TestFixture::value_type> stl_vector {
+        this->GetValue(0), this->GetValue(13), this->GetValue(10)
+    };
+    
+    this->InsertMultipleElementsByRange(v, initial_size,
+            stl_vector.begin(), stl_vector.begin());
+}
+
+TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithNonContinuousIteratorAtEndToNonEmptyVector) {
+    const int initial_size = 6;
+    auto v = this->GetVectorOfSize(initial_size);
+    std::list<typename TestFixture::value_type> stl_list {
+        this->GetValue(0),
+        this->GetValue(13),
+        this->GetValue(10)
+    };
+    
+    this->InsertMultipleElementsByRange(v, initial_size,
+            stl_list.begin(), stl_list.begin());
+}
+
+TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithPointerInMiddleToNonEmptyVector) {
     const int initial_size = 6;
     auto v = this->GetVectorOfSize(initial_size);
     const int pos = Random::rand(1, initial_size - 1);
@@ -781,7 +920,33 @@ TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeInMiddleToNonEmptyVec
     this->InsertMultipleElementsByRange(v, pos, a, a);
 }
 
-TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeAtBeginToNonEmptyVector) {
+TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithCotinuousIteratorInMiddleToNonEmptyVector) {
+    const int initial_size = 6;
+    auto v = this->GetVectorOfSize(initial_size);
+    const int pos = Random::rand(1, initial_size - 1);
+    std::vector<typename TestFixture::value_type> stl_vector {
+        this->GetValue(0), this->GetValue(13), this->GetValue(10)
+    };
+    
+    this->InsertMultipleElementsByRange(v, pos,
+            stl_vector.begin(), stl_vector.begin());
+}
+
+TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithNonContinuousIteratorInMiddleToNonEmptyVector) {
+    const int initial_size = 6;
+    auto v = this->GetVectorOfSize(initial_size);
+    const int pos = Random::rand(1, initial_size - 1);
+    std::list<typename TestFixture::value_type> stl_list {
+        this->GetValue(0),
+        this->GetValue(13),
+        this->GetValue(10)
+    };
+    
+    this->InsertMultipleElementsByRange(v, pos,
+            stl_list.begin(), stl_list.begin());
+}
+
+TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeWithPointerAtBeginToNonEmptyVector) {
     auto v = this->GetVectorOfSize(6);
     typename TestFixture::value_type a[] = {
         this->GetValue(0), this->GetValue(13), this->GetValue(10)
@@ -791,7 +956,29 @@ TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeAtBeginToNonEmpty
     this->InsertMultipleElementsByRange(v, 0, a, a + count);
 }
 
-TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeAtEndToNonEmptyVector) {
+TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeWithCotinuousIteratorAtBeginToNonEmptyVector) {
+    auto v = this->GetVectorOfSize(6);
+    std::vector<typename TestFixture::value_type> stl_vector {
+        this->GetValue(0), this->GetValue(13), this->GetValue(10)
+    };
+    
+    this->InsertMultipleElementsByRange(v, 0,
+            stl_vector.begin(), stl_vector.end());
+}
+
+TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeWithNonContinuousIteratorAtBeginToNonEmptyVector) {
+    auto v = this->GetVectorOfSize(6);
+    std::list<typename TestFixture::value_type> stl_list {
+        this->GetValue(0),
+        this->GetValue(13),
+        this->GetValue(10)
+    };
+    
+    this->InsertMultipleElementsByRange(v, 0,
+            stl_list.begin(), stl_list.end());
+}
+
+TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeWithPointerAtEndToNonEmptyVector) {
     const int initial_size = 6;
     auto v = this->GetVectorOfSize(initial_size);
     typename TestFixture::value_type a[] = {
@@ -802,7 +989,31 @@ TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeAtEndToNonEmptyVe
     this->InsertMultipleElementsByRange(v, initial_size, a, a + count);
 }
 
-TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeInMiddleToNonEmptyVector) {
+TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeWithCotinuousIteratorAtEndToNonEmptyVector) {
+    const int initial_size = 6;
+    auto v = this->GetVectorOfSize(initial_size);
+    std::vector<typename TestFixture::value_type> stl_vector {
+        this->GetValue(0), this->GetValue(13), this->GetValue(10)
+    };
+
+    this->InsertMultipleElementsByRange(v, initial_size,
+            stl_vector.begin(), stl_vector.end());
+}
+
+TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeWithNonContinuousIteratorAtEndToNonEmptyVector) {
+    const int initial_size = 6;
+    auto v = this->GetVectorOfSize(initial_size);
+    std::list<typename TestFixture::value_type> stl_list {
+        this->GetValue(0),
+        this->GetValue(13),
+        this->GetValue(10)
+    };
+
+    this->InsertMultipleElementsByRange(v, initial_size,
+            stl_list.begin(), stl_list.end());
+}
+
+TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeWithPointerInMiddleToNonEmptyVector) {
     const int initial_size = 6;
     auto v = this->GetVectorOfSize(initial_size);
     const int pos = 3;
@@ -812,6 +1023,32 @@ TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeInMiddleToNonEmpt
     const int count = sizeof(a) / sizeof(a[0]);
     
     this->InsertMultipleElementsByRange(v, pos, a, a + count);
+}
+
+TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeWithCotinuousIteratorInMiddleToNonEmptyVector) {
+    const int initial_size = 6;
+    auto v = this->GetVectorOfSize(initial_size);
+    const int pos = 3;
+    std::vector<typename TestFixture::value_type> stl_vector {
+        this->GetValue(0), this->GetValue(13), this->GetValue(10)
+    };
+    
+    this->InsertMultipleElementsByRange(v, pos,
+            stl_vector.begin(), stl_vector.end());
+}
+
+TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeWithNonContinuousIteratorInMiddleToNonEmptyVector) {
+    const int initial_size = 6;
+    auto v = this->GetVectorOfSize(initial_size);
+    const int pos = 3;
+    std::list<typename TestFixture::value_type> stl_list {
+        this->GetValue(0),
+        this->GetValue(13),
+        this->GetValue(10)
+    };
+    
+    this->InsertMultipleElementsByRange(v, pos,
+            stl_list.begin(), stl_list.end());
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByInitializerListToEmptyVector) {

@@ -156,7 +156,7 @@ VectorTestBaseFixture<V>::InsertMultipleElementsByRange(vector& v, size_type pos
     const vector save = v;
     const size_type count = std::distance(begin, end);
     value_type save_range[count];
-    std::copy(&*begin, &*end, save_range);
+    std::copy(begin, end, save_range);
 
     auto it = v.insert(v.begin() + pos, begin, end);
 
