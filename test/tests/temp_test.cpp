@@ -1,6 +1,7 @@
 #include <bits/stdc++.h>
 #include <static_vector.hpp>
 #include <boost/container/static_vector.hpp>
+#include <vector.hpp>
 #include <test_type/test_type.hpp>
 #include <utils/utils.hpp>
 
@@ -22,19 +23,11 @@ void print(const Container& c) {
 
 int main() {
     using T = test_type;
-    using Vector1 = boost::container::static_vector<T, C>;
-    using Vector2 = uwr::static_vector<T, C>;
-    
-    const T val = 3;
-    Vector2 v {3, 1, 2, 3, 2, 3, 2};
+    uwr::vector<T> v { 1 };
 
     ON;
     
-    erase_if(v, [&](const auto& x){ return x == val; });
-
     OFF;
- 
-    cout << v << endl;
 
     return 0;
 }
