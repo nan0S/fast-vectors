@@ -585,23 +585,6 @@ static_vector_alt<T, C, size_t>::swap(static_vector_alt<T, C, size_t>& other) {
 
 template<class T, len_t C, class size_t>
 constexpr void
-static_vector_alt<T, C, size_t>::priv_swap(
-        static_vector_alt<T, C, size_t>& shorter,
-        static_vector_alt<T, C, size_t>& longer,
-        size_type s_len, size_type l_len) const {
-    T* const s_begin = shorter.begin();
-    T* const l_begin = longer.begin();
-
-    std::swap_ranges(s_begin, shorter.m_end, l_begin);
-    mem::umove(shorter.m_end, l_begin + s_len, longer.m_end);
-    mem::destroy(l_begin + s_len, longer.m_end);
-
-    shorter.m_end = s_begin + l_len;
-    longer.m_end = l_begin + s_len;
-}
-
-template<class T, len_t C, class size_t>
-constexpr void
 static_vector_alt<T, C, size_t>::clear() noexcept {
     mem::destroy(this->data(), this->m_end);
     this->m_end = this->data();
@@ -662,6 +645,23 @@ template<class T, len_t C, class size_t>
 constexpr const T*
 static_vector_alt<T, C, size_t>::data_at(size_type n) const noexcept {
     return reinterpret_cast<const T*>(&this->m_data[n]);
+}
+
+template<class T, len_t C, class size_t>
+constexpr void
+static_vector_alt<T, C, size_t>::priv_swap(
+        static_vector_alt<T, C, size_t>& shorter,
+        static_vector_alt<T, C, size_t>& longer,
+        size_type s_len, size_type l_len) const {
+    T* const s_begin = shorter.begin();
+    T* const l_begin = longer.begin();
+
+    std::swap_ranges(s_begin, shorter.m_end, l_begin);
+    mem::umove(shorter.m_end, l_begin + s_len, longer.m_end);
+    mem::destroy(l_begin + s_len, longer.m_end);
+
+    shorter.m_end = s_begin + l_len;
+    longer.m_end = l_begin + s_len;
 }
 
 template<class T, len_t C, class size_t>
@@ -806,25 +806,22 @@ operator<=>(const static_vector_alt<T, C, size_t>& lhs, const static_vector_alt<
 */
 namespace std {
 
-template<class T, uwr::len_t C>
+template<class T, uwr::len_t C, class size_t>
 constexpr void swap(uwr::static_vector_alt<T, C, size_t>& x, uwr::static_vector_alt<T, C, size_t>& y);
 
 #if CPP_ABOVE_17
 
-template<class T, uwr::len_t C, class U>
-constexpr typename uwr::static_vector_alt<T, C, size_t>::size_type
-erase(uwr::static_vector_alt<T, C, size_t>& c, const U& value);
-
-template<class T, uwr::len_t C, class Pred>
-constexpr typename uwr::static_vector_alt<T, C, size_t>::size_type
-erase_if(uwr::static_vector_alt<T, C, size_t>& c, Pred pred);
+template<class T, uwr::len_t C, class size_t, class U>
+constexpr size_t erase(uwr::static_vector_alt<T, C, size_t>& c, const U& value);
+template<class T, uwr::len_t C, class size_t, class Pred>
+constexpr size_t erase_if(uwr::static_vector_alt<T, C, size_t>& c, Pred pred);
 
 #endif
 
 /*
  * non-member functions' implementations
  */
-template<class T, uwr::len_t C>
+template<class T, uwr::len_t C, class size_t>
 constexpr void
 swap(uwr::static_vector_alt<T, C, size_t>& x, uwr::static_vector_alt<T, C, size_t>& y) {
     x.swap(y);
@@ -832,28 +829,24 @@ swap(uwr::static_vector_alt<T, C, size_t>& x, uwr::static_vector_alt<T, C, size_
 
 #if CPP_ABOVE_17
 
-template<class T, uwr::len_t C, class U>
-constexpr typename uwr::static_vector_alt<T, C, size_t>::size_type
+template<class T, uwr::len_t C, class size_t, class U>
+constexpr size_t
 erase(uwr::static_vector_alt<T, C, size_t>& c, const U& value) {
-    using size_type = typename uwr::static_vector_alt<T, C, size_t>::size_type;
+    T* const c_end = c.end();
+    T* const mid = std::remove(c.begin(), c_end, value);
+    c.erase(mid, c_end);
 
-    T* const cend = c.end();
-    T* const it = std::remove(c.begin(), cend, value);
-    c.erase(it, cend);
-
-    return static_cast<size_type>(std::distance(it, cend));
+    return static_cast<size_t>(std::distance(mid, c_end));
 }
 
-template<class T, uwr::len_t C, class Pred>
-constexpr typename uwr::static_vector_alt<T, C, size_t>::size_type
+template<class T, uwr::len_t C, class size_t, class Pred>
+constexpr size_t
 erase_if(uwr::static_vector_alt<T, C, size_t>& c, Pred pred) {
-    using size_type = typename uwr::static_vector_alt<T, C, size_t>::size_type;
+    T* const c_end = c.end();
+    T* const mid = std::remove_if(c.begin(), c_end, pred);
+    c.erase(mid, c_end);
 
-    T* const cend = c.end();
-    T* const it = std::remove_if(c.begin(), cend, pred);
-    c.erase(it, cend);
-
-    return static_cast<size_type>(std::distance(it, cend));
+    return static_cast<size_t>(std::distance(mid, c_end));
 }
 
 #endif // CPP_ABOVE_17
