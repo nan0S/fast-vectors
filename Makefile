@@ -1,7 +1,7 @@
 CXX := g++
 # check c++20, but write for at least c++17 compatibility
-VERSION := -std=c++17
-# VERSION := -std=c++20
+# VERSION := -std=c++17
+VERSION := -std=c++20
 
 # OFLAGS := -Ofast -march=native -flto -fomit-frame-pointer -s -DNDEBUG
 OFLAGS := -O3 -DNDEBUG -march=native
