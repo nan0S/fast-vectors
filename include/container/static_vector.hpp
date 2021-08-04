@@ -79,7 +79,7 @@ public:
     UWR_FORCEINLINE constexpr T* data() noexcept;
     UWR_FORCEINLINE constexpr const T* data() const noexcept;
 
-    template<class InputIterator>
+    template<class InputIterator, class = typename std::iterator_traits<InputIterator>::value_type>
     UWR_FORCEINLINE constexpr void assign(InputIterator first, InputIterator last);
     constexpr void assign(size_type n, const T& val);
     UWR_FORCEINLINE constexpr void assign(std::initializer_list<T> ilist);
@@ -94,7 +94,7 @@ public:
     UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, const T& value);
     UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, T&& value);
     constexpr iterator insert(const_iterator pos, size_type count, const T& value);
-    template<class InputIterator>
+    template<class InputIterator, class = typename std::iterator_traits<InputIterator>::value_type>
     constexpr iterator insert(const_iterator pos, InputIterator first, InputIterator last);
     UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, std::initializer_list<T> ilist);
 
@@ -407,7 +407,7 @@ static_vector<T, C, size_t>::data() const noexcept {
 }
 
 template<class T, len_t C, class size_t>
-template<class InputIterator>
+template<class InputIterator, class>
 constexpr void
 static_vector<T, C, size_t>::assign(InputIterator first, InputIterator last) {
     this->priv_copy_assign(first, last,
@@ -513,7 +513,7 @@ static_vector<T, C, size_t>::insert(const_iterator pos, size_type count, const T
 }
 
 template<class T, len_t C, class size_t>
-template<class InputIterator>
+template<class InputIterator, class>
 constexpr typename static_vector<T, C, size_t>::iterator
 static_vector<T, C, size_t>::insert(const_iterator pos, InputIterator first, InputIterator last) {
     T* const position = const_cast<T* const>(pos);
@@ -714,6 +714,7 @@ static_vector<T, C, size_t>::priv_move_assign(InputIterator first, InputIterator
     this->m_length = n;
 }
 
+
 /*
  * non-member operators 
  */
@@ -738,6 +739,7 @@ template<class T, len_t C, class size_t>
 constexpr auto operator<=>(const static_vector<T, C, size_t>& lhs, const static_vector<T, C, size_t>& rhs);
 
 #endif
+
 
 /*
  * non-member operators' implementations
@@ -804,8 +806,8 @@ operator<=>(const static_vector<T, C, size_t>& lhs, const static_vector<T, C, si
 
 
 /*
-* non-member functions
-*/
+ * non-member functions
+ */
 namespace std {
 
 template<class T, uwr::len_t C, class size_t>
@@ -819,6 +821,7 @@ template<class T, uwr::len_t C, class size_t, class Pred>
 constexpr size_t erase_if(uwr::static_vector<T, C, size_t>& c, Pred pred);
 
 #endif
+
 
 /*
  * non-member functions' implementations
