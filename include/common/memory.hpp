@@ -182,6 +182,7 @@ template<class T>
 UWR_FORCEINLINE
 NT_Move_A<T> shiftl(T* dest, T* begin, T* end);
 
+
 /*
  * implementations
  */

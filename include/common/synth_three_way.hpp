@@ -2,9 +2,9 @@
 
 #if CPP_ABOVE_17
 
-#include "define.hpp"
-
 #include <compare>
+
+#include "define.hpp"
 
 namespace uwr::mem {
 
