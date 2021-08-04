@@ -513,11 +513,11 @@ template<class InputIterator, class>
 constexpr typename static_vector_alt<T, C, size_t>::iterator
 static_vector_alt<T, C, size_t>::insert(const_iterator pos, InputIterator first, InputIterator last) {
     T* const position = const_cast<T* const>(pos);
-    size_type count = static_cast<size_type>(std::distance(first, last));
 
-    if (UWR_UNLIKELY(count == 0))
+    if (UWR_UNLIKELY(first == last))
         return position;
     
+    size_type count = static_cast<size_type>(std::distance(first, last));
     T* const spill = position + count;
 
     if (spill < this->m_end) {
