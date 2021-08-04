@@ -9,3 +9,5 @@
 #define UWR_UNLIKELY(x)     __builtin_expect((x), 0)
 
 #define UWR_ASSERT(expr) assert(expr)
+
+#define UWR_UNUSED __attribute__((unused))
