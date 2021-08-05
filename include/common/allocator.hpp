@@ -329,6 +329,7 @@ bool expand_in_place_or_alloc_raw(T*& data, len_t cap, len_t req, T*& out_ptr) {
     }
 }
 
+// TODO: simplify
 template<class T>
 T_Move_C<T, bool> do_expand_in_place_or_alloc_raw(T*& data, len_t cap, len_t req, T*& out_ptr) {
     UWR_ASSERT(req > cap);
@@ -344,10 +345,16 @@ T_Move_C<T, bool> do_expand_in_place_or_alloc_raw(T*& data, len_t cap, len_t req
             return false;
         }
         case 3: { /* both are big sizes */
-            // TODO: check alternative
             out_ptr = (T*)mremap(data, cap * sizeof(T),
-                                 req * sizeof(T), MREMAP_MAYMOVE);
-            return out_ptr == data;
+                                 req * sizeof(T), 0);
+            if (out_ptr == (T*)-1) {
+                out_ptr = big_allocate<T>(req);
+                return false;
+            }
+            else {
+                UWR_ASSERT(out_ptr == data);
+                return true;
+            }
         }
         default: /* impossible */
             UWR_ASSERT(false);
