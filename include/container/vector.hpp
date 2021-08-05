@@ -1,7 +1,6 @@
 #pragma once
 
 #include <iterator>
-#include <limits>
 
 #include "../common/allocator.hpp"
 #include "../common/define.hpp"
@@ -31,13 +30,11 @@ public:
     constexpr vector() noexcept;
     constexpr explicit vector(size_type n);
     constexpr vector(size_type n, const T& val);
-    template<class InputIterator,
-             class = typename std::iterator_traits<InputIterator>::value_type>
+    template<class InputIterator, class = typename std::iterator_traits<InputIterator>::value_type>
     constexpr vector(InputIterator first, InputIterator last);
     constexpr vector(const vector& x);
     constexpr vector(vector&& x) noexcept;
     constexpr vector(std::initializer_list<T> ilist);
-
     #if CPP_ABOVE_17
     constexpr
     #endif
@@ -82,25 +79,22 @@ public:
     constexpr T* data() noexcept;
     constexpr const T* data() const noexcept;
 
-    template<class InputIterator,
-        class = typename std::iterator_traits<InputIterator>::value_type>
+    template<class InputIterator, class = typename std::iterator_traits<InputIterator>::value_type>
     constexpr void assign(InputIterator first, InputIterator last);
     constexpr void assign(size_type n, const T& val);
     constexpr void assign(std::initializer_list<T> ilist);
 
     constexpr void push_back(const T& value);
-    constexpr void fast_push_back(const T& value) noexcept;
     constexpr void push_back(T&& value);
     constexpr void fast_push_back(T&& value) noexcept;
 
     constexpr void pop_back();
-    constexpr void safe_pop_back() noexcept;
+    constexpr bool safe_pop_back() noexcept;
 
     constexpr iterator insert(const_iterator pos, const T& value);
     constexpr iterator insert(const_iterator pos, T&& value);
     constexpr iterator insert(const_iterator pos, size_type count, const T& value);
-    template<class InputIterator,
-        class = typename std::iterator_traits<InputIterator>::value_type>
+    template<class InputIterator, class = typename std::iterator_traits<InputIterator>::value_type>
     constexpr iterator insert(const_iterator pos, InputIterator first, InputIterator last);
     constexpr iterator insert(const_iterator pos, std::initializer_list<T> ilist);
 
@@ -113,9 +107,16 @@ public:
     template<class... Args>
     constexpr iterator emplace(const_iterator pos, Args&&... args);
     template<class... Args>
-    constexpr void emplace_back(Args&&... args);
+    constexpr reference emplace_back(Args&&... args);
     template<class... Args>
-    constexpr void fast_emplace_back(Args&&... args) noexcept;
+    constexpr reference fast_emplace_back(Args&&... args) noexcept;
+
+private:
+    constexpr size_type fix_capacity(size_type n) const noexcept;
+    constexpr size_type next_capacity(size_type add) const noexcept;
+
+    template<class InputIterator>
+    constexpr void priv_copy_assign(InputIterator first, InputIterator last, size_type n);
 
 private:
     size_type m_length;
@@ -135,18 +136,18 @@ template<class T, class size_t>
 constexpr
 vector<T, size_t>::vector(size_type n)
     : m_length(n),
-      m_capacity(mem::fix_capacity<T>(n)),
-      m_data(mem::allocate<T>(m_capacity)) {
-    mem::construct(m_data, n);
+      m_capacity(this->fix_capacity(this->m_length)),
+      m_data(mem::allocate<T>(this->m_capacity)) {
+    mem::construct(this->m_data, n);
 }
 
 template<class T, class size_t>
 constexpr
 vector<T, size_t>::vector(size_type n, const T& val)
     : m_length(n),
-      m_capacity(mem::fix_capacity<T>(n)),
-      m_data(mem::allocate<T>(m_capacity)) {
-    mem::ufill(m_data, n, val);
+      m_capacity(this->fix_capacity(n)),
+      m_data(mem::allocate<T>(this->m_capacity)) {
+    mem::ufill(this->m_data, n, val);
 }
 
 template<class T, class size_t>
@@ -154,18 +155,18 @@ template<class InputIterator, class>
 constexpr
 vector<T, size_t>::vector(InputIterator first, InputIterator last)
     : m_length(std::distance(first, last)),
-      m_capacity(mem::fix_capacity<T>(m_length)),
-      m_data(mem::allocate<T>(m_capacity)) {
-    mem::ucopy(m_data, first, last);
+      m_capacity(this->fix_capacity(this->m_length)),
+      m_data(mem::allocate<T>(this->m_capacity)) {
+    mem::ucopy(this->m_data, first, last);
 }
 
 template<class T, class size_t>
 constexpr
 vector<T, size_t>::vector(const vector& x)
     : m_length(x.m_length),
-      m_capacity(x.m_capacity),
-      m_data(mem::allocate<T>(m_capacity)) {
-    mem::ucopy(m_data, x.begin(), x.end());
+      m_capacity(this->fix_capacity(this->m_length)),
+      m_data(mem::allocate<T>(this->m_capacity)) {
+    mem::ucopy(this->m_data, x.begin(), x.end());
 }
 
 template<class T, class size_t>
@@ -183,9 +184,9 @@ template<class T, class size_t>
 constexpr
 vector<T, size_t>::vector(std::initializer_list<T> ilist)
     : m_length(ilist.size()),
-      m_capacity(mem::fix_capacity<T>(m_length)),
-      m_data(mem::allocate<T>(m_capacity)) {
-    mem::ucopy(m_data, ilist.begin(), ilist.end());
+      m_capacity(this->fix_capacity(this->m_length)),
+      m_data(mem::allocate<T>(this->m_capacity)) {
+    mem::ucopy(this->m_data, ilist.begin(), ilist.end());
 }
 
 template<class T, class size_t>
@@ -193,27 +194,19 @@ template<class T, class size_t>
 constexpr
 #endif
 vector<T, size_t>::~vector() {
-    mem::destroy(m_data, m_length);
-    mem::deallocate(m_data, m_capacity);
+    mem::destroy(this->m_data, this->m_length);
+    mem::deallocate(this->m_data, this->m_capacity);
 }
 
-// TODO: fix
 template<class T, class size_t>
 constexpr
 vector<T, size_t>& vector<T, size_t>::operator=(const vector<T, size_t>& other) noexcept {
-    if (UNLIKELY(this == std::addressof(other)))
-        return *this;
-    if (other.m_length > m_length)
-        mem::change_capacity(m_data, m_length, m_capacity, other.m_capacity);
-
-    mem::destroy(m_data, m_length);
-    mem::ucopy(m_data, other.begin(), other.end());
-    m_length = other.m_length;
-
+    if (UWR_LIKELY(this != &other))
+        this->priv_copy_assign(other.begin(), other.end(), other.m_length);
     return *this;
 }
 
-// TODO: fix
+// TODO: maybe deallocate moved
 template<class T, class size_t>
 constexpr
 vector<T, size_t>& vector<T, size_t>::operator=(vector<T, size_t>&& other) noexcept {
@@ -224,96 +217,89 @@ vector<T, size_t>& vector<T, size_t>::operator=(vector<T, size_t>&& other) noexc
     return *this;
 }
 
-// TODO: fix
 template<class T, class size_t>
 constexpr
 vector<T, size_t>& vector<T, size_t>::operator=(std::initializer_list<T> ilist) noexcept {
-    if (ilist.size() > m_capacity)
-        mem::change_capacity(m_data, m_length, m_capacity, ilist.size());
-    
-    mem::destroy(m_data, m_data + m_length);
-    mem::ucopy(m_data, ilist.begin(), ilist.end());
-    m_length = ilist.size();
-
+    this->assign(ilist.begin(), ilist.end());
     return *this;
 }
 
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::iterator
 vector<T, size_t>::begin() noexcept {
-    return m_data;
+    return this->m_data;
 }
 
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::const_iterator
 vector<T, size_t>::begin() const noexcept {
-    return m_data;
+    return this->m_data;
 }
 
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::iterator
 vector<T, size_t>::end() noexcept {
-    return m_data + m_length;
+    return this->m_data + this->m_length;
 }
 
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::const_iterator
 vector<T, size_t>::end() const noexcept {
-    return m_data + m_length;
+    return this->m_data + this->m_length;
 }
 
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::reverse_iterator
 vector<T, size_t>::rbegin() noexcept {
-    return reverse_iterator(m_data + m_length);
+    return reverse_iterator(this->m_data + this->m_length);
 }
 
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::const_reverse_iterator
 vector<T, size_t>::rbegin() const noexcept {
-    return const_reverse_iterator(m_data + m_length);
+    return const_reverse_iterator(this->m_data + this->m_length);
 }
 
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::reverse_iterator
 vector<T, size_t>::rend() noexcept {
-    return reverse_iterator(m_data);
+    return reverse_iterator(this->m_data);
 }
 
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::const_reverse_iterator
 vector<T, size_t>::rend() const noexcept {
-    return const_reverse_iterator(m_data);
+    return const_reverse_iterator(this->m_data);
 }
 
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::const_iterator
 vector<T, size_t>::cbegin() const noexcept {
-    return m_data;
+    return this->m_data;
 }
 
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::const_iterator
 vector<T, size_t>::cend() const noexcept {
-    return m_data + m_length;
+    return this->m_data + this->m_length;
 }
 
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::const_reverse_iterator
 vector<T, size_t>::crbegin() const noexcept {
-    return const_reverse_iterator(m_data + m_length);
+    return const_reverse_iterator(this->m_data + this->m_length);
 }
 
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::const_reverse_iterator
 vector<T, size_t>::crend() const noexcept {
-    return const_reverse_iterator(m_data);
+    return const_reverse_iterator(this->m_data);
 }
 
 template<class T, class size_t>
 constexpr size_t
 vector<T, size_t>::size() const noexcept {
-    return m_length;
+    return this->m_length;
 }
 
 template<class T, class size_t>
@@ -325,313 +311,410 @@ vector<T, size_t>::max_size() const noexcept {
 template<class T, class size_t>
 constexpr void
 vector<T, size_t>::resize(size_type n) {
-    if (n > m_capacity)
-        mem::change_capacity(m_data, m_length, m_capacity, n);
+    if (n > this->m_capacity) {
+        size_type new_capacity = this->fix_capacity(n);
 
-    if (n < m_length) {
-        mem::destroy(m_data + n, m_data + m_length);
-        m_length = n;
+        mem::reallocate(this->m_data, this->m_length, this->m_capacity, new_capacity);
+        mem::construct(this->end(), this->m_data + n);
+
+        this->m_capacity = new_capacity;
     }
-    else if (n > m_length)
-        mem::construct(m_data + m_length, n - m_length);
+    else {
+        T* const m_end = this->end();
+        T* const new_end = this->m_data + n;
 
-    m_length = n;
+        if (n > this->m_length)
+            mem::construct(m_end, new_end);
+        else
+            mem::destroy(new_end, m_end);
+    }
+
+    this->m_length = n;
 }
 
 template<class T, class size_t>
 constexpr void vector<T, size_t>::resize(size_type n, const T& val) {
-    if (n > m_capacity)
-        mem::change_capacity(m_data, m_length, m_capacity, n);
+    if (n > this->m_capacity) {
+        size_type new_capacity = this->fix_capacity(n);
+        
+        mem::reallocate(this->m_data, this->m_length, this->m_capacity, new_capacity);
+        mem::ufill(this->end(), this->m_data + n, val);
 
-    if (n < m_length) {
-        mem::destroy(m_data + n, m_data + m_length);
-        m_length = n;
+        this->m_capacity = new_capacity;
     }
-    else if (n > m_length)
-        mem::ufill(m_data + m_length, n - m_length, val);
+    else {
+        T* const m_end = this->end();
+        T* const new_end = this->m_data + n;
 
-    m_length = n;
+        if (n > this->m_length)
+            mem::ufill(m_end, new_end, val);
+        else
+            mem::destroy(new_end, m_end);
+    }
+
+    this->m_length = n;
 }
 
 template<class T, class size_t>
 constexpr size_t
 vector<T, size_t>::capacity() const noexcept {
-    return m_capacity;
+    return this->m_capacity;
 }
 
 template<class T, class size_t>
 constexpr bool
 vector<T, size_t>::empty() const noexcept {
-    return m_length == 0;
+    return this->m_length == 0;
 }
 
 template<class T, class size_t>
 constexpr void
 vector<T, size_t>::reserve(size_type n) noexcept {
-    if (n <= m_capacity)
-        return;
-    n = n < 2 * m_capacity ? 2 * m_capacity : n;
-    mem::change_capacity(m_data, m_length, m_capacity, n);
+    // TODO: likely here (?)
+    if (n > this->m_capacity) {
+        size_type new_capacity = this->fix_capacity(n);
+        mem::reallocate(this->m_data, this->m_length, this->m_capacity, new_capacity);
+        this->m_capacity = new_capacity;
+    }
 }
 
 template<class T, class size_t>
 constexpr void
 vector<T, size_t>::shrink_to_fit() noexcept {
-    if (m_capacity < mem::map_threshold<T>)
-        mem::change_capacity(m_data, m_length, m_capacity, m_length);
+    // TODO: now we don't shrink, maybe in the future
 }
 
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::reference
 vector<T, size_t>::operator[](size_type n) {
-    return m_data[n];
+    return this->m_data[n];
 }
 
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::const_reference
 vector<T, size_t>::operator[](size_type n) const {
-    return m_data[n];
+    return this->m_data[n];
 }
 
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::reference
 vector<T, size_t>::at(size_type n) {
-    // TODO: unlikely
-    if (n >= m_length)
+    if (UWR_LIKELY(n < this->m_length))
+        return this->m_data[n];
+    else
         throw std::out_of_range("Index out of range: " + std::to_string(n));
-    return m_data[n];
 }
 
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::const_reference
 vector<T, size_t>::at(size_type n) const {
-    // TODO: unlikely
-    if (n >= m_length)
+    if (UWR_LIKELY(n < this->m_length))
+        return this->m_data[n];
+    else
         throw std::out_of_range("Index out of range: " + std::to_string(n));
-    return m_data[n];
 }
 
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::reference
 vector<T, size_t>::front() {
-    return m_data[0];
+    return this->m_data[0];
 }
 
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::const_reference
 vector<T, size_t>::front() const {
-    return m_data[0];
+    return this->m_data[0];
 }
 
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::reference
 vector<T, size_t>::back() {
-    return m_data[m_length - 1];
+    return this->m_data[this->m_length - 1];
 }
 
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::const_reference
 vector<T, size_t>::back() const {
-    return m_data[m_length - 1];
+    return this->m_data[this->m_length - 1];
 }
 
 template<class T, class size_t>
 constexpr T*
 vector<T, size_t>::data() noexcept {
-    return m_data;
+    return this->m_data;
 }
 
 template<class T, class size_t>
 constexpr const T*
 vector<T, size_t>::data() const noexcept {
-    return m_data;
+    return this->m_data;
 }
 
 template<class T, class size_t>
 template<class InputIterator, class>
 constexpr void
 vector<T, size_t>::assign(InputIterator first, InputIterator last) {
-    size_type count = std::distance(first, last);
-    if (count > m_capacity)
-        mem::change_capacity(m_data, m_length, m_capacity, count);
-
-    mem::destroy(m_data, m_data + m_length);
-    mem::ucopy(m_data, first, last);
-    
-    m_length = count;
+    this->priv_copy_assign(first, last,
+            static_cast<size_type>(std::distance(first, last)));
 }
 
 template<class T, class size_t>
 constexpr void
 vector<T, size_t>::assign(size_type n, const T& val) {
-    if (n > m_capacity)
-        mem::change_capacity(m_data, m_length, m_capacity, n);
+    if (n > this->m_capacity) {
+        size_type new_capacity = this->fix_capacity(n);
+        
+        if (mem::expand_in_place_or_destroy_and_alloc_raw(
+                    this->m_data, this->m_length,
+                    this->m_capacity, new_capacity)) {
+            T* const m_end = this->end();
+            
+            mem::fill(this->m_data, m_end, val);
+            mem::ufill(m_end, this->m_data + n, val);
+        }
+        else
+            mem::ufill(this->m_data, n, val);
 
-    mem::destroy(m_data, m_data + m_length);
-    mem::ufill(m_data, n, val);
+        this->m_capacity = new_capacity;
+    }
+    else {
+        T* const m_end = this->end();
+        T* const split = this->m_data + n;
 
-    m_length = n;
+        if (n > this->m_length) {
+            mem::fill(this->m_data, m_end, val);
+            mem::ufill(m_end, split, val);
+        }
+        else {
+            mem::destroy(split, m_end);
+            mem::fill(this->m_data, split, val);
+        }
+    }
+
+    this->m_length = n;
 }
 
 template<class T, class size_t>
 constexpr void
 vector<T, size_t>::assign(std::initializer_list<T> ilist) {
-    assign(ilist.begin(), ilist.end());
+    this->assign(ilist.begin(), ilist.end());
 }
 
 template<class T, class size_t>
 constexpr void
 vector<T, size_t>::push_back(const_reference value) {
-    mem::grow(m_data, m_length, m_capacity);
-    new (data() + m_length) T(value);
-    ++m_length;
-}
-
-template<class T, class size_t>
-constexpr void
-vector<T, size_t>::fast_push_back(const_reference value) noexcept {
-    new (m_data + m_length) T(value);
-    ++m_length;
+    this->emplace_back(value);
 }
 
 template<class T, class size_t>
 constexpr void
 vector<T, size_t>::push_back(T&& value) {
-    mem::grow(m_data, m_length, m_capacity);
-    new (m_data + m_length) T(std::forward<T>(value));
-    ++m_length;
+    this->emplace_back(std::move(value));
 }
 
 template<class T, class size_t>
 constexpr void
 vector<T, size_t>::fast_push_back(T&& value) noexcept {
-    new (m_data + m_length) T(std::forward<T>(value));
-    ++m_length;
+    this->fast_emplace_back(std::forward<T>(value));
 }
 
 template<class T, class size_t>
 constexpr void
 vector<T, size_t>::pop_back() {
-    if constexpr (!std::is_trivially_destructible_v<T>)
-        back().~T();
-    --m_length;
+    mem::destroy_at(this->data() + --this->m_length);
 }
 
 template<class T, class size_t>
-constexpr void
+constexpr bool
 vector<T, size_t>::safe_pop_back() noexcept {
-    if (m_length == 0)
-        return;
-    if constexpr (!std::is_trivially_destructible_v<T>)
-        back().~T();
-    --m_length;
+    if (UWR_LIKELY(this->m_length != 0)) {
+        this->pop_back();
+        return true;
+    }
+    else
+        return false;
 }
 
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::iterator
 vector<T, size_t>::insert(const_iterator pos, const T& value) {
-    auto position = const_cast<T*>(pos);
-    auto m = std::distance(begin(), position);
-    mem::grow(m_data, m_length, m_capacity);
-    position = begin() + m;
-    if (position != end())
-        mem::shiftr_data(position, (end() - position));
-    new (position) T(value);
-    ++m_length;
-
-    return position;
+    return this->emplace(pos, value);
 }
 
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::iterator
 vector<T, size_t>::insert(const_iterator pos, T&& value) {
-    auto position = const_cast<T*>(pos);
-    auto m = std::distance(begin(), position);
-    mem::grow(m_data, m_length, m_capacity);
-    position = begin() + m;
-    if (position != end())
-        mem::shiftr_data(position, (end() - position));
-    new (position) T(std::forward<T>(value));
-    ++m_length;
-
-    return position;
+    return this->emplace(pos, std::move(value));
 }
 
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::iterator
 vector<T, size_t>::insert(const_iterator pos, size_type count, const T& value) {
-    auto position = const_cast<T*>(pos);
-    if (!count)
+    T* const position = const_cast<T* const>(pos);
+
+    if (UWR_UNLIKELY(!count))
         return position;
 
-    if (m_length + count > m_capacity) {
-        auto m = std::distance(begin(), position);
-        size_type new_cap = std::max(m_length + count, m_capacity * 2);
-        mem::change_capacity(m_data, m_length, m_capacity, new_cap);
-        position = begin() + m;
-    }
-    auto end_ = end();
-    size_type rest = std::distance(position, end_);
-    if (rest > count) {
-        std::uninitialized_move(end_ - count, end_, end_);
-        std::move_backward(position, end_ - count, end_);
-        std::fill(position, position + count, value);
+    size_type new_length = this->m_length + count;
+
+    if (new_length > this->m_capacity) {
+        size_type new_capacity = this->fix_capacity(new_length);
+
+        T* new_data;
+        if (mem::expand_in_place_or_alloc_raw(
+                    this->m_data, this->m_capacity,
+                    new_capacity, new_data)) {
+            T* const m_end = this->end();
+            T* const spill = position + count;
+
+            if (spill < m_end) {
+                mem::shiftr(spill, position, m_end);
+                mem::fill(position, spill, value);
+            }
+            else {
+                mem::umove(spill, position, m_end);
+                mem::fill(position, m_end, value);
+                mem::ufill(m_end, spill, value);
+            }
+
+            this->m_capacity = new_capacity;
+            this->m_length = new_length;
+
+            return position;
+        }
+        else {
+            T* const i_begin = new_data + (position - this->m_data);
+            T* const i_end = i_begin + count;
+            T* const m_end = this->end();
+
+            mem::ucopy(new_data, this->m_data, position);
+            mem::ufill(i_begin, i_end, value);
+            mem::ucopy(i_end, position, m_end);
+
+            mem::destroy(this->m_data, m_end);
+            mem::deallocate(this->m_data, this->m_capacity);
+
+            this->m_data = new_data;
+            this->m_capacity = new_capacity;
+            this->m_length = new_length;
+
+            return i_begin;
+        }
     }
     else {
-        std::uninitialized_move(position, end_, position + count);
-        std::fill(position, end_, value);
-        std::uninitialized_fill(end_, position + count, value);
-    }
-    m_length += count;
+        T* const m_end = this->end();
+        T* const spill = position + count;
 
-    return position;
+        if (spill < m_end) {
+            mem::shiftr(spill, position, m_end);
+            mem::fill(position, spill, value);
+        }
+        else {
+            mem::umove(spill, position, m_end);
+            mem::fill(position, m_end, value);
+            mem::ufill(m_end, spill, value);
+        }
+
+        this->m_length = new_length;
+
+        return position;
+    }
 }
 
 template<class T, class size_t>
 template<class InputIterator, class>
 constexpr typename vector<T, size_t>::iterator
 vector<T, size_t>::insert(const_iterator pos, InputIterator first, InputIterator last) {
-    auto position = const_cast<T*>(pos);
-    if (first == last)
+    T* const position = const_cast<T* const>(pos);
+
+    if (UWR_UNLIKELY(first == last))
         return position;
 
-    size_type count = std::distance(first, last);
-    if (m_length + count > m_capacity) {
-        auto m = std::distance(begin(), position);
-        size_type new_cap = std::max(m_length + count, m_capacity * 2);
-        mem::change_capacity(m_data, m_length, m_capacity, new_cap);
-        position = begin() + m;
-    }
-    auto end_ = end();
-    size_type rest = std::distance(position, end_);
-    if (rest > count) {
-        std::uninitialized_move(end_ - count, end_, end_);
-        std::move_backward(position, end_ - count, end_);
-        std::copy(first, last, position);
+    size_type count = static_cast<size_type>(std::distance(first, last));
+    size_type new_length = this->m_length + count;
+
+    if (new_length > this->m_capacity) {
+        size_type new_capacity = this->fix_capacity(new_length);
+
+        T* new_data;
+        if (mem::expand_in_place_or_alloc_raw(
+                    this->m_data, this->m_capacity,
+                    new_capacity, new_data)) {
+            T* const m_end = this->end();
+            T* const spill = position + count;
+
+            if (spill < m_end) {
+                mem::shiftr(spill, position, m_end);
+                mem::copy(position, first, last);
+            }
+            else {
+                size_type rest = static_cast<size_type>(std::distance(position, m_end));
+                InputIterator split = std::next(first, rest);
+
+                mem::umove(spill, position, m_end);
+                mem::copy(position, first, split);
+                mem::ucopy(m_end, split, last);
+            }
+
+            this->m_capacity = new_capacity;
+            this->m_length = new_length;
+
+            return position;
+        }
+        else {
+            T* const i_begin = new_data + (position - this->m_data);
+            T* const i_end = i_begin + count;
+            T* const m_end = this->end();
+
+            mem::ucopy(new_data, this->m_data, position);
+            mem::ucopy(i_begin, first, last);
+            mem::ucopy(i_end, position, m_end);
+
+            mem::destroy(this->m_data, m_end);
+            mem::deallocate(this->m_data, this->m_capacity);
+
+            this->m_data = new_data;
+            this->m_capacity = new_capacity;
+            this->m_length = new_length;
+            
+            return i_begin;
+        }
     }
     else {
-        std::uninitialized_move(position, end_, position + count);
-        std::copy(first, first + rest, position);
-        std::uninitialized_copy(first + rest, last, end_);
-    }
-    m_length += count;
+        T* const m_end = this->end();
+        T* const spill = position + count;
 
-    return position;
+        if (spill < m_end) {
+            mem::shiftr(spill, position, m_end);
+            mem::copy(position, first, last);
+        }
+        else {
+            size_type rest = static_cast<size_type>(std::distance(position, m_end));
+            InputIterator split = std::next(first, rest);
+
+            mem::umove(spill, position, m_end);
+            mem::copy(position, first, split);
+            mem::ucopy(m_end, split, last);
+        }
+
+        this->m_length = new_length;
+
+        return position;
+    }
 }
 
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::iterator
 vector<T, size_t>::insert(const_iterator pos, std::initializer_list<T> ilist) {
-    return insert(pos, ilist.begin(), ilist.end());
+    return this->insert(pos, ilist.begin(), ilist.end());
 }
 
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::iterator
 vector<T, size_t>::erase(const_iterator pos) {
-    auto position = const_cast<T*>(pos);
-    if (position + 1 != end())
-        std::copy(position + 1, end(), position);
-    pop_back();
+    T* const position = const_cast<T* const>(pos);
+    mem::shiftl(position, position + 1, this->end());
+    this->pop_back();
 
     return position;
 }
@@ -639,16 +722,17 @@ vector<T, size_t>::erase(const_iterator pos) {
 template<class T, class size_t>
 constexpr typename vector<T, size_t>::iterator
 vector<T, size_t>::erase(const_iterator first, const_iterator last) {
-    auto f = const_cast<T*>(first);
-    if (first == last)
-        return f;
+    T* const f = const_cast<T* const>(first);
+    size_type count = static_cast<size_type>(std::distance(first, last));
 
-    auto l = const_cast<T*>(last);
-    auto n = std::distance(first, last);
-    if (last != end())
-        std::move(l, end(), f);
-    mem::destroy(end() - n, end());
-    m_length -= n;
+    if (UWR_LIKELY(count != 0)) {
+        T* const l = const_cast<T* const>(last);
+        T* const e = this->end();
+
+        mem::shiftl(f, l, e);
+        mem::destroy(e - count, e);
+        this->m_length -= count;
+    }
 
     return f;
 }
@@ -656,73 +740,145 @@ vector<T, size_t>::erase(const_iterator first, const_iterator last) {
 template<class T, class size_t>
 constexpr void
 vector<T, size_t>::swap(vector<T, size_t>& other) {
-    using std::swap;
-    swap(m_data, other.m_data);
-    swap(m_length, other.m_length);
-    swap(m_capacity, other.m_capacity);
+    std::swap(m_data, other.m_data);
+    std::swap(m_length, other.m_length);
+    std::swap(m_capacity, other.m_capacity);
 }
 
 template<class T, class size_t>
 constexpr void
 vector<T, size_t>::clear() noexcept {
-    mem::destroy(m_data, m_data + m_length);
-    m_length = 0;
+    mem::destroy(this->m_data, this->m_length);
+    this->m_length = 0;
 }
 
 template<class T, class size_t>
 template<class... Args>
 constexpr typename vector<T, size_t>::iterator
 vector<T, size_t>::emplace(const_iterator pos, Args&&... args) {
-    // TODO: improve when pos == end()
-    return insert(pos, T(std::forward<Args>(args)...));
+    // TODO: add unlikely (?)
+    // TODO: fix
+    size_type idx = pos - this->m_data;
+    this->insert(pos, 1, T(std::forward<Args>(args)...));
+    return this->m_data + idx;
 }
 
 template<class T, class size_t>
 template<class... Args>
-constexpr void
+constexpr typename vector<T, size_t>::reference
 vector<T, size_t>::emplace_back(Args&&... args) {
-    mem::grow(m_data, m_length, m_capacity);
-    new (m_data + m_length) T(std::forward<Args>(args)...);
-    ++m_length;
+    // TODO: add unlikely (?)
+    if (this->m_length == this->m_capacity) {
+        size_type new_capacity = this->next_capacity(1);
+        mem::reallocate(this->m_data, this->m_length, this->m_capacity, new_capacity);
+        this->m_capacity = new_capacity;
+    }
+    return this->fast_emplace_back(std::forward<Args>(args)...);
 }
 
 template<class T, class size_t>
 template<class... Args>
-constexpr void
+constexpr typename vector<T, size_t>::reference
 vector<T, size_t>::fast_emplace_back(Args&&... args) noexcept {
-    new (m_data + m_length) T(std::forward<Args>(args)...);
-    ++m_length;
+    T* const last_end = this->m_data + this->m_length++;
+    new (last_end) T(std::forward<Args>(args)...);
+    return *last_end;
+}
+
+template<class T, class size_t>
+constexpr size_t
+vector<T, size_t>::fix_capacity(size_type n) const noexcept {
+    if (mem::is_big<T>(n))
+        return (n * sizeof(T) + mem::page_size - 1) / mem::page_size
+            * mem::page_size / sizeof(T);
+    else
+        return std::max((64 + sizeof(T) - 1) / sizeof(T), n);
+}
+
+template<class T, class size_t>
+constexpr size_t
+vector<T, size_t>::next_capacity(size_type add) const noexcept {
+    constexpr int num = 2;
+    constexpr int den = 1;
+
+    return this->fix_capacity(num * this->m_capacity / den + add);
+    // return this->fix_capacity(std::max(num * this->m_capacity / den, this->m_capacity + add));
+}
+
+template<class T, class size_t>
+template<class InputIterator>
+constexpr void
+vector<T, size_t>::priv_copy_assign(InputIterator first, InputIterator last, size_type n) {
+    UWR_ASSERT(n == std::distance(first, last));
+
+    if (n > this->m_capacity) {
+        size_type new_capacity = this->fix_capacity(n);
+
+        if (mem::expand_in_place_or_destroy_and_alloc_raw(
+                    this->m_data, this->m_length,
+                    this->m_capacity, new_capacity)) {
+            InputIterator split = std::next(first, this->m_length);
+
+            mem::copy(this->m_data, first, split);
+            mem::ucopy(this->end(), split, last);
+        }
+        else
+            mem::ucopy(this->m_data, first, last);
+
+        this->m_capacity = new_capacity;
+    }
+    else {
+        T* const m_end = this->end();
+
+        if (n > this->m_length) {
+            InputIterator split = std::next(first, this->m_length);
+
+            mem::copy(this->m_data, first, split);
+            mem::ucopy(m_end, split, last);
+        }
+        else {
+            mem::destroy(this->m_data + n, m_end);
+            mem::copy(this->m_data, first, last);
+        }
+    }
+
+    this->m_length = n;
 }
 
 
-/* non-member operators  */
+/*
+ * non-member operators 
+ */
 template<class T, class size_t>
-constexpr inline bool operator==(const vector<T, size_t>& lhs, const vector<T, size_t>& rhs);
+UWR_FORCEINLINE constexpr bool operator==(const vector<T, size_t>& lhs, const vector<T, size_t>& rhs);
 template<class T, class size_t>
-constexpr inline bool operator!=(const vector<T, size_t>& lhs, const vector<T, size_t>& rhs);
+UWR_FORCEINLINE constexpr bool operator!=(const vector<T, size_t>& lhs, const vector<T, size_t>& rhs);
 template<class T, class size_t>
-constexpr inline bool operator<(const vector<T, size_t>& lhs, const vector<T, size_t>& rhs);
+constexpr bool operator<(const vector<T, size_t>& lhs, const vector<T, size_t>& rhs);
 template<class T, class size_t>
-constexpr inline bool operator<=(const vector<T, size_t>& lhs, const vector<T, size_t>& rhs);
+UWR_FORCEINLINE constexpr bool operator<=(const vector<T, size_t>& lhs, const vector<T, size_t>& rhs);
 template<class T, class size_t>
-constexpr inline bool operator>(const vector<T, size_t>& lhs, const vector<T, size_t>& rhs);
+UWR_FORCEINLINE constexpr bool operator>(const vector<T, size_t>& lhs, const vector<T, size_t>& rhs);
 template<class T, class size_t>
-constexpr inline bool operator>=(const vector<T, size_t>& lhs, const vector<T, size_t>& rhs);
+UWR_FORCEINLINE constexpr bool operator>=(const vector<T, size_t>& lhs, const vector<T, size_t>& rhs);
 template<class T, class size_t>
 constexpr std::ostream& operator<<(std::ostream& out, const vector<T, size_t>& v);
 
 #if CPP_ABOVE_17
+
 template<class T, class size_t>
-constexpr inline auto operator<=>(const vector<T, size_t>& lhs, const vector<T, size_t>& rhs);
+constexpr auto operator<=>(const vector<T, size_t>& lhs, const vector<T, size_t>& rhs);
+
 #endif
 
-/* non-member operators' implementations */
+
+/*
+ * non-member operators' implementations
+ */
 template<class T, class size_t>
 constexpr bool
 operator==(const vector<T, size_t>& lhs, const vector<T, size_t>& rhs) {
-    if (lhs.size() != rhs.size())
-        return false;
-    return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+    return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
 template<class T, class size_t>
@@ -780,22 +936,27 @@ operator<=>(const vector<T, size_t>& lhs, const vector<T, size_t>& rhs) {
 } // namespace uwr
 
 
+/*
+ * non-member functions
+ */
 namespace std {
+
+template<class T, class size_t>
+constexpr void swap(uwr::vector<T, size_t>& x, uwr::vector<T, size_t>& y);
 
 #if CPP_ABOVE_17
 
-/* non-member functions */
-template<class T, class U>
-constexpr typename uwr::vector<T, size_t>::size_type
-erase(uwr::vector<T, size_t>& c, const U& value);
-
-template<class T, class Pred>
-constexpr typename uwr::vector<T, size_t>::size_type
-erase_if(uwr::vector<T, size_t>& c, Pred pred);
+template<class T, class size_t, class U>
+constexpr size_t erase(uwr::vector<T, size_t>& c, const U& value);
+template<class T, class size_t, class Pred>
+constexpr size_t erase_if(uwr::vector<T, size_t>& c, Pred pred);
 
 #endif
 
-/* non-member functions' implementations */
+
+/*
+ * non-member functions' implementations
+ */
 template<class T, class size_t>
 constexpr void
 swap(uwr::vector<T, size_t>& x, uwr::vector<T, size_t>& y) {
@@ -804,26 +965,24 @@ swap(uwr::vector<T, size_t>& x, uwr::vector<T, size_t>& y) {
 
 #if CPP_ABOVE_17
 
-template<class T, class U>
-constexpr typename uwr::vector<T, size_t>::size_type
+template<class T, class size_t, class U>
+constexpr size_t
 erase(uwr::vector<T, size_t>& c, const U& value) {
-    // TODO: possible optimizations?
-    auto it = std::remove(c.begin(), c.end(), value);
-    auto r = std::distance(it, c.end());
-    c.erase(it, c.end());
+    T* const c_end = c.end();
+    T* const mid = std::remove(c.begin(), c_end, value);
+    c.erase(mid, c_end);
 
-    return r;
+    return static_cast<size_t>(std::distance(mid, c_end));
 }
 
-template<class T, class Pred>
-constexpr typename uwr::vector<T, size_t>::size_type
+template<class T, class size_t, class Pred>
+constexpr size_t
 erase_if(uwr::vector<T, size_t>& c, Pred pred) {
-    // TODO: possible optimizations?
-    auto it = std::remove_if(c.begin(), c.end(), pred);
-    auto r = std::distance(it, c.end());
-    c.erase(it, c.end());
+    T* const c_end = c.end();
+    T* const mid = std::remove_if(c.begin(), c_end, pred);
+    c.erase(mid, c_end);
 
-    return r;
+    return static_cast<size_t>(std::distance(mid, c_end));
 }
 
 #endif // CPP_ABOVE_17

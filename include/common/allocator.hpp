@@ -8,115 +8,384 @@
 
 namespace uwr::mem {
 
-// should use getpagesize() but want constexpr
-template<class T>
-constexpr len_t map_threshold = 4096 / sizeof(T);
-
+/*
+ * allocate n objects of type T
+ */
 template<class T>
 T* allocate(len_t n);
-template<class T>
-void deallocate(T* p, len_t n);
 
+/*
+ * is allocating n objects of type T
+ * big allocation
+ */
 template<class T>
-len_t fix_capacity(len_t n);
+int is_big(len_t n);
 
+/*
+ * allocate using big allocation
+ */
 template<class T>
-T_Move<T, T*> realloc(T* data, len_t length, len_t capacity, len_t n);
-template<class T>
-NT_Move<T, T*> realloc(T* data, len_t length, len_t capacity, len_t n);
+T* big_allocate(len_t n);
 
+/*
+ * allocate using small allocation
+ */
 template<class T>
-void change_capacity(T*& data, len_t length, len_t& capacity, len_t n);
-template<class T>
-void grow(T*& data, len_t length, len_t& capacity);
+T* small_allocate(len_t n);
 
+/*
+ * deallocate n objects of type T
+ * under address `data`
+ */
+template<class T>
+void deallocate(T* data, len_t n);
+
+/*
+ * deallocate using big deallocation
+ */
+template<class T>
+void big_deallocate(T* data, len_t n);
+
+/*
+ * deallocate using small deallocation
+ */
+template<class T>
+void small_deallocate(T* data, UWR_UNUSED len_t n);
+
+/*
+ * reallocate (possibly in place) memory at
+ * `data` (possibly nullptr) of `len` objects of
+ * type T (in total has capacity of `cap` objects
+ * of type T) to `req` objects of type T and
+ * assign new address to `data`
+ */
+template<class T>
+T_Move_C<T> reallocate(T*& data, len_t len, len_t cap, len_t req);
+template<class T>
+NT_Move_C<T> reallocate(T*& data, len_t len, len_t cap, len_t req);
+
+/*
+ * try to expand in place,
+ * return true on success, false on failure,
+ * if failure, destroy data at `data` address
+ * and assign to it newly allocated chunk of memory
+ *
+ * NOTE: do not copy the data to the new address (raw),
+ *       but still destroy old data,
+ *
+ * USAGE: this function should be used when you want to
+ *        allocate more memory and you don't care about
+ *        objects at `data` (they would be destroyed in
+ *        a while)
+ */
+template<class T>
+bool expand_in_place_or_destroy_and_alloc_raw(T*& data, len_t len, len_t cap, len_t req);
+
+/*
+ * expand_in_place_or_alloc_raw helper functions
+ */
+template<class T>
+static T_Move_C<T, bool> do_expand_in_place_or_destroy_and_alloc_raw(T*& data, len_t len, len_t cap, len_t req);
+template<class T>
+static NT_Move_C<T, bool> do_expand_in_place_or_destroy_and_alloc_raw(T*& data, len_t len, len_t cap, len_t req);
+
+/*
+ * the same as expand_in_place_or_destroy_and_alloc_raw(data, len, cap, req)
+ * but do not destroy and deallocate old data, but still allocate new
+ * as raw memory region, on failed expansion places new address into
+ * `out_ptr` variable
+ *
+ * USAGE: this function should be used when you want to allocate
+ *        more memory, but still somehow care about the data at
+ *        `data`, e.g. it should be copied to new address but in
+ *        special way
+ */
+template<class T>
+bool expand_in_place_or_alloc_raw(T*& data, len_t cap, len_t req, T*& out_ptr);
+
+/*
+ * expand_in_place_or_alloc_raw helper functions
+ */
+template<class T>
+static T_Move_C<T, bool> do_expand_in_place_or_alloc_raw(T*& data, len_t cap, len_t req, T*& out_ptr);
+template<class T>
+static NT_Move_C<T, bool> do_expand_in_place_or_alloc_raw(T*& data, len_t cap, len_t req, T*& out_ptr);
+
+
+/*
+ * implementations
+ */
 template<class T>
 T* allocate(len_t n) {
-    if (n > map_threshold<T>)
-        return (T*)mmap(NULL, n * sizeof(T),
+    if (is_big<T>(n))
+        return big_allocate<T>(n);
+    else
+        return small_allocate<T>(n);
+}
+
+template<class T>
+int is_big(len_t n) {
+    return n * sizeof(T) >= page_size;
+}
+
+template<class T>
+T* big_allocate(len_t n) {
+    return (T*)mmap(NULL, n * sizeof(T),
                     PROT_READ | PROT_WRITE,
                     MAP_PRIVATE | MAP_ANONYMOUS,
                     -1, 0);
+}
+
+template<class T>
+T* small_allocate(len_t n) {
+    UWR_ASSERT(!is_big<T>(n));
+    return (T*)malloc(n * sizeof(T));
+}
+
+template<class T>
+void deallocate(T* data, len_t n) {
+    if (is_big<T>(n))
+        big_deallocate(data, n);
     else
-        return (T*)malloc(n * sizeof(T));
+        small_deallocate(data, n);
 }
 
 template<class T>
-void deallocate(T* p, len_t n) {
-    if (n > map_threshold<T>)
-        munmap(p, n * sizeof(T));
-    else
-        free(p);
+void big_deallocate(T* data, len_t n) {
+    UWR_ASSERT(is_big<T>(n));
+    munmap(data, n * sizeof(T));
 }
 
 template<class T>
-len_t fix_capacity(len_t n) {
-    if (n < map_threshold<T>)
-        return std::max(64 / sizeof(T), n);
-    return map_threshold<T> * (n / map_threshold<T> + 1);
+void small_deallocate(T* data, UWR_UNUSED len_t n) {
+    UWR_ASSERT(!is_big<T>(n));
+    free(data);
 }
 
 template<class T>
-T_Move<T, T*> realloc(T* data, len_t length, len_t capacity, len_t n) {
-    int cond = (n > map_threshold<T>) |
-        (capacity > map_threshold<T>) << 1;
+T_Move_C<T> reallocate(T*& data, len_t len, len_t cap, len_t req) {
+    UWR_ASSERT(req > cap);
+    int cond = is_big<T>(cap) | is_big<T>(req) << 1;
 
     switch (cond) {
-        case 3:
-            return (T*)mremap(data, capacity * sizeof(T),
-                        n * sizeof(T), MREMAP_MAYMOVE);
-        case 0:
-            return (T*)::realloc(data, n * sizeof(T));
-
-        default:
-            T* new_data = allocate<T>(n);
-            umove(new_data, data, length);
-            deallocate(data, capacity);
-            return new_data;
+        case 0: { /* both are small sizes */
+            data = (T*)realloc(data, req * sizeof(T));
+            break;
+        }
+        case 2: { /* new size is big, old is small */
+            T* new_data = big_allocate<T>(req);
+            umove(new_data, data, len);
+            destroy(data, len);
+            small_deallocate(data, cap);
+            data = new_data;
+            break;
+        }
+        case 3: { /* both are big sizes */
+            data = (T*)mremap(data, len * sizeof(T),
+                              req * sizeof(T), MREMAP_MAYMOVE);
+            break;
+        }
+        default: /* impossible */
+            UWR_ASSERT(false);
     }
 }
 
 template<class T>
-NT_Move<T, T*> realloc(T* data, len_t length, len_t capacity, len_t n) {
-    if (capacity > map_threshold<T>) {
-        void* new_data = mremap(data, capacity * sizeof(T),
-                        n * sizeof(T), 0);
-        if (new_data != (void*)-1)
-            return (T*)new_data;
+NT_Move_C<T> reallocate(T*& data, len_t len, len_t cap, len_t req) {
+    UWR_ASSERT(req > cap);
+    int cond = is_big<T>(cap) | is_big<T>(req) << 1;
+
+    switch (cond) {
+        case 0: { /* both are small sizes */
+            T* new_data = small_allocate<T>(req);
+            umove(new_data, data, len);
+            destroy(data, len);
+            small_deallocate(data, cap);
+            data = new_data;
+            break;
+        }
+        case 2: { /* new size is big, old is small */
+            T* new_data = big_allocate<T>(req);
+            umove(new_data, data, len);
+            destroy(data, len);
+            small_deallocate(data, cap);
+            data = new_data;
+            break;
+        }
+        case 3: { /* both are big sizes */
+            T* new_data = (T*)mremap(data, cap * sizeof(T),
+                                     req * sizeof(T), 0);
+            if (new_data != (T*)-1)
+                data = new_data;
+            if (new_data == (T*)-1) {
+                new_data = big_allocate<T>(req);
+                umove(new_data, data, len);
+                destroy(data, len);
+                big_deallocate(data, cap);
+                data = new_data;
+            }
+            break;
+        }
+        default: /* impossible */
+            UWR_ASSERT(false);
+    }
+}
+
+template<class T>
+bool expand_in_place_or_destroy_and_alloc_raw(T*& data, len_t len, len_t cap, len_t req) {
+    UWR_ASSERT(req > len);
+
+    if (UWR_LIKELY(!!data))
+        return do_expand_in_place_or_destroy_and_alloc_raw(data, len, cap, req);
+    else {
+        data = allocate<T>(req);
+        return false;
+    }
+}
+
+template<class T>
+T_Move_C<T, bool> do_expand_in_place_or_destroy_and_alloc_raw(T*& data, len_t len, len_t cap, len_t req) {
+    UWR_ASSERT(req > cap);
+
+    int cond = is_big<T>(cap) | is_big<T>(req) << 1;
+    destroy(data, len);
+
+    switch (cond) {
+        case 0: { /* both are small sizes */
+            small_deallocate(data, cap);
+            data = small_allocate<T>(req);
+            break;
+        }
+        case 2: { /* new size is big, old is small */
+            small_deallocate(data, cap);
+            data = big_allocate<T>(req);
+            break;
+        }
+        case 3: { /* both are big sizes */
+            // TODO: check alternative
+            data = (T*)mremap(data, cap * sizeof(T),
+                              req * sizeof(T), MREMAP_MAYMOVE);
+            break;
+        }
+        default: /* impossible */
+            UWR_ASSERT(false);
     }
 
-    // TODO: if n >= capacity is true then optimize
-    T* new_data = allocate<T>(n);
-    umove(new_data, data, length);
-    destroy(data, length);
-    // TODO: checking the same if twice
-    deallocate(data, capacity);
-
-    return new_data;
+    // always return false as these objects are trivial
+    // NOTE: assumption is that you don't care about
+    //       objects under `data` address, so return
+    //       always false so that caller thinks they
+    //       are gone
+    return false;
 }
 
 template<class T>
-void change_capacity(T*& data, len_t length, len_t& capacity, len_t n) {
-    len_t new_capacity = fix_capacity<T>(n);
-    // TODO: do we shrink capacity (?)
-    if (UNLIKELY(new_capacity < map_threshold<T> &&
-                capacity > map_threshold<T>))
-        return;
+NT_Move_C<T, bool> do_expand_in_place_or_destroy_and_alloc_raw(T*& data, len_t len, len_t cap, len_t req) {
+    UWR_ASSERT(req > len);
+    int cond = is_big<T>(cap) | is_big<T>(req) << 1;
 
-    if (data)
-        data = realloc(data, length, capacity, new_capacity);
-    else
-        data = allocate<T>(new_capacity);
-
-    capacity = new_capacity;
+    switch (cond) {
+        case 0: { /* both are small */
+            destroy(data, len);
+            small_deallocate(data, cap);
+            data = small_allocate<T>(req);
+            return false;
+        }
+        case 2: { /* new size is big, old is small */
+            destroy(data, len);
+            small_deallocate(data, cap);
+            data = big_allocate<T>(req);
+            return false;
+        }
+        case 3: { /* both are big sizes */
+            void* new_data = mremap(data, cap * sizeof(T),
+                                    req * sizeof(T), 0);
+            if (new_data == (void*)-1) {
+                destroy(data, len);
+                big_deallocate(data, cap);
+                data = big_allocate<T>(req);
+                return false;
+            }
+            else {
+                UWR_ASSERT((T*)new_data == data);
+                return true;
+            }
+        }
+        default: /* impossible */
+            UWR_ASSERT(false);
+            return false; // keep compiler happy
+    }
 }
 
 template<class T>
-void grow(T*& data, len_t length, len_t& capacity) {
-    // TODO: likely here (?)
-    if (LIKELY(length < capacity))
-        return;
-    change_capacity(data, length, capacity, capacity * 2 + 1);
+bool expand_in_place_or_alloc_raw(T*& data, len_t cap, len_t req, T*& out_ptr) {
+    UWR_ASSERT(req > len);
+
+    if (UWR_LIKELY(!!data))
+        return do_expand_in_place_or_alloc_raw(data, cap, req, out_ptr);
+    else {
+        out_ptr = allocate<T>(req);
+        return false;
+    }
 }
+
+template<class T>
+T_Move_C<T, bool> do_expand_in_place_or_alloc_raw(T*& data, len_t cap, len_t req, T*& out_ptr) {
+    UWR_ASSERT(req > cap);
+    int cond = is_big<T>(cap) | is_big<T>(req) << 1;
+
+    switch (cond) {
+        case 0: { /* both are small sizes */
+            out_ptr = small_allocate<T>(req);
+            return false;
+        }
+        case 2: { /* new size is big, old is small */
+            out_ptr = big_allocate<T>(req);
+            return false;
+        }
+        case 3: { /* both are big sizes */
+            // TODO: check alternative
+            out_ptr = (T*)mremap(data, cap * sizeof(T),
+                                 req * sizeof(T), MREMAP_MAYMOVE);
+            return out_ptr == data;
+        }
+        default: /* impossible */
+            UWR_ASSERT(false);
+            return false; // keep compiler happy
+    }
+}
+
+template<class T>
+NT_Move_C<T, bool> do_expand_in_place_or_alloc_raw(T*& data, len_t cap, len_t req, T*& out_ptr) {
+    UWR_ASSERT(req > cap);
+    int cond = is_big<T>(cap) | is_big<T>(req) << 1;
+
+    switch (cond) {
+        case 0: { /* both are small sizes */
+            out_ptr = small_allocate<T>(req);
+            return false;
+        }
+        case 2: { /* new size is big, old is small */
+            out_ptr = big_allocate<T>(req);
+            return false;
+        }
+        case 3: { /* both are big sizes */
+            out_ptr = (T*)mremap(data, cap * sizeof(T),
+                                 req * sizeof(T), 0);
+            if (out_ptr == (T*)-1) {
+                out_ptr = big_allocate<T>(req);
+                return false;
+            }
+            else {
+                UWR_ASSERT(out_ptr == data);
+                return true;
+            }
+        }
+        default: /* impossible */
+            UWR_ASSERT(false);
+            return false; // keep compiler happy
+    }
+}    
+
 
 } // namespace mem::uwr
