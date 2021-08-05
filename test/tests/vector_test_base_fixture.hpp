@@ -4,6 +4,7 @@
 #include <common/define.hpp>
 #include <test_type/test_type.hpp>
 #include <utils/utils.hpp>
+#include <list>
 
 template<class V>
 class VectorTestBaseFixture : public ::testing::Test {
@@ -11,18 +12,36 @@ public:
     using vector = V;
     using value_type = typename vector::value_type;
     using size_type = typename vector::size_type;
+
     static constexpr size_type C = 10;
 
-private:
+    static constexpr size_type SMALL_SIZE = 5;
+    static constexpr size_type MEDIUM_SIZE = 100;
+    static constexpr size_type BIG_SIZE = 5000;
+
+    static_assert(2 * SMALL_SIZE <= C,
+            "SMALL_SIZE should be small enough to fit into static_vector of capacity C twice!");
+    static_assert(SMALL_SIZE > 2,
+            "SMALL_SIZE should be more than 2!");
+
+    // in ascending order
+    static constexpr size_type ALL_SIZES[] = {
+        SMALL_SIZE, MEDIUM_SIZE, BIG_SIZE
+    };
+
+protected:
     void SetUp() {}
     void TearDown() {}
 
-    void ExpectInsertedInAt(const vector& v, size_type pos,
-            size_type count, const vector& save);
+    size_type GetMaxVectorSize();
+    std::vector<size_type> GetAllSizes();
 
-public:
     value_type GetValue(int id);
     vector GetVectorOfSize(size_type size);
+
+    std::unique_ptr<value_type[]> GetInitializedArrayOfSize(size_type size);
+    std::vector<value_type> GetInitializedVectorOfSize(size_type size);
+    std::list<value_type> GetInitializedListOfSize(size_type size);
 
     void InsertOneElementByCopy(vector& v, size_type pos, int id);
     void InsertOneElementByMove(vector& v, size_type pos, int id);
@@ -40,6 +59,9 @@ public:
     void EraseMultipleElements(vector& v, size_type pos, size_type count);
 
     void ExpectErasedInAt(const vector& v, size_type pos,
+            size_type count, const vector& save);
+
+    void ExpectInsertedInAt(const vector& v, size_type pos,
             size_type count, const vector& save);
 };
 
@@ -72,6 +94,28 @@ VectorTestBaseFixture<compare_vector_t<test_type>>::TearDown() {
 }
 
 template<class V>
+typename VectorTestBaseFixture<V>::size_type
+VectorTestBaseFixture<V>::GetMaxVectorSize() {
+    const vector v;
+    return v.max_size();
+}
+
+template<class V>
+std::vector<typename VectorTestBaseFixture<V>::size_type>
+VectorTestBaseFixture<V>::GetAllSizes() {
+    std::vector<size_type> all_sizes;
+    size_type max_size = this->GetMaxVectorSize();
+
+    for (const auto& size : ALL_SIZES)
+        if (size <= max_size)
+            all_sizes.emplace_back(size);
+        else
+            break;
+
+    return all_sizes;
+}
+
+template<class V>
 typename VectorTestBaseFixture<V>::value_type
 VectorTestBaseFixture<V>::GetValue(int id) {
     return get_value<value_type>(id);
@@ -85,6 +129,37 @@ VectorTestBaseFixture<V>::GetVectorOfSize(size_type size) {
         v[i] = get_value<value_type>(i);
 
     return v;
+}
+
+template<class V>
+std::unique_ptr<typename VectorTestBaseFixture<V>::value_type[]>
+VectorTestBaseFixture<V>::GetInitializedArrayOfSize(size_type size) {
+    auto arr = std::make_unique<value_type[]>(size);
+    for (size_type i = 0; i < size; ++i)
+        arr[i] = this->GetValue(i);
+
+    return arr;
+}
+
+template<class V>
+std::vector<typename VectorTestBaseFixture<V>::value_type>
+VectorTestBaseFixture<V>::GetInitializedVectorOfSize(size_type size) {
+    std::vector<value_type> v;
+    v.reserve(size);
+    for (size_type i = 0; i < size; ++i)
+        v.push_back(this->GetValue(i));
+
+    return v;
+}
+
+template<class V>
+std::list<typename VectorTestBaseFixture<V>::value_type>
+VectorTestBaseFixture<V>::GetInitializedListOfSize(size_type size) {
+    std::list<value_type> l;
+    for (size_type i = 0; i < size; ++i)
+        l.push_back(this->GetValue(i));
+
+    return l;
 }
 
 template<class V>
@@ -244,12 +319,12 @@ std::string TypeNames::GetName(int id) {
 
 using TestedTypes = ::testing::Types<
     tested_vector_t<int>,
-    tested_vector_t<test_type>,
+    // tested_vector_t<test_type>,
 #if !(CPP_ABOVE_17) && !defined(DONT_COMPARE)
     compare_vector_t<test_type>,
 #endif
-    tested_vector_t<std::string>,
-    tested_vector_t<std::array<int, 10>>
+    tested_vector_t<std::string>
+    // tested_vector_t<std::array<int, 10>>
 >;
 
 TYPED_TEST_SUITE(VectorTestBaseFixture, TestedTypes, TypeNames);

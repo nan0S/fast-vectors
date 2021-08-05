@@ -1,8 +1,8 @@
 #pragma once
 
-#include <list>
-#include <utils/utils.hpp>
 #include "vector_test_base_fixture.hpp"
+#include <utils/utils.hpp>
+#include <list>
 
 TYPED_TEST(VectorTestBaseFixture, DefaultConstructor) {
     typename TestFixture::vector v;
@@ -11,86 +11,102 @@ TYPED_TEST(VectorTestBaseFixture, DefaultConstructor) {
 }
 
 TYPED_TEST(VectorTestBaseFixture, CountConstructor) {
-    typename TestFixture::vector v(5);
+    for (const auto& size : this->GetAllSizes()) {
+        typename TestFixture::vector v(size);
 
-    EXPECT_EQ(v.size(), 5);
-    for (const auto& x : v)
-        EXPECT_EQ(x, typename TestFixture::value_type());
+        EXPECT_EQ(v.size(), size);
+        for (const auto& x : v)
+            EXPECT_EQ(x, typename TestFixture::value_type());
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, CountValueConstructor) {
-    auto val = this->GetValue(3);
-    typename TestFixture::vector v(5, val);
+    for (const auto& size : this->GetAllSizes()) {
+        auto val = this->GetValue(3);
 
-    EXPECT_EQ(v.size(), 5);
-    for (const auto& x : v)
-        EXPECT_EQ(x, val);
+        typename TestFixture::vector v(size, val);
+
+        EXPECT_EQ(v.size(), size);
+        for (const auto& x : v)
+            EXPECT_EQ(x, val);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, RangeConstructorWithPointer) {
-    const typename TestFixture::value_type a[] = {
-        this->GetValue(0), this->GetValue(1), this->GetValue(2)
-    };
-    const int s = sizeof(a) / sizeof(a[0]);
-    typename TestFixture::vector v(a, a + s);
+    using size_type = typename TestFixture::size_type;
 
-    for (size_t i = 0; i < s; ++i)
-        EXPECT_EQ(a[i], this->GetValue(i));
-    EXPECT_EQ(v.size(), s);
-    for (size_t i = 0; i < v.size(); ++i)
-        EXPECT_EQ(v[i], a[i]);
+    for (const size_type& size : this->GetAllSizes()) {
+        auto a = this->GetInitializedArrayOfSize(size);
+
+        typename TestFixture::vector v(a.get(), a.get() + size);
+
+        for (size_type i = 0; i < size; ++i)
+            EXPECT_EQ(a[i], this->GetValue(i));
+        EXPECT_EQ(v.size(), size);
+        for (size_type i = 0; i < v.size(); ++i)
+            EXPECT_EQ(v[i], a[i]);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, RangeConstructorWithContinuousIterator) {
-    std::vector<typename TestFixture::value_type> stl_vector {
-        this->GetValue(0), this->GetValue(1), this->GetValue(2)
-    };
-    const auto s = stl_vector.size();
-    typename TestFixture::vector v(stl_vector.begin(), stl_vector.end());
+    using size_type = typename TestFixture::size_type;
 
-    for (size_t i = 0; i < v.size(); ++i)
-        EXPECT_EQ(stl_vector[i], this->GetValue(i));
-    EXPECT_EQ(v.size(), s);
-    for (size_t i = 0; i < v.size(); ++i)
-        EXPECT_EQ(v[i], stl_vector[i]);
+    for (const size_type& size : this->GetAllSizes()) {
+        auto stl_vec = this->GetInitializedVectorOfSize(size);
+
+        typename TestFixture::vector v(stl_vec.begin(), stl_vec.end());
+
+        for (size_t i = 0; i < v.size(); ++i)
+            EXPECT_EQ(stl_vec[i], this->GetValue(i));
+        EXPECT_EQ(v.size(), size);
+        for (size_t i = 0; i < v.size(); ++i)
+            EXPECT_EQ(v[i], stl_vec[i]);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, RangeConstructorWithNonContinuousIterator) {
-    std::list<typename TestFixture::value_type> stl_list {
-        this->GetValue(0),
-        this->GetValue(1),
-        this->GetValue(2)
-    };
-    const auto s = stl_list.size();
-    typename TestFixture::vector v(stl_list.begin(), stl_list.end());
-    
-    auto it = stl_list.begin();
-    int i = 0;
-    for (; it != stl_list.end(); ++it, ++i)
-        EXPECT_EQ(*it, this->GetValue(i));
-    EXPECT_EQ(v.size(), s);
-    for (it = stl_list.begin(), i = 0; it != stl_list.end(); ++it, ++i)
-        EXPECT_EQ(v[i], *it);
+    using size_type = typename TestFixture::size_type;
+
+    for (const size_type& size : this->GetAllSizes()) {
+        auto stl_list = this->GetInitializedListOfSize(size);
+
+        typename TestFixture::vector v(stl_list.begin(), stl_list.end());
+        
+        auto it = stl_list.begin();
+        size_t i = 0;
+        for (; it != stl_list.end(); ++it, ++i)
+            EXPECT_EQ(*it, this->GetValue(i));
+        EXPECT_EQ(v.size(), size);
+        for (i = 0, it = stl_list.begin(); i < size; ++i, ++it)
+            EXPECT_EQ(v[i], *it);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, CopyConstructor) {
-    auto v1 = this->GetVectorOfSize(5);
-    typename TestFixture::vector v2(v1);
-    
-    EXPECT_EQ(v1.size(), v2.size());
-    for (typename TestFixture::size_type i = 0; i < v1.size(); ++i)
-        EXPECT_EQ(v1[i], v2[i]);
+    using size_type = typename TestFixture::size_type;
+
+    for (const size_type& size : this->GetAllSizes()) {
+        auto v1 = this->GetVectorOfSize(size);
+
+        typename TestFixture::vector v2(v1);
+        
+        EXPECT_EQ(v1.size(), v2.size());
+        for (size_type i = 0; i < v1.size(); ++i)
+            EXPECT_EQ(v1[i], v2[i]);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, MoveConstructor) {
-    const auto val = this->GetValue(10);
-    const int size = 5;
-    typename TestFixture::vector v1(size, val);
-    typename TestFixture::vector v2(std::move(v1));
-    
-    EXPECT_EQ(v2.size(), size);
-    for (const auto& x : v2)
-        EXPECT_EQ(x, val);
+    for (const auto& size : this->GetAllSizes()) {
+        const auto val = this->GetValue(10);
+        typename TestFixture::vector v1(size, val);
+
+        typename TestFixture::vector v2(std::move(v1));
+        
+        EXPECT_EQ(v2.size(), size);
+        for (const auto& x : v2)
+            EXPECT_EQ(x, val);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InitializerListConstructor) {
@@ -98,6 +114,7 @@ TYPED_TEST(VectorTestBaseFixture, InitializerListConstructor) {
         this->GetValue(0), this->GetValue(1), this->GetValue(2),
         this->GetValue(3), this->GetValue(4), this->GetValue(5)
     };
+
     typename TestFixture::vector v(il);
 
     EXPECT_EQ(v.size(), il.size());
@@ -106,25 +123,34 @@ TYPED_TEST(VectorTestBaseFixture, InitializerListConstructor) {
 }
 
 TYPED_TEST(VectorTestBaseFixture, CopyOperator) {
-    auto v1 = this->GetVectorOfSize(5);
-    typename TestFixture::vector v2(3);
-    v2 = v1;
+    using size_type = typename TestFixture::size_type;
 
-    EXPECT_EQ(v1.size(), v2.size());
-    for (typename TestFixture::size_type i = 0; i < v1.size(); ++i)
-        EXPECT_EQ(v1[i], v2[i]);
+    for (const size_type& size : this->GetAllSizes()) {
+        auto v1 = this->GetVectorOfSize(size);
+        typename TestFixture::vector v2(3);
+
+        v2 = v1;
+
+        EXPECT_EQ(v1.size(), v2.size());
+        for (size_type i = 0; i < v1.size(); ++i)
+            EXPECT_EQ(v1[i], v2[i]);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, MoveOperator) {
-    const auto val = this->GetValue(10);
-    const int size = 5;
-    typename TestFixture::vector v1(size, val);
-    typename TestFixture::vector v2(3);
-    v2 = std::move(v1);
+    using size_type = typename TestFixture::size_type;
 
-    EXPECT_EQ(v2.size(), size);
-    for (typename TestFixture::size_type i = 0; i < size; ++i)
-        EXPECT_EQ(v2[i], val);
+    for (const size_type& size : this->GetAllSizes()) {
+        const auto val = this->GetValue(10);
+        typename TestFixture::vector v1(size, val);
+        typename TestFixture::vector v2(size / 2);
+
+        v2 = std::move(v1);
+
+        EXPECT_EQ(v2.size(), size);
+        for (size_type i = 0; i < size; ++i)
+            EXPECT_EQ(v2[i], val);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InitializerListOperator) {
@@ -140,33 +166,37 @@ TYPED_TEST(VectorTestBaseFixture, InitializerListOperator) {
 }
 
 TYPED_TEST(VectorTestBaseFixture, CopyOperatorToTheSameVector) {
-    const auto val = this->GetValue(10);
-    const int size = 5;
+    using size_type = typename TestFixture::size_type;
 
-    typename TestFixture::vector v(size, val);
-    auto& v1 = v;
-    auto& v2 = v;
+    for (const size_type& size : this->GetAllSizes()) {
+        const auto val = this->GetValue(10);
+        typename TestFixture::vector v(size, val);
+        auto& v1 = v;
+        auto& v2 = v;
 
-    v1 = v2;
+        v1 = v2;
 
-    EXPECT_EQ(v.size(), size);
-    for (typename TestFixture::size_type i = 0; i < v.size(); ++i)
-        EXPECT_EQ(v[i], val);
+        EXPECT_EQ(v.size(), size);
+        for (size_type i = 0; i < v.size(); ++i)
+            EXPECT_EQ(v[i], val);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, MoveOperatorToTheSameVector) {
-    const auto val = this->GetValue(10);
-    const int size = 5;
+    using size_type = typename TestFixture::size_type;
 
-    typename TestFixture::vector v(size, val);
-    auto& v1 = v;
-    auto& v2 = v;
+    for (const size_type& size : this->GetAllSizes()) {
+        const auto val = this->GetValue(10);
+        typename TestFixture::vector v(size, val);
+        auto& v1 = v;
+        auto& v2 = v;
 
-    v1 = std::move(v2);
+        v1 = std::move(v2);
 
-    EXPECT_EQ(v.size(), size);
-    for (typename TestFixture::size_type i = 0; i < v.size(); ++i)
-        EXPECT_EQ(v[i], val);
+        EXPECT_EQ(v.size(), size);
+        for (typename TestFixture::size_type i = 0; i < v.size(); ++i)
+            EXPECT_EQ(v[i], val);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, BeginEndInEmptyVector) {
@@ -197,29 +227,29 @@ TYPED_TEST(VectorTestBaseFixture, BeginEndMarkSize) {
 }
 
 TYPED_TEST(VectorTestBaseFixture, IteratorsPointCorrectly) {
-    const typename TestFixture::size_type size = 5;
-    auto v = this->GetVectorOfSize(size);
-    int i;
-    
-    i = 0;
-    for (auto it = v.begin(); it != v.end(); ++it, ++i)
-        EXPECT_EQ(*it, this->GetValue(i));
-    EXPECT_EQ(i, v.size());
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        
+        int i = 0;
+        for (auto it = v.begin(); it != v.end(); ++it, ++i)
+            EXPECT_EQ(*it, this->GetValue(i));
+        EXPECT_EQ(i, v.size());
 
-    i = 0;
-    for (auto it = v.cbegin(); it != v.cend(); ++it, ++i)
-        EXPECT_EQ(*it, this->GetValue(i));
-    EXPECT_EQ(i, v.size());
+        i = 0;
+        for (auto it = v.cbegin(); it != v.cend(); ++it, ++i)
+            EXPECT_EQ(*it, this->GetValue(i));
+        EXPECT_EQ(i, v.size());
 
-    i = 0;
-    for (auto it = v.rbegin(); it != v.rend(); ++it, ++i)
-        EXPECT_EQ(*it, this->GetValue(size - i - 1));
-    EXPECT_EQ(i, v.size());
+        i = 0;
+        for (auto it = v.rbegin(); it != v.rend(); ++it, ++i)
+            EXPECT_EQ(*it, this->GetValue(size - i - 1));
+        EXPECT_EQ(i, v.size());
 
-    i = 0;
-    for (auto it = v.crbegin(); it != v.crend(); ++it, ++i)
-        EXPECT_EQ(*it, this->GetValue(size - i - 1));
-    EXPECT_EQ(i, v.size());
+        i = 0;
+        for (auto it = v.crbegin(); it != v.crend(); ++it, ++i)
+            EXPECT_EQ(*it, this->GetValue(size - i - 1));
+        EXPECT_EQ(i, v.size());
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, IsSizeChanging) {
@@ -254,327 +284,428 @@ TYPED_TEST(VectorTestBaseFixture, DoesResizeChangeSize) {
     EXPECT_EQ(v.size(), 5);
     v.resize(3);
     EXPECT_EQ(v.size(), 3);
+    for (const auto& size : this->GetAllSizes()) {
+        v.resize(size);
+        EXPECT_EQ(v.size(), size);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, ResizeEmptyWithDefaultConstruct) {
-    typename TestFixture::vector v;
+    for (const auto& size : this->GetAllSizes()) {
+        typename TestFixture::vector v;
 
-    v.resize(5);
+        v.resize(size);
 
-    for (const auto& x : v)
-        EXPECT_EQ(x, typename TestFixture::value_type());
+        for (const auto& x : v)
+            EXPECT_EQ(x, typename TestFixture::value_type());
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, ResizeEmptyWithFill) {
-    const auto val = this->GetValue(rand());
-    typename TestFixture::vector v;
+    for (const auto& size : this->GetAllSizes()) {
+        const auto val = this->GetValue(rand());
+        typename TestFixture::vector v;
 
-    v.resize(5, val);
+        v.resize(size, val);
 
-    for (const auto& x : v)
-        EXPECT_EQ(x, val);
+        for (const auto& x : v)
+            EXPECT_EQ(x, val);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, ResizeNonEmptyWithDefaultConstruct) {
-    const int initial_size = 5;
-    auto v = this->GetVectorOfSize(initial_size);
+    using size_type = typename TestFixture::size_type;
 
-    v.resize(initial_size + 2);
-    
-    for (int i = 0; i < initial_size; ++i)
-        EXPECT_EQ(v[i], this->GetValue(i));
-    for (int i = initial_size; i < initial_size + 2; ++i)
-        EXPECT_EQ(v[i], typename TestFixture::value_type());
+    for (const size_type& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
 
-    v.resize(3);
+        v.resize(size + 2);
+        
+        for (size_type i = 0; i < size; ++i)
+            EXPECT_EQ(v[i], this->GetValue(i));
+        for (size_type i = size; i < size + 2; ++i)
+            EXPECT_EQ(v[i], typename TestFixture::value_type());
 
-    for (typename TestFixture::size_type i = 0; i < v.size(); ++i)
-        EXPECT_EQ(v[i], this->GetValue(i));
+        v.resize(3);
+
+        for (typename TestFixture::size_type i = 0; i < v.size(); ++i)
+            EXPECT_EQ(v[i], this->GetValue(i));
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, ResizeNonEmptyWithFill) {
-    const int initial_size = 5;
-    const auto val = this->GetValue(13);
-    auto v = this->GetVectorOfSize(initial_size);
-
-    v.resize(initial_size + 2, val);
+    using size_type = typename TestFixture::size_type;
     
-    for (int i = 0; i < initial_size; ++i)
-        EXPECT_EQ(v[i], this->GetValue(i));
-    for (int i = initial_size; i < initial_size + 2; ++i)
-        EXPECT_EQ(v[i], val);
+    for (const size_type& size : this->GetAllSizes()) {
+        const auto val = this->GetValue(13);
+        auto v = this->GetVectorOfSize(size);
 
-    v.resize(3);
+        v.resize(size + 2, val);
+        
+        for (size_type i = 0; i < size; ++i)
+            EXPECT_EQ(v[i], this->GetValue(i));
+        for (size_type i = size; i < size + 2; ++i)
+            EXPECT_EQ(v[i], val);
 
-    for (typename TestFixture::size_type i = 0; i < v.size(); ++i)
-        EXPECT_EQ(v[i], this->GetValue(i));
+        v.resize(3);
+
+        for (typename TestFixture::size_type i = 0; i < v.size(); ++i)
+            EXPECT_EQ(v[i], this->GetValue(i));
+    }
 }
 
-TYPED_TEST(VectorTestBaseFixture, Reserve) {
-    typename TestFixture::vector v;
-    const typename TestFixture::size_type initial_size = v.size();
-    
-    for (typename TestFixture::size_type i = 1; i <= this->C; ++i) {
-        v.reserve(i);
-        EXPECT_EQ(v.size(), initial_size);
-        EXPECT_GE(v.capacity(), i);
+TYPED_TEST(VectorTestBaseFixture, ReserveWithEmptyVector) {
+    using size_type = typename TestFixture::size_type;
+
+    for (const auto& size : this->GetAllSizes()) {
+        typename TestFixture::vector v;
+        const size_type initial_size = v.size();
+        
+        for (size_type i = 1; i <= size; ++i) {
+            v.reserve(i);
+            EXPECT_EQ(v.size(), initial_size);
+            EXPECT_GE(v.capacity(), i);
+        }
+    }
+}
+
+TYPED_TEST(VectorTestBaseFixture, ReserveWithNonEmptyVector) {
+    using size_type = typename TestFixture::size_type;
+
+    for (const auto& size : this->GetAllSizes()) {
+        typename TestFixture::vector v(size / 2);
+        const size_type initial_size = v.size();
+        
+        for (size_type i = 1; i <= size; ++i) {
+            v.reserve(i);
+            EXPECT_EQ(v.size(), initial_size);
+            EXPECT_GE(v.capacity(), i);
+        }
     }
 }
 
 TYPED_TEST(VectorTestBaseFixture, ShrinkToFit) {
-    typename TestFixture::vector v(5);
-    v.shrink_to_fit();
+    for (const auto& size : this->GetAllSizes()) {
+        typename TestFixture::vector v(size);
 
-    EXPECT_GE(v.capacity(), v.size());
+        v.shrink_to_fit();
+
+        EXPECT_GE(v.capacity(), v.size());
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, AccessOperators) {
-    auto v = this->GetVectorOfSize(5);
+    using size_type = typename TestFixture::size_type;
 
-    for (typename TestFixture::size_type i = 0; i < v.size(); ++i) {
-        EXPECT_EQ(v[i], this->GetValue(i));
-        EXPECT_EQ(v.at(i), this->GetValue(i));
+    for (const size_type& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+
+        for (size_type i = 0; i < v.size(); ++i) {
+            EXPECT_EQ(v[i], this->GetValue(i));
+            EXPECT_EQ(v.at(i), this->GetValue(i));
+        }
+
+        // EXPECT_THROW(v.at(v.size()), std::out_of_range);
     }
-
-    // EXPECT_THROW(v.at(v.size()), std::out_of_range);
 }
 
 TYPED_TEST(VectorTestBaseFixture, FrontBack) {
-    auto v = this->GetVectorOfSize(5);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
 
-    EXPECT_EQ(v.front(), this->GetValue(0));
-    EXPECT_EQ(v.back(), this->GetValue(v.size() - 1));
+        EXPECT_EQ(v.front(), this->GetValue(0));
+        EXPECT_EQ(v.back(), this->GetValue(v.size() - 1));
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, ConstFrontBack) {
-    const auto v = this->GetVectorOfSize(5);
+    for (const auto& size : this->GetAllSizes()) {
+        const auto v = this->GetVectorOfSize(size);
 
-    EXPECT_EQ(v.front(), this->GetValue(0));
-    EXPECT_EQ(v.back(), this->GetValue(v.size() - 1));
+        EXPECT_EQ(v.front(), this->GetValue(0));
+        EXPECT_EQ(v.back(), this->GetValue(v.size() - 1));
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, Data) {
-    auto v = this->GetVectorOfSize(5);
-    typename TestFixture::value_type* data = v.data();
+    using size_type = typename TestFixture::size_type;
 
-    for (typename TestFixture::size_type i = 0; i < v.size(); ++i)
-        EXPECT_EQ(data[i], v[i]);
+    for (const size_type& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+
+        auto* data = v.data();
+
+        for (size_type i = 0; i < v.size(); ++i)
+            EXPECT_EQ(data[i], v[i]);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, ConstData) {
-    const auto v = this->GetVectorOfSize(5);
-    const auto* data = v.data();
+    using size_type = typename TestFixture::size_type;
 
-    for (typename TestFixture::size_type i = 0; i < v.size(); ++i)
-        EXPECT_EQ(data[i], v[i]);
+    for (const size_type& size : this->GetAllSizes()) {
+        const auto v = this->GetVectorOfSize(size);
+
+        const auto* data = v.data();
+
+        for (size_type i = 0; i < v.size(); ++i)
+            EXPECT_EQ(data[i], v[i]);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, RangeAssignWithPointer) {
-    const typename TestFixture::value_type a[] = {
-        this->GetValue(0), this->GetValue(1), this->GetValue(2)
-    };
-    const int s = sizeof(a) / sizeof(a[0]);
-    auto v = this->GetVectorOfSize(5);
+    using size_type = typename TestFixture::size_type;
 
-    v.assign(a, a + s);
+    for (const size_type& size : this->GetAllSizes()) {
+        const auto a = this->GetInitializedArrayOfSize(size);
+        auto v = this->GetVectorOfSize(2);
 
-    EXPECT_EQ(v.size(), s);
-    for (size_t i = 0; i < v.size(); ++i)
-        EXPECT_EQ(v[i], a[i]);
+        v.assign(a.get(), a.get() + size);
+
+        EXPECT_EQ(v.size(), size);
+        for (size_type i = 0; i < v.size(); ++i)
+            EXPECT_EQ(v[i], a[i]);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, RangeAssignWithContinuousIterator) {
-    std::vector<typename TestFixture::value_type> stl_vector {
-        this->GetValue(0), this->GetValue(1), this->GetValue(2)
-    };
-    const auto s = stl_vector.size();
-    auto v =  this->GetVectorOfSize(5);
+    using size_type = typename TestFixture::size_type;
 
-    v.assign(stl_vector.begin(), stl_vector.end());
+    for (const size_type& size : this->GetAllSizes()) {
+        auto stl_vec = this->GetInitializedVectorOfSize(size);
+        auto v =  this->GetVectorOfSize(3);
 
-    for (size_t i = 0; i < v.size(); ++i)
-        EXPECT_EQ(stl_vector[i], this->GetValue(i));
-    EXPECT_EQ(v.size(), s);
-    for (size_t i = 0; i < v.size(); ++i)
-        EXPECT_EQ(v[i], stl_vector[i]);
+        v.assign(stl_vec.begin(), stl_vec.end());
+
+        for (size_type i = 0; i < v.size(); ++i)
+            EXPECT_EQ(stl_vec[i], this->GetValue(i));
+        EXPECT_EQ(v.size(), size);
+        for (size_type i = 0; i < v.size(); ++i)
+            EXPECT_EQ(v[i], stl_vec[i]);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, RangeAssignWithNonContinuousIterator) {
-    std::list<typename TestFixture::value_type> stl_list {
-        this->GetValue(0),
-        this->GetValue(1),
-        this->GetValue(2)
-    };
-    const auto s = stl_list.size();
-    auto v = this->GetVectorOfSize(5);
-    
-    v.assign(stl_list.begin(), stl_list.end());
-    
-    auto it = stl_list.begin();
-    int i = 0;
-    for (; it != stl_list.end(); ++it, ++i)
-        EXPECT_EQ(*it, this->GetValue(i));
-    EXPECT_EQ(v.size(), s);
-    for (i = 0, it = stl_list.begin(); it != stl_list.end(); ++i, ++it)
-        EXPECT_EQ(v[i], *it);
+    using size_type = typename TestFixture::size_type;
+
+    for (const size_type& size : this->GetAllSizes()) {
+        auto stl_list = this->GetInitializedListOfSize(size);
+        auto v = this->GetVectorOfSize(5);
+        
+        v.assign(stl_list.begin(), stl_list.end());
+        
+        auto it = stl_list.begin();
+        size_type i = 0;
+        for (; it != stl_list.end(); ++it, ++i)
+            EXPECT_EQ(*it, this->GetValue(i));
+        EXPECT_EQ(v.size(), size);
+        for (i = 0, it = stl_list.begin(); i < size; ++i, ++it)
+            EXPECT_EQ(v[i], *it);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, FillAssign) {
-    auto v = this->GetVectorOfSize(3);
-    const auto val = this->GetValue(rand());
-    typename TestFixture::size_type size = 5;
-    
-    v.assign(size, val);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(3);
+        const auto val = this->GetValue(rand());
+        
+        v.assign(size, val);
 
-    EXPECT_EQ(v.size(), size);
-    for (const auto& x : v)
-        EXPECT_EQ(x, val);
+        EXPECT_EQ(v.size(), size);
+        for (const auto& x : v)
+            EXPECT_EQ(x, val);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InitializerListAssign) {
-    typename TestFixture::vector v(2);
-    auto il = {
-        this->GetValue(0), this->GetValue(13), this->GetValue(3)
-    };
-    
-    v.assign(il);
+    using size_type = typename TestFixture::size_type;
 
-    EXPECT_EQ(v.size(), il.size());
-    for (typename TestFixture::size_type i = 0; i < v.size(); ++i)
-        EXPECT_EQ(v[i], il.begin()[i]);
+    for (const size_type& size : this->GetAllSizes()) {
+        typename TestFixture::vector v(size);
+        auto il = {
+            this->GetValue(0),
+            this->GetValue(13),
+            this->GetValue(3)
+        };
+        
+        v.assign(il);
+
+        EXPECT_EQ(v.size(), il.size());
+        for (size_type i = 0; i < v.size(); ++i)
+            EXPECT_EQ(v[i], il.begin()[i]);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, PushBackByCopy) {
-    typename TestFixture::vector v(2);
-    const typename TestFixture::size_type initial_size = v.size();
+    using size_type = typename TestFixture::size_type;
 
-    for (typename TestFixture::size_type i = 0; i + initial_size < this->C; ++i) {
-        int id = rand();
-        const auto val = this->GetValue(id);
-        v.push_back(val);
+    for (const size_type& size : this->GetAllSizes()) {
+        typename TestFixture::vector v(3);
+        const size_type initial_size = v.size();
 
-        EXPECT_EQ(v.size(), initial_size + i + 1);
-        EXPECT_EQ(v.back(), val);
-        EXPECT_EQ(val, this->GetValue(id));
+        for (size_type i = 0; i + initial_size < size; ++i) {
+            int id = rand();
+            const auto val = this->GetValue(id);
+
+            v.push_back(val);
+
+            EXPECT_EQ(v.size(), initial_size + i + 1);
+            EXPECT_EQ(v.back(), val);
+            EXPECT_EQ(val, this->GetValue(id));
+        }
     }
 }
 
 TYPED_TEST(VectorTestBaseFixture, PushBackByMove) {
-    typename TestFixture::vector v(3);
-    const typename TestFixture::size_type initial_size = v.size();
+    using size_type = typename TestFixture::size_type;
 
-    for (typename TestFixture::size_type i = 0; i + initial_size < this->C; ++i) {
-        int id = rand();
-        v.push_back(this->GetValue(id));
+    for (const size_type& size : this->GetAllSizes()) {
+        typename TestFixture::vector v(3);
+        const size_type initial_size = v.size();
 
-        EXPECT_EQ(v.size(), initial_size + i + 1);
-        EXPECT_EQ(v.back(), this->GetValue(id));
+        for (size_type i = 0; i + initial_size < size; ++i) {
+            int id = rand();
+            v.push_back(this->GetValue(id));
+
+            EXPECT_EQ(v.size(), initial_size + i + 1);
+            EXPECT_EQ(v.back(), this->GetValue(id));
+        }
     }
 }
 
 TYPED_TEST(VectorTestBaseFixture, FastPushBackByCopy) {
-    typename TestFixture::vector v(2);
-    const typename TestFixture::size_type initial_size = v.size();
+    using size_type = typename TestFixture::size_type;
 
-    for (int i = 0; i + initial_size < this->C; ++i) {
-        int id = rand();
-        const auto val = this->GetValue(id);
-        // v.fast_push_back(val);
-        v.push_back(val);
+    for (const size_type& size : this->GetAllSizes()) {
+        typename TestFixture::vector v(3);
+        const size_type initial_size = v.size();
 
-        EXPECT_EQ(v.size(), initial_size + i + 1);
-        EXPECT_EQ(v.back(), val);
-        EXPECT_EQ(val, this->GetValue(id));
+        for (int i = 0; i + initial_size < size; ++i) {
+            int id = rand();
+            const auto val = this->GetValue(id);
+
+            // v.fast_push_back(val);
+            v.push_back(val);
+
+            EXPECT_EQ(v.size(), initial_size + i + 1);
+            EXPECT_EQ(v.back(), val);
+            EXPECT_EQ(val, this->GetValue(id));
+        }
     }
 }
 
 TYPED_TEST(VectorTestBaseFixture, FastPushBackByMove) {
-    typename TestFixture::vector v(3);
-    const typename TestFixture::size_type initial_size = v.size();
+    using size_type = typename TestFixture::size_type;
 
-    for (typename TestFixture::size_type i = 0; i + initial_size < this->C; ++i) {
-        int id = rand();
-        // v.fast_push_back(this->GetValue(id));
-        v.push_back(this->GetValue(id));
+    for (const size_type& size : this->GetAllSizes()) {
+        typename TestFixture::vector v(3);
+        const size_type initial_size = v.size();
 
-        EXPECT_EQ(v.size(), initial_size + i + 1);
-        EXPECT_EQ(v.back(), this->GetValue(id));
+        for (size_type i = 0; i + initial_size < size; ++i) {
+            int id = rand();
+
+            // v.fast_push_back(this->GetValue(id));
+            v.push_back(this->GetValue(id));
+
+            EXPECT_EQ(v.size(), initial_size + i + 1);
+            EXPECT_EQ(v.back(), this->GetValue(id));
+        }
     }
 }
 
 TYPED_TEST(VectorTestBaseFixture, EmplaceBackByCopy) {
-    typename TestFixture::vector v(3);
-    const typename TestFixture::size_type initial_size = v.size();
+    using size_type = typename TestFixture::size_type;
 
-    for (typename TestFixture::size_type i = 0; i + initial_size < this->C; ++i) {
-        int id = rand();
-        const auto val = this->GetValue(id);
-        auto& ret = v.emplace_back(val);
+    for (const size_type& size : this->GetAllSizes()) {
+        typename TestFixture::vector v(3);
+        const size_type initial_size = v.size();
 
-        EXPECT_EQ(val, this->GetValue(id));
-        EXPECT_EQ(ret, this->GetValue(id));
-        EXPECT_EQ(v.size(), initial_size + i + 1);
-        EXPECT_EQ(v.back(), this->GetValue(id));
+        for (size_type i = 0; i + initial_size < size; ++i) {
+            int id = rand();
+            const auto val = this->GetValue(id);
+
+            auto& ret = v.emplace_back(val);
+
+            EXPECT_EQ(val, this->GetValue(id));
+            EXPECT_EQ(ret, this->GetValue(id));
+            EXPECT_EQ(v.size(), initial_size + i + 1);
+            EXPECT_EQ(v.back(), this->GetValue(id));
+        }
     }
 }
 
 TYPED_TEST(VectorTestBaseFixture, EmplaceBackByMove) {
-    typename TestFixture::vector v(3);
-    const typename TestFixture::size_type initial_size = v.size();
+    using size_type = typename TestFixture::size_type;
 
-    for (typename TestFixture::size_type i = 0; i + initial_size < this->C; ++i) {
-        int id = rand();
-        auto& ret = v.emplace_back(this->GetValue(id));
+    for (const auto& size : this->GetAllSizes()) {
+        typename TestFixture::vector v(3);
+        const size_type initial_size = v.size();
 
-        EXPECT_EQ(ret, this->GetValue(id));
-        EXPECT_EQ(v.size(), initial_size + i + 1);
-        EXPECT_EQ(v.back(), this->GetValue(id));
+        for (size_type i = 0; i + initial_size < size; ++i) {
+            int id = rand();
+
+            auto& ret = v.emplace_back(this->GetValue(id));
+
+            EXPECT_EQ(ret, this->GetValue(id));
+            EXPECT_EQ(v.size(), initial_size + i + 1);
+            EXPECT_EQ(v.back(), this->GetValue(id));
+        }
     }
 }
 
 TYPED_TEST(VectorTestBaseFixture, FastEmplaceBack) {
-    typename TestFixture::vector v(2);
-    const typename TestFixture::size_type initial_size = v.size();
+    using size_type = typename TestFixture::size_type;
 
-    for (typename TestFixture::size_type i = 0; i + initial_size < this->C; ++i) {
-        int id = rand();
-        const auto val = this->GetValue(id);
-        // v.fast_emplace_back(val);
-        v.emplace_back(val);
+    for (const size_type& size : this->GetAllSizes()) {
+        typename TestFixture::vector v(2);
+        const size_type initial_size = v.size();
 
-        EXPECT_EQ(v.size(), initial_size + i + 1);
-        EXPECT_EQ(v.back(), val);
-        EXPECT_EQ(val, this->GetValue(id));
+        for (size_type i = 0; i + initial_size < size; ++i) {
+            int id = rand();
+            const auto val = this->GetValue(id);
+
+            // v.fast_emplace_back(val);
+            v.emplace_back(val);
+
+            EXPECT_EQ(v.size(), initial_size + i + 1);
+            EXPECT_EQ(v.back(), val);
+            EXPECT_EQ(val, this->GetValue(id));
+        }
     }
 }
 
 TYPED_TEST(VectorTestBaseFixture, PopBack) {
-    const int initial_size = 3;
-    auto v = this->GetVectorOfSize(initial_size);
+    using size_type = typename TestFixture::size_type;
 
-    for (int i = initial_size - 1; i >= 0; --i) {
-        EXPECT_EQ(v.back(), this->GetValue(i));
-        v.pop_back();
-        EXPECT_EQ(v.size(), i);
+    for (const size_type& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+
+        for (size_type i = size; i >= 1; --i) {
+            EXPECT_EQ(v.back(), this->GetValue(i - 1));
+            v.pop_back();
+            EXPECT_EQ(v.size(), i - 1);
+        }
+
+        EXPECT_TRUE(v.empty());
     }
-
-    EXPECT_TRUE(v.empty());
 }
 
 TYPED_TEST(VectorTestBaseFixture, SafePopBack) {
-    const int initial_size = 3;
-    auto v = this->GetVectorOfSize(initial_size);
+    using size_type = typename TestFixture::size_type;
 
-    for (int i = initial_size - 1; i >= 0; --i) {
-        EXPECT_EQ(v.back(), this->GetValue(i));
-        // v.safe_pop_back();
-        v.pop_back();
-        EXPECT_EQ(v.size(), i);
+    for (const size_type& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+
+        for (size_type i = size; i >= 1; --i) {
+            EXPECT_EQ(v.back(), this->GetValue(i - 1));
+            // v.safe_pop_back();
+            v.pop_back();
+            EXPECT_EQ(v.size(), i - 1);
+        }
+
+        EXPECT_TRUE(v.empty());
+        // EXPECT_NO_THROW(v.safe_pop_back());
     }
-
-    EXPECT_TRUE(v.empty());
-    // EXPECT_NO_THROW(v.safe_pop_back());
-    EXPECT_EQ(v.size(), 0);
 }
 
 TYPED_TEST(VectorTestBaseFixture, PushPopBackMixed) {
@@ -622,81 +753,99 @@ TYPED_TEST(VectorTestBaseFixture, PushPopBackMixed) {
 }
 
 TYPED_TEST(VectorTestBaseFixture, TwoSwap) {
-    const int v1_size = 5;
-    const int v2_size = 3;
-    auto v1 = this->GetVectorOfSize(v1_size);
-    auto v2 = this->GetVectorOfSize(v2_size);
+    using size_type = typename TestFixture::size_type;
 
-    std::reverse(v1.begin(), v1.end());
-    v1.swap(v2);
-    v2.swap(v1);
+    for (const size_type& size : this->GetAllSizes()) {
+        const size_type v1_size = size;
+        const size_type v2_size = size * 2 / 3;
+        auto v1 = this->GetVectorOfSize(v1_size);
+        auto v2 = this->GetVectorOfSize(v2_size);
 
-    EXPECT_EQ(v1.size(), v1_size);
-    EXPECT_EQ(v2.size(), v2_size);
-    for (typename TestFixture::size_type i = 0; i < v1.size(); ++i)
-        EXPECT_EQ(v1[i], this->GetValue(v1.size() - 1 - i));
-    for (typename TestFixture::size_type i = 0; i < v2.size(); ++i)
-        EXPECT_EQ(v2[i], this->GetValue(i));
+        std::reverse(v1.begin(), v1.end());
+        v1.swap(v2);
+        v2.swap(v1);
+
+        EXPECT_EQ(v1.size(), v1_size);
+        EXPECT_EQ(v2.size(), v2_size);
+        for (size_type i = 0; i < v1.size(); ++i)
+            EXPECT_EQ(v1[i], this->GetValue(v1.size() - 1 - i));
+        for (size_type i = 0; i < v2.size(); ++i)
+            EXPECT_EQ(v2[i], this->GetValue(i));
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, OneSwap) {
-    const int v1_size = 5;
-    const int v2_size = 3;
-    auto v1 = this->GetVectorOfSize(v1_size);
-    auto v2 = this->GetVectorOfSize(v2_size);
+    using size_type = typename TestFixture::size_type;
 
-    std::reverse(v1.begin(), v1.end());
-    v1.swap(v2);
+    for (const size_type& size : this->GetAllSizes()) {
+        const size_type v1_size = size;
+        const size_type v2_size = 5 * size / 3;
+        auto v1 = this->GetVectorOfSize(v1_size);
+        auto v2 = this->GetVectorOfSize(v2_size);
 
-    EXPECT_EQ(v1.size(), v2_size);
-    EXPECT_EQ(v2.size(), v1_size);
-    for (typename TestFixture::size_type i = 0; i < v1.size(); ++i)
-        EXPECT_EQ(v1[i], this->GetValue(i));
-    for (typename TestFixture::size_type i = 0; i < v2.size(); ++i)
-        EXPECT_EQ(v2[i], this->GetValue(v2.size() - 1 - i));
+        std::reverse(v1.begin(), v1.end());
+        v1.swap(v2);
+
+        EXPECT_EQ(v1.size(), v2_size);
+        EXPECT_EQ(v2.size(), v1_size);
+        for (size_type i = 0; i < v1.size(); ++i)
+            EXPECT_EQ(v1[i], this->GetValue(i));
+        for (size_type i = 0; i < v2.size(); ++i)
+            EXPECT_EQ(v2[i], this->GetValue(v2.size() - 1 - i));
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, StdTwoSwap) {
-    const int v1_size = 5;
-    const int v2_size = 3;
-    auto v1 = this->GetVectorOfSize(v1_size);
-    auto v2 = this->GetVectorOfSize(v2_size);
+    using size_type = typename TestFixture::size_type;
 
-    std::reverse(v1.begin(), v1.end());
-    std::swap(v1, v2);
-    std::swap(v2, v1);
+    for (const size_type& size : this->GetAllSizes()) {
+        const size_type v1_size = size;
+        const size_type v2_size = size / 4;
+        auto v1 = this->GetVectorOfSize(v1_size);
+        auto v2 = this->GetVectorOfSize(v2_size);
 
-    EXPECT_EQ(v1.size(), v1_size);
-    EXPECT_EQ(v2.size(), v2_size);
-    for (typename TestFixture::size_type i = 0; i < v1.size(); ++i)
-        EXPECT_EQ(v1[i], this->GetValue(v1.size() - 1 - i));
-    for (typename TestFixture::size_type i = 0; i < v2.size(); ++i)
-        EXPECT_EQ(v2[i], this->GetValue(i));
+        std::reverse(v1.begin(), v1.end());
+        std::swap(v1, v2);
+        std::swap(v2, v1);
+
+        EXPECT_EQ(v1.size(), v1_size);
+        EXPECT_EQ(v2.size(), v2_size);
+        for (size_type i = 0; i < v1.size(); ++i)
+            EXPECT_EQ(v1[i], this->GetValue(v1.size() - 1 - i));
+        for (size_type i = 0; i < v2.size(); ++i)
+            EXPECT_EQ(v2[i], this->GetValue(i));
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, StdOneSwap) {
-    const int v1_size = 5;
-    const int v2_size = 3;
-    auto v1 = this->GetVectorOfSize(v1_size);
-    auto v2 = this->GetVectorOfSize(v2_size);
+    using size_type = typename TestFixture::size_type;
 
-    std::reverse(v1.begin(), v1.end());
-    std::swap(v1, v2);
+    for (const size_type& size : this->GetAllSizes()) {
+        const size_type v1_size = size;
+        const size_type v2_size = size * 3 / 4;
+        auto v1 = this->GetVectorOfSize(v1_size);
+        auto v2 = this->GetVectorOfSize(v2_size);
 
-    EXPECT_EQ(v1.size(), v2_size);
-    EXPECT_EQ(v2.size(), v1_size);
-    for (typename TestFixture::size_type i = 0; i < v1.size(); ++i)
-        EXPECT_EQ(v1[i], this->GetValue(i));
-    for (typename TestFixture::size_type i = 0; i < v2.size(); ++i)
-        EXPECT_EQ(v2[i], this->GetValue(v2.size() - 1 - i));
+        std::reverse(v1.begin(), v1.end());
+        std::swap(v1, v2);
+
+        EXPECT_EQ(v1.size(), v2_size);
+        EXPECT_EQ(v2.size(), v1_size);
+        for (typename TestFixture::size_type i = 0; i < v1.size(); ++i)
+            EXPECT_EQ(v1[i], this->GetValue(i));
+        for (typename TestFixture::size_type i = 0; i < v2.size(); ++i)
+            EXPECT_EQ(v2[i], this->GetValue(v2.size() - 1 - i));
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, Clear) {
-    auto v = this->GetVectorOfSize(5);
-    
-    v.clear();
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        
+        v.clear();
 
-    EXPECT_TRUE(v.empty());
+        EXPECT_TRUE(v.empty());
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertOneElementByCopyToEmptyVector) {
@@ -706,25 +855,28 @@ TYPED_TEST(VectorTestBaseFixture, InsertOneElementByCopyToEmptyVector) {
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertOneElementByCopyAtBeginToNonEmptyVector) {
-    auto v = this->GetVectorOfSize(5);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
 
-    this->InsertOneElementByCopy(v, 0, 13);
+        this->InsertOneElementByCopy(v, 0, 13);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertOneElementByCopyAtEndToNonEmptyVector) {
-    const int initial_size = 5;
-    auto v = this->GetVectorOfSize(initial_size);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
 
-    this->InsertOneElementByCopy(v, initial_size, 13);
+        this->InsertOneElementByCopy(v, size, 13);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertOneElementByCopyInMiddleToNonEmptyVector) {
-    const int initial_size = 5;
-    auto v = this->GetVectorOfSize(initial_size);
-    const int pos = 3;
-    // const int pos = Random::rand(1, initial_size - 1);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        const int pos = 3;
 
-    this->InsertOneElementByCopy(v, pos, 13);
+        this->InsertOneElementByCopy(v, pos, 13);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertOneElementByMoveAtBeginToEmptyVector) {
@@ -734,24 +886,28 @@ TYPED_TEST(VectorTestBaseFixture, InsertOneElementByMoveAtBeginToEmptyVector) {
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertOneElementByMoveAtBeginToNonEmptyVector) {
-    auto v = this->GetVectorOfSize(5);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
 
-    this->InsertOneElementByMove(v, 0, 13);
+        this->InsertOneElementByMove(v, 0, 13);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertOneElementByMoveAtEndToNonEmptyVector) {
-    const int initial_size = 5;
-    auto v = this->GetVectorOfSize(initial_size);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
 
-    this->InsertOneElementByMove(v, initial_size, 13);
+        this->InsertOneElementByMove(v, size, 13);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertOneElementByMoveInMiddleToNonEmptyVector) {
-    const int initial_size = 5;
-    auto v = this->GetVectorOfSize(initial_size);
-    const int pos = 3;
-    
-    this->InsertOneElementByMove(v, pos, 13);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        const int pos = 3;
+        
+        this->InsertOneElementByMove(v, pos, 13);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByFillToEmptyVector) {
@@ -761,294 +917,268 @@ TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByFillToEmptyVector) {
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByFillAtBeginToNonEmptyVector) {
-    auto v = this->GetVectorOfSize(5);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
 
-    this->InsertMultipleElementsByFill(v, 0, 0, 13);
+        this->InsertMultipleElementsByFill(v, 0, 0, 13);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByFillAtEndToNonEmptyVector) {
-    const int initial_size = 5;
-    auto v = this->GetVectorOfSize(initial_size);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
 
-    this->InsertMultipleElementsByFill(v, initial_size, 0, 13);
+        this->InsertMultipleElementsByFill(v, size, 0, 13);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByFillInMiddleToNonEmptyVector) {
-    const int initial_size = 5;
-    auto v = this->GetVectorOfSize(initial_size);
-    int pos = Random::rand(1, initial_size - 1);
+    using size_type = typename TestFixture::size_type;
 
-    this->InsertMultipleElementsByFill(v, pos, 0, 13);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        const size_type pos = Random::rand<size_type>(1, size - 1);
+
+        this->InsertMultipleElementsByFill(v, pos, 0, 13);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByFillToEmptyVector) {
-    typename TestFixture::vector v;
-    const int count = 5;
+    for (const auto& count : this->GetAllSizes()) {
+        typename TestFixture::vector v;
 
-    this->InsertMultipleElementsByFill(v, 0, count, rand());
+        this->InsertMultipleElementsByFill(v, 0, count, rand());
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByFillAtBeginToNonEmptyVector) {
-    const int initial_size = 5;
-    auto v = this->GetVectorOfSize(initial_size);
-    const int count = 3;
+    for (const auto& size : this->GetAllSizes()) {
+        for (const auto& count : this->GetAllSizes()) {
+            auto v = this->GetVectorOfSize(size);
 
-    this->InsertMultipleElementsByFill(v, 0, count, 13);
+            this->InsertMultipleElementsByFill(v, 0, count, 13);
+        }
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByFillAtEndToNonEmptyVector) {
-    const int initial_size = 5;
-    auto v = this->GetVectorOfSize(initial_size);
-    const int count = 4;
+    for (const auto& size : this->GetAllSizes()) {
+        for (const auto& count : this->GetAllSizes()) {
+            auto v = this->GetVectorOfSize(size);
 
-    this->InsertMultipleElementsByFill(v, initial_size, count, 13);
+            this->InsertMultipleElementsByFill(v, size, count, 13);
+        }
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByFillInMiddleToNonEmptyVector) {
-    const int initial_size = 5;
-    auto v = this->GetVectorOfSize(initial_size);
-    const int count = 4;
-    const int pos = 2;
+    for (const auto& size : this->GetAllSizes()) {
+        for (const auto& count : this->GetAllSizes()) {
+            auto v = this->GetVectorOfSize(size);
+            const int pos = 2;
 
-    this->InsertMultipleElementsByFill(v, pos, count, 13);
+            this->InsertMultipleElementsByFill(v, pos, count, 13);
+        }
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithPointerToEmptyVector) {
     typename TestFixture::vector v;
-    typename TestFixture::value_type a[] = {
-        this->GetValue(0), this->GetValue(13), this->GetValue(10)
-    };
+    typename TestFixture::value_type a[0];
     
     this->InsertMultipleElementsByRange(v, 0, a, a);
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithCotinuousIteratorAtBeginToEmptyVector) {
     typename TestFixture::vector v;
-    std::vector<typename TestFixture::value_type> stl_vector {
-        this->GetValue(0), this->GetValue(13), this->GetValue(10)
-    };
+    std::vector<typename TestFixture::value_type> stl_vec;
     
     this->InsertMultipleElementsByRange(v, 0,
-            stl_vector.begin(), stl_vector.begin());
+            stl_vec.begin(), stl_vec.begin());
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithNonContinuousIteratorAtBeginToEmptyVector) {
     typename TestFixture::vector v;
-    std::list<typename TestFixture::value_type> stl_list {
-        this->GetValue(0),
-        this->GetValue(13),
-        this->GetValue(10)
-    };
+    std::list<typename TestFixture::value_type> stl_list;
     
     this->InsertMultipleElementsByRange(v, 0,
             stl_list.begin(), stl_list.begin());
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithPointerAtBeginToNonEmptyVector) {
-    auto v = this->GetVectorOfSize(6);
-    typename TestFixture::value_type a[] = {
-        this->GetValue(0), this->GetValue(13), this->GetValue(10)
-    };
-    
-    this->InsertMultipleElementsByRange(v, 0, a, a);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        typename TestFixture::value_type a[0];
+        
+        this->InsertMultipleElementsByRange(v, 0, a, a);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithCotinuousIteratorAtBeginToNonEmptyVector) {
-    auto v = this->GetVectorOfSize(6);
-    std::vector<typename TestFixture::value_type> stl_vector {
-        this->GetValue(0), this->GetValue(13), this->GetValue(10)
-    };
-    
-    this->InsertMultipleElementsByRange(v, 0,
-            stl_vector.begin(), stl_vector.begin());
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        std::vector<typename TestFixture::value_type> stl_vec;
+        
+        this->InsertMultipleElementsByRange(v, 0,
+                stl_vec.begin(), stl_vec.begin());
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithNonContinuousIteratorAtBeginToNonEmptyVector) {
-    auto v = this->GetVectorOfSize(6);
-    std::list<typename TestFixture::value_type> stl_list {
-        this->GetValue(0),
-        this->GetValue(13),
-        this->GetValue(10)
-    };
-    
-    this->InsertMultipleElementsByRange(v, 0,
-            stl_list.begin(), stl_list.begin());
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        std::list<typename TestFixture::value_type> stl_list;
+        
+        this->InsertMultipleElementsByRange(v, 0,
+                stl_list.begin(), stl_list.begin());
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithPointerAtEndToNonEmptyVector) {
-    const int initial_size = 6;
-    auto v = this->GetVectorOfSize(initial_size);
-    typename TestFixture::value_type a[] = {
-        this->GetValue(0), this->GetValue(13), this->GetValue(10)
-    };
-    
-    this->InsertMultipleElementsByRange(v, initial_size, a, a);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        typename TestFixture::value_type a[0];
+        
+        this->InsertMultipleElementsByRange(v, size, a, a);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithCotinuousIteratorAtEndToNonEmptyVector) {
-    const int initial_size = 6;
-    auto v = this->GetVectorOfSize(initial_size);
-    std::vector<typename TestFixture::value_type> stl_vector {
-        this->GetValue(0), this->GetValue(13), this->GetValue(10)
-    };
-    
-    this->InsertMultipleElementsByRange(v, initial_size,
-            stl_vector.begin(), stl_vector.begin());
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        std::vector<typename TestFixture::value_type> stl_vec;
+        
+        this->InsertMultipleElementsByRange(v, size,
+                stl_vec.begin(), stl_vec.begin());
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithNonContinuousIteratorAtEndToNonEmptyVector) {
-    const int initial_size = 6;
-    auto v = this->GetVectorOfSize(initial_size);
-    std::list<typename TestFixture::value_type> stl_list {
-        this->GetValue(0),
-        this->GetValue(13),
-        this->GetValue(10)
-    };
-    
-    this->InsertMultipleElementsByRange(v, initial_size,
-            stl_list.begin(), stl_list.begin());
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        std::list<typename TestFixture::value_type> stl_list;
+        
+        this->InsertMultipleElementsByRange(v, size,
+                stl_list.begin(), stl_list.begin());
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithPointerInMiddleToNonEmptyVector) {
-    const int initial_size = 6;
-    auto v = this->GetVectorOfSize(initial_size);
-    const int pos = Random::rand(1, initial_size - 1);
-    typename TestFixture::value_type a[] = {
-        this->GetValue(0), this->GetValue(13), this->GetValue(10)
-    };
-    
-    this->InsertMultipleElementsByRange(v, pos, a, a);
+    using size_type = typename TestFixture::size_type;
+
+    for (const size_type& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        const size_type pos = Random::rand<size_type>(1, size - 1);
+        typename TestFixture::value_type a[0];
+        
+        this->InsertMultipleElementsByRange(v, pos, a, a);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithCotinuousIteratorInMiddleToNonEmptyVector) {
-    const int initial_size = 6;
-    auto v = this->GetVectorOfSize(initial_size);
-    const int pos = Random::rand(1, initial_size - 1);
-    std::vector<typename TestFixture::value_type> stl_vector {
-        this->GetValue(0), this->GetValue(13), this->GetValue(10)
-    };
-    
-    this->InsertMultipleElementsByRange(v, pos,
-            stl_vector.begin(), stl_vector.begin());
+    using size_type = typename TestFixture::size_type;
+
+    for (const size_type& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        const size_type pos = Random::rand<size_type>(1, size - 1);
+        std::vector<typename TestFixture::value_type> stl_vec;
+        
+        this->InsertMultipleElementsByRange(v, pos,
+                stl_vec.begin(), stl_vec.begin());
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithNonContinuousIteratorInMiddleToNonEmptyVector) {
-    const int initial_size = 6;
-    auto v = this->GetVectorOfSize(initial_size);
-    const int pos = Random::rand(1, initial_size - 1);
-    std::list<typename TestFixture::value_type> stl_list {
-        this->GetValue(0),
-        this->GetValue(13),
-        this->GetValue(10)
-    };
-    
-    this->InsertMultipleElementsByRange(v, pos,
-            stl_list.begin(), stl_list.begin());
+    using size_type = typename TestFixture::size_type;
+
+    for (const size_type& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        const size_type pos = Random::rand<size_type>(1, size - 1);
+        std::list<typename TestFixture::value_type> stl_list;
+        
+        this->InsertMultipleElementsByRange(v, pos,
+                stl_list.begin(), stl_list.begin());
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeWithPointerAtBeginToNonEmptyVector) {
-    auto v = this->GetVectorOfSize(6);
-    typename TestFixture::value_type a[] = {
-        this->GetValue(0), this->GetValue(13), this->GetValue(10)
-    };
-    const int count = sizeof(a) / sizeof(a[0]);
-    
-    this->InsertMultipleElementsByRange(v, 0, a, a + count);
+    for (const auto& size : this->GetAllSizes()) {
+        for (const auto& count : this->GetAllSizes()) {
+            auto v = this->GetVectorOfSize(size);
+            auto a = this->GetInitializedArrayOfSize(count);
+
+            this->InsertMultipleElementsByRange(v, 0, a.get(), a.get() + count);
+        }
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeWithCotinuousIteratorAtBeginToNonEmptyVector) {
-    auto v = this->GetVectorOfSize(6);
-    std::vector<typename TestFixture::value_type> stl_vector {
-        this->GetValue(0), this->GetValue(13), this->GetValue(10)
-    };
-    
-    this->InsertMultipleElementsByRange(v, 0,
-            stl_vector.begin(), stl_vector.end());
+    for (const auto& size : this->GetAllSizes()) {
+        for (const auto& count : this->GetAllSizes()) {
+            if (size + count <= this->GetMaxVectorSize()) {
+                auto v = this->GetVectorOfSize(size);
+                auto stl_vec = this->GetInitializedVectorOfSize(count);
+                
+                this->InsertMultipleElementsByRange(v, 0,
+                        stl_vec.begin(), stl_vec.end());
+            }
+        }
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeWithNonContinuousIteratorAtBeginToNonEmptyVector) {
-    auto v = this->GetVectorOfSize(6);
-    std::list<typename TestFixture::value_type> stl_list {
-        this->GetValue(0),
-        this->GetValue(13),
-        this->GetValue(10)
-    };
-    
-    this->InsertMultipleElementsByRange(v, 0,
-            stl_list.begin(), stl_list.end());
+    for (const auto& size : this->GetAllSizes()) {
+        for (const auto& count : this->GetAllSizes()) {
+            if (size + count <= this->GetMaxVectorSize()) {
+                auto v = this->GetVectorOfSize(size);
+                auto stl_list = this->GetInitializedListOfSize(count);
+                
+                this->InsertMultipleElementsByRange(v, 0,
+                        stl_list.begin(), stl_list.end());
+            }
+        }
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeWithPointerAtEndToNonEmptyVector) {
-    const int initial_size = 6;
-    auto v = this->GetVectorOfSize(initial_size);
-    typename TestFixture::value_type a[] = {
-        this->GetValue(0), this->GetValue(13), this->GetValue(10)
-    };
-    const int count = sizeof(a) / sizeof(a[0]);
+    for (const auto& size : this->GetAllSizes()) {
+        for (const auto& count : this->GetAllSizes()) {
+            if (size + count <= this->GetMaxVectorSize()) {
+                auto v = this->GetVectorOfSize(size);
+                auto a = this->GetInitializedArrayOfSize(count);
 
-    this->InsertMultipleElementsByRange(v, initial_size, a, a + count);
+                this->InsertMultipleElementsByRange(v, size, a.get(), a.get() + count);
+            }
+        }
+    }
 }
 
-TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeWithCotinuousIteratorAtEndToNonEmptyVector) {
-    const int initial_size = 6;
-    auto v = this->GetVectorOfSize(initial_size);
-    std::vector<typename TestFixture::value_type> stl_vector {
-        this->GetValue(0), this->GetValue(13), this->GetValue(10)
-    };
+TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeWithContinuousIteratorAtEndToNonEmptyVector) {
+    for (const auto& size : this->GetAllSizes()) {
+        for (const auto& count : this->GetAllSizes()) {
+            if (size + count <= this->GetMaxVectorSize()) {
+                auto v = this->GetVectorOfSize(size);
+                auto stl_vec = this->GetInitializedVectorOfSize(count);
 
-    this->InsertMultipleElementsByRange(v, initial_size,
-            stl_vector.begin(), stl_vector.end());
+                this->InsertMultipleElementsByRange(v, size,
+                        stl_vec.begin(), stl_vec.end());
+            }
+        }
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeWithNonContinuousIteratorAtEndToNonEmptyVector) {
-    const int initial_size = 6;
-    auto v = this->GetVectorOfSize(initial_size);
-    std::list<typename TestFixture::value_type> stl_list {
-        this->GetValue(0),
-        this->GetValue(13),
-        this->GetValue(10)
-    };
+    for (const auto& size : this->GetAllSizes()) {
+        for (const auto& count : this->GetAllSizes()) {
+            if (size + count <= this->GetMaxVectorSize()) {
+                auto v = this->GetVectorOfSize(size);
+                auto stl_list = this->GetInitializedListOfSize(count);
 
-    this->InsertMultipleElementsByRange(v, initial_size,
-            stl_list.begin(), stl_list.end());
-}
-
-TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeWithPointerInMiddleToNonEmptyVector) {
-    const int initial_size = 6;
-    auto v = this->GetVectorOfSize(initial_size);
-    const int pos = 3;
-    typename TestFixture::value_type a[] = {
-        this->GetValue(0), this->GetValue(13), this->GetValue(10)
-    };
-    const int count = sizeof(a) / sizeof(a[0]);
-    
-    this->InsertMultipleElementsByRange(v, pos, a, a + count);
-}
-
-TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeWithCotinuousIteratorInMiddleToNonEmptyVector) {
-    const int initial_size = 6;
-    auto v = this->GetVectorOfSize(initial_size);
-    const int pos = 3;
-    std::vector<typename TestFixture::value_type> stl_vector {
-        this->GetValue(0), this->GetValue(13), this->GetValue(10)
-    };
-    
-    this->InsertMultipleElementsByRange(v, pos,
-            stl_vector.begin(), stl_vector.end());
-}
-
-TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByRangeWithNonContinuousIteratorInMiddleToNonEmptyVector) {
-    const int initial_size = 6;
-    auto v = this->GetVectorOfSize(initial_size);
-    const int pos = 3;
-    std::list<typename TestFixture::value_type> stl_list {
-        this->GetValue(0),
-        this->GetValue(13),
-        this->GetValue(10)
-    };
-    
-    this->InsertMultipleElementsByRange(v, pos,
-            stl_list.begin(), stl_list.end());
+                this->InsertMultipleElementsByRange(v, size,
+                        stl_list.begin(), stl_list.end());
+            }
+        }
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByInitializerListToEmptyVector) {
@@ -1059,57 +1189,61 @@ TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByInitializerListToEmptyVect
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByInitializerListAtBeginToNonEmptyVector) {
-    auto v = this->GetVectorOfSize(6);
-    std::initializer_list<typename TestFixture::value_type> ilist;
-    
-    this->InsertMultipleElementsByInitializerList(v, 0, ilist);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        std::initializer_list<typename TestFixture::value_type> ilist;
+        
+        this->InsertMultipleElementsByInitializerList(v, 0, ilist);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByInitializerListAtEndToNonEmptyVector) {
-    const int initial_size = 6;
-    auto v = this->GetVectorOfSize(initial_size);
-    std::initializer_list<typename TestFixture::value_type> ilist;
-    
-    this->InsertMultipleElementsByInitializerList(v, initial_size, ilist);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        std::initializer_list<typename TestFixture::value_type> ilist;
+        
+        this->InsertMultipleElementsByInitializerList(v, size, ilist);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByInitializerListInMiddleToNonEmptyVector) {
-    const int initial_size = 6;
-    auto v = this->GetVectorOfSize(initial_size);
-    const int pos = Random::rand(1, initial_size - 1);
-    std::initializer_list<typename TestFixture::value_type> ilist;
-    
-    this->InsertMultipleElementsByInitializerList(v, pos, ilist);
+    using size_type = typename TestFixture::size_type;
+
+    for (const size_type& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        std::initializer_list<typename TestFixture::value_type> ilist;
+        const size_type pos = Random::rand<size_type>(1, size - 1);
+        
+        this->InsertMultipleElementsByInitializerList(v, pos, ilist);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByInitializerListAtBeginToNonEmptyVector) {
-    auto v = this->GetVectorOfSize(6);
-    auto ilist = {
-        this->GetValue(49), this->GetValue(13)
-    };
-    
-    this->InsertMultipleElementsByInitializerList(v, 0, ilist);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        auto ilist = { this->GetValue(49), this->GetValue(13) };
+        
+        this->InsertMultipleElementsByInitializerList(v, 0, ilist);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByInitializerListAtEndToNonEmptyVector) {
-    const int initial_size = 6;
-    auto v = this->GetVectorOfSize(initial_size);
-    auto ilist = {
-        this->GetValue(49), this->GetValue(13)
-    };
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        auto ilist = { this->GetValue(49), this->GetValue(13) };
 
-    this->InsertMultipleElementsByInitializerList(v, initial_size, ilist);
+        this->InsertMultipleElementsByInitializerList(v, size, ilist);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, InsertMultipleElementsByInitializerListInMiddleToNonEmptyVector) {
-    const int initial_size = 6;
-    auto v = this->GetVectorOfSize(initial_size);
-    const int pos = 3;
-    auto ilist = {
-        this->GetValue(49), this->GetValue(13)
-    };
-    
-    this->InsertMultipleElementsByInitializerList(v, pos, ilist);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        auto ilist = { this->GetValue(49), this->GetValue(13) };
+        const int pos = 3;
+        
+        this->InsertMultipleElementsByInitializerList(v, pos, ilist);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, EmplaceOneElementByCopyToEmptyVector) {
@@ -1119,37 +1253,44 @@ TYPED_TEST(VectorTestBaseFixture, EmplaceOneElementByCopyToEmptyVector) {
 }
 
 TYPED_TEST(VectorTestBaseFixture, EmplaceOneElementByCopyAtBeginToNonEmptyVector) {
-    auto v = this->GetVectorOfSize(5);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
 
-    this->EmplaceAt(v, 0, 13);
+        this->EmplaceAt(v, 0, 13);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, EmplaceOneElementByCopyAtEndToNonEmptyVector) {
-    const int initial_size = 5;
-    auto v = this->GetVectorOfSize(initial_size);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
 
-    this->EmplaceAt(v, initial_size, 13);
+        this->EmplaceAt(v, size, 13);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, EmplaceOneElementByCopyInMiddleToNonEmptyVector) {
-    const int initial_size = 5;
-    auto v = this->GetVectorOfSize(initial_size);
-    const int pos = 3;
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        const int pos = 3;
 
-    this->EmplaceAt(v, pos, 13);
+        this->EmplaceAt(v, pos, 13);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, EraseBeginFromNonEmptyVector) {
-    auto v = this->GetVectorOfSize(5);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
 
-    this->EraseOneElement(v, 0);
+        this->EraseOneElement(v, 0);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, EraseEndFromNonEmptyVector) {
-    const int initial_size = 5;
-    auto v = this->GetVectorOfSize(initial_size);
-    
-    this->EraseOneElement(v, initial_size - 1);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        
+        this->EraseOneElement(v, size - 1);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, EraseZeroElementsFromEmptyVector) {
@@ -1159,49 +1300,65 @@ TYPED_TEST(VectorTestBaseFixture, EraseZeroElementsFromEmptyVector) {
 }
 
 TYPED_TEST(VectorTestBaseFixture, EraseZeroElementsAtBeginFromNonEmptyVector) {
-    auto v = this->GetVectorOfSize(5);
-    
-    this->EraseMultipleElements(v, 0, 0);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        
+        this->EraseMultipleElements(v, 0, 0);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, EraseZeroElemensAtEndFromNonEmptyVector) {
-    const int initial_size = 5;
-    auto v = this->GetVectorOfSize(initial_size);
-    
-    this->EraseMultipleElements(v, initial_size, 0);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        
+        this->EraseMultipleElements(v, size, 0);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, EraseAllElementsFromNonEmptyVector) {
-    const int initial_size = 5;
-    auto v = this->GetVectorOfSize(initial_size);
-    
-    this->EraseMultipleElements(v, 0, initial_size);
-    EXPECT_TRUE(v.empty());
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        
+        this->EraseMultipleElements(v, 0, size);
+        EXPECT_TRUE(v.empty());
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, EraseMultipleElementsAtBeginFromNonEmptyVector) {
-    const int initial_size = 5;
-    auto v = this->GetVectorOfSize(initial_size);
-    const int count = 3;
-    
-    this->EraseMultipleElements(v, 0, count);
+    using size_type = typename TestFixture::size_type;
+
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        const size_type count = std::min<size_type>(size, 3);
+        
+        this->EraseMultipleElements(v, 0, count);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, EraseMultipleElementsToEndFromNonEmptyVector) {
-    const int initial_size = 5;
-    auto v = this->GetVectorOfSize(initial_size);
-    const int pos = Random::rand(1, initial_size - 1);
-    
-    this->EraseMultipleElements(v, pos, initial_size - pos);
+    using size_type = typename TestFixture::size_type;
+
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        const size_type pos = Random::rand<size_type>(1, size - 1);
+        
+        this->EraseMultipleElements(v, pos, size - pos);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, EraseMutipleElementsInMiddleFromNonEmptyVector) {
-    const int initial_size = 7;
-    auto v = this->GetVectorOfSize(initial_size);
-    const int pos = 2;
-    const int count = 3;
+    for (const auto& size : this->GetAllSizes()) {
+        for (auto count : this->GetAllSizes()) {
+            if (count <= size) {
+                auto v = this->GetVectorOfSize(size);
+                const int pos = 1;
+                if (count == size)
+                    --count;
 
-    this->EraseMultipleElements(v, pos, count);
+                this->EraseMultipleElements(v, pos, count);
+            }
+        }
+    }
 }
 
 #if CPP_ABOVE_17
@@ -1216,56 +1373,117 @@ TYPED_TEST(VectorTestBaseFixture, EraseByValueFromEmptyVector) {
 }
 
 TYPED_TEST(VectorTestBaseFixture, EraseByValueNothingFromNonEmptyVector) {
-    const int initial_size =  5;
-    auto v = this->GetVectorOfSize(initial_size);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
 
-    auto count = std::erase(v, this->GetValue(13));
+        auto count = std::erase(v, this->GetValue(-1));
 
-    EXPECT_EQ(count, 0);
-    EXPECT_EQ(v.size(), initial_size);
+        EXPECT_EQ(count, 0);
+        EXPECT_EQ(v.size(), size);
+    }
 }
 
-TYPED_TEST(VectorTestBaseFixture, EraseByValueOneValueFromBeginFromNonEmptyVector) {
-    auto v = this->GetVectorOfSize(5);
-    const auto save = v;
+TYPED_TEST(VectorTestBaseFixture, EraseByValueOneValueAtBeginFromNonEmptyVector) {
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        const auto save = v;
 
-    auto count = std::erase(v, this->GetValue(0));
+        auto count = std::erase(v, this->GetValue(0));
 
-    ASSERT_EQ(count, 1);
-    this->ExpectErasedInAt(v, 0, 1, save);
+        ASSERT_EQ(count, 1);
+        this->ExpectErasedInAt(v, 0, 1, save);
+    }
 }
 
-TYPED_TEST(VectorTestBaseFixture, EraseByValueOneValueFromEndFromNonEmptyVector) {
-    const int initial_size = 5;
-    auto v = this->GetVectorOfSize(initial_size);
-    const auto save = v;
+TYPED_TEST(VectorTestBaseFixture, EraseByValueOneValueAtEndFromNonEmptyVector) {
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        const auto save = v;
 
-    auto count = std::erase(v, this->GetValue(4));
+        auto count = std::erase(v, this->GetValue(size - 1));
 
-    ASSERT_EQ(count, 1);
-    this->ExpectErasedInAt(v, initial_size - 1, 1, save);
+        ASSERT_EQ(count, 1);
+        this->ExpectErasedInAt(v, size - 1, 1, save);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, EraseByValueOneValueInMiddleFromNonEmptyVector) {
-    auto v = this->GetVectorOfSize(5);
-    const auto save = v;
+    using size_type = typename TestFixture::size_type;
 
-    auto count = std::erase(v, this->GetValue(2));
+    for (const size_type& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        const auto save = v;
+        const size_type id = Random::rand<size_type>(1, size - 1);
 
-    ASSERT_EQ(count, 1);
-    this->ExpectErasedInAt(v, 2, 1, save);
+        auto count = std::erase(v, this->GetValue(id));
+
+        ASSERT_EQ(count, 1);
+        this->ExpectErasedInAt(v, id, 1, save);
+    }
 }
 
-TYPED_TEST(VectorTestBaseFixture, EraseByValueMultipleValuesInOneBlockFromNonEmptyVector) {
-    typename TestFixture::vector v {
-        this->GetValue(0), this->GetValue(2), this->GetValue(2), this->GetValue(2)
-    };
-    const auto save = v;
+TYPED_TEST(VectorTestBaseFixture, EraseByValueMultipleValuesInOneBlockAtBeginFromNonEmptyVector) {
+    using size_type = typename TestFixture::size_type;
 
-    auto count = std::erase(v, this->GetValue(2));
+    for (const size_type& size : this->GetAllSizes()) {
+        for (size_type block : this->GetAllSizes()) {
+            if (block <= size) {
+                auto v = this->GetVectorOfSize(size);
+                if (block == size) --block;
+                for (size_type i = 0; i < block; ++i)
+                    v[i] = this->GetValue(-1);
+                const auto save = v;
 
-    ASSERT_EQ(count, 3);
-    this->ExpectErasedInAt(v, 1, 3, save);
+                auto count = std::erase(v, this->GetValue(-1));
+
+                ASSERT_EQ(count, block);
+                this->ExpectErasedInAt(v, 0, block, save);
+            }
+        }
+    }
+}
+
+TYPED_TEST(VectorTestBaseFixture, EraseByValueMultipleValuesInOneBlockAtEndFromNonEmptyVector) {
+    using size_type = typename TestFixture::size_type;
+
+    for (const size_type& size : this->GetAllSizes()) {
+        for (size_type block : this->GetAllSizes()) {
+            if (block <= size) {
+                auto v = this->GetVectorOfSize(size);
+                if (block == size) --block;
+                for (size_type i = size - block; i < size; ++i)
+                    v[i] = this->GetValue(-1);
+                const auto save = v;
+
+                auto count = std::erase(v, this->GetValue(-1));
+
+                ASSERT_EQ(count, block);
+                this->ExpectErasedInAt(v, size - block, block, save);
+            }
+        }
+    }
+}
+
+TYPED_TEST(VectorTestBaseFixture, EraseByValueMultipleValuesInOneBlockInMiddleFromNonEmptyVector) {
+    using size_type = typename TestFixture::size_type;
+
+    for (const size_type& size : this->GetAllSizes()) {
+        for (size_type block : this->GetAllSizes()) {
+            if (block <= size) {
+                auto v = this->GetVectorOfSize(size);
+                if (block == size) block -= 2;
+                const size_type pos = Random::rand<size_type>(1, size - block);
+                for (size_type i = 0; i < block; ++i)
+                    v[i + pos] = this->GetValue(-1);
+                const auto save = v;
+
+                auto count = std::erase(v, this->GetValue(-1));
+
+                ASSERT_EQ(count, block);
+                this->ExpectErasedInAt(v, pos, block, save);
+            }
+        }
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, EraseByValueMultipleValuesScatteredFromNonEmptyVector) {
@@ -1297,67 +1515,144 @@ TYPED_TEST(VectorTestBaseFixture, EraseIfByValueFromEmptyVector) {
 }
 
 TYPED_TEST(VectorTestBaseFixture, EraseIfByValueNothingFromNonEmptyVector) {
-    const int initial_size =  5;
-    auto v = this->GetVectorOfSize(initial_size);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
 
-    auto count = std::erase_if(v, [this](const typename TestFixture::value_type& x) {
-        return x == this->GetValue(13);
-    });
+        auto count = std::erase_if(v, [this](const typename TestFixture::value_type& x) {
+            return x == this->GetValue(-1);
+        });
 
-    EXPECT_EQ(count, 0);
-    EXPECT_EQ(v.size(), initial_size);
+        EXPECT_EQ(count, 0);
+        EXPECT_EQ(v.size(), size);
+    }
 }
 
-TYPED_TEST(VectorTestBaseFixture, EraseIfByValueOneValueFromBeginFromNonEmptyVector) {
-    auto v = this->GetVectorOfSize(5);
-    const auto save = v;
+TYPED_TEST(VectorTestBaseFixture, EraseIfByValueOneValueAtBeginFromNonEmptyVector) {
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        const auto save = v;
 
-    auto count = std::erase_if(v, [this](const typename TestFixture::value_type& x){
-        return x == this->GetValue(0);
-    });
+        auto count = std::erase_if(v, [this](const typename TestFixture::value_type& x){
+            return x == this->GetValue(0);
+        });
 
-    ASSERT_EQ(count, 1);
-    this->ExpectErasedInAt(v, 0, 1, save);
+        ASSERT_EQ(count, 1);
+        this->ExpectErasedInAt(v, 0, 1, save);
+    }
 }
 
-TYPED_TEST(VectorTestBaseFixture, EraseIfByValueOneValueFromEndFromNonEmptyVector) {
-    const int initial_size = 5;
-    auto v = this->GetVectorOfSize(initial_size);
-    const auto save = v;
+TYPED_TEST(VectorTestBaseFixture, EraseIfByValueOneValueAtEndFromNonEmptyVector) {
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        const auto save = v;
 
-    auto count = std::erase_if(v, [this](const typename TestFixture::value_type& x){
-        return x == this->GetValue(4);
-    });
+        auto count = std::erase_if(v, [&](const typename TestFixture::value_type& x){
+            return x == this->GetValue(size - 1);
+        });
 
-    ASSERT_EQ(count, 1);
-    this->ExpectErasedInAt(v, initial_size - 1, 1, save);
+        ASSERT_EQ(count, 1);
+        this->ExpectErasedInAt(v, size - 1, 1, save);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, EraseIfByValueOneValueInMiddleFromNonEmptyVector) {
-    auto v = this->GetVectorOfSize(5);
-    const auto save = v;
+    for (const auto& size : this->GetAllSizes()) {
+        auto v = this->GetVectorOfSize(size);
+        const auto save = v;
 
-    auto count = std::erase_if(v, [this](const typename TestFixture::value_type& x){
-        return x == this->GetValue(2);
-    });
+        auto count = std::erase_if(v, [this](const typename TestFixture::value_type& x){
+            return x == this->GetValue(1);
+        });
 
-    ASSERT_EQ(count, 1);
-    this->ExpectErasedInAt(v, 2, 1, save);
+        ASSERT_EQ(count, 1);
+        this->ExpectErasedInAt(v, 1, 1, save);
+    }
 }
 
-TYPED_TEST(VectorTestBaseFixture, EraseIfByValueMultipleValuesInOneBlockFromNonEmptyVector) {
-    typename TestFixture::vector v {
-        this->GetValue(0), this->GetValue(2), this->GetValue(2), this->GetValue(2)
-    };
-    const auto save = v;
+TYPED_TEST(VectorTestBaseFixture, EraseIfByValueMultipleValuesInOneBlockAtBeginFromNonEmptyVector) {
+    using size_type = typename TestFixture::size_type;
 
-    auto count = std::erase_if(v, [this](const typename TestFixture::value_type& x){
-        return x == this->GetValue(2);
-    });
+    for (const size_type& size : this->GetAllSizes()) {
+        for (size_type block : this->GetAllSizes()) {
+            if (block <= size) {
+                auto v = this->GetVectorOfSize(size);
+                if (block == size) --block;
+                for (size_type i = 0; i < block; ++i)
+                    v[i] = this->GetValue(-1);
+                const auto save = v;
 
-    ASSERT_EQ(count, 3);
-    this->ExpectErasedInAt(v, 1, 3, save);
+                auto count = std::erase_if(v, [this](const typename TestFixture::value_type& x){
+                    return x == this->GetValue(-1);
+                });
+
+                ASSERT_EQ(count, block);
+                this->ExpectErasedInAt(v, 0, block, save);
+            }
+        }
+    }
 }
+
+TYPED_TEST(VectorTestBaseFixture, EraseIfByValueMultipleValuesInOneBlockAtEndFromNonEmptyVector) {
+    using size_type = typename TestFixture::size_type;
+
+    for (const size_type& size : this->GetAllSizes()) {
+        for (size_type block : this->GetAllSizes()) {
+            if (block <= size) {
+                auto v = this->GetVectorOfSize(size);
+                if (block == size) --block;
+                for (size_type i = size - block; i < size; ++i)
+                    v[i] = this->GetValue(-1);
+                const auto save = v;
+
+                auto count = std::erase_if(v, [this](const typename TestFixture::value_type& x){
+                    return x == this->GetValue(-1);
+                });
+
+                ASSERT_EQ(count, block);
+                this->ExpectErasedInAt(v, size - block, block, save);
+            }
+        }
+    }
+}
+
+TYPED_TEST(VectorTestBaseFixture, EraseIfByValueMultipleValuesInOneBlockInMiddleFromNonEmptyVector) {
+    using size_type = typename TestFixture::size_type;
+
+    for (const size_type& size : this->GetAllSizes()) {
+        for (size_type block : this->GetAllSizes()) {
+            if (block <= size) {
+                auto v = this->GetVectorOfSize(size);
+                if (block == size) block -= 2;
+                const size_type pos = Random::rand<size_type>(1, size - block);
+                for (size_type i = 0; i < block; ++i)
+                    v[i + pos] = this->GetValue(-1);
+                const auto save = v;
+
+                auto count = std::erase_if(v, [this](const typename TestFixture::value_type& x){
+                    return x == this->GetValue(-1);
+                });
+
+                ASSERT_EQ(count, block);
+                this->ExpectErasedInAt(v, pos, block, save);
+            }
+        }
+    }
+}
+
+// TODO: remove
+// TYPED_TEST(VectorTestBaseFixture, EraseIfByValueMultipleValuesInOneBlockFromNonEmptyVector) {
+    // typename TestFixture::vector v {
+        // this->GetValue(0), this->GetValue(2), this->GetValue(2), this->GetValue(2)
+    // };
+    // const auto save = v;
+
+    // auto count = std::erase_if(v, [this](const typename TestFixture::value_type& x){
+        // return x == this->GetValue(2);
+    // });
+
+    // ASSERT_EQ(count, 3);
+    // this->ExpectErasedInAt(v, 1, 3, save);
+// }
 
 TYPED_TEST(VectorTestBaseFixture, EraseIfByValueMultipleValuesScatteredFromNonEmptyVector) {
     typename TestFixture::vector v {
@@ -1405,24 +1700,21 @@ TYPED_TEST(VectorTestBaseFixture, EmptyVectorsAreEqual) {
 }
 
 TYPED_TEST(VectorTestBaseFixture, EqualIndependentNonEmptyVectorsAreEqual) {
-    typename TestFixture::vector v1 {
-        this->GetValue(0), this->GetValue(13)
-    };
-    typename TestFixture::vector v2 {
-        this->GetValue(0), this->GetValue(13)
-    };
+    for (const auto& size : this->GetAllSizes()) {
+        auto v1 = this->GetVectorOfSize(size);
+        auto v2 = this->GetVectorOfSize(size);
 
-    EXPECT_TRUE(v1 == v2);
+        EXPECT_TRUE(v1 == v2);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, CopiedVectorIsEqualToOriginal) {
-    const int initial_size = 6;
-    typename TestFixture::vector v1;
-    for (int i = 0; i < initial_size; ++i)
-        v1.push_back(this->GetValue(i));
-    auto v2 = v1;
+    for (const auto& size : this->GetAllSizes()) {
+        auto v1 = this->GetVectorOfSize(size);
+        auto v2 = v1;
 
-    EXPECT_TRUE(v1 == v2);
+        EXPECT_TRUE(v1 == v2);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, EmptyVectorsAreNotDifferent) {
@@ -1432,41 +1724,41 @@ TYPED_TEST(VectorTestBaseFixture, EmptyVectorsAreNotDifferent) {
 }
 
 TYPED_TEST(VectorTestBaseFixture, EqualIndependentNonEmptyVectorsAreNotDifferent) {
-    typename TestFixture::vector v1 {
-        this->GetValue(0), this->GetValue(13)
-    };
-    typename TestFixture::vector v2 {
-        this->GetValue(0), this->GetValue(13)
-    };
+    for (const auto& size : this->GetAllSizes()) {
+        auto v1 = this->GetVectorOfSize(size);
+        auto v2 = this->GetVectorOfSize(size);
 
-    EXPECT_FALSE(v1 != v2);
+        EXPECT_FALSE(v1 != v2);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, CopiedVectorIsNotDifferentToOriginal) {
-    const int initial_size = 9;
-    typename TestFixture::vector v1;
-    for (int i = 0; i < initial_size; ++i)
-        v1.push_back(this->GetValue(i));
-    auto v2 = v1;
+    for (const auto& size : this->GetAllSizes()) {
+        auto v1 = this->GetVectorOfSize(size);
+        auto v2 = v1;
 
-    EXPECT_FALSE(v1 != v2);
+        EXPECT_FALSE(v1 != v2);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, DifferentVectorsAreDifferentWhereOneIsEmpty) {
-    typename TestFixture::vector v1;
-    auto v2 = this->GetVectorOfSize(3);
+    for (const auto& size : this->GetAllSizes()) {
+        typename TestFixture::vector v1;
+        auto v2 = this->GetVectorOfSize(size);
 
-    EXPECT_TRUE(v1 != v2);
-    EXPECT_TRUE(v2 != v1);
+        EXPECT_TRUE(v1 != v2);
+        EXPECT_TRUE(v2 != v1);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, DifferentVectorsOfTheSameSizeAreDifferent) {
-    typename TestFixture::vector v1 {
-        this->GetValue(2), this->GetValue(1), this->GetValue(0)
-    };
-    auto v2 = this->GetVectorOfSize(3);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v1 = this->GetVectorOfSize(size);
+        auto v2 = this->GetVectorOfSize(size);
+        std::reverse(v2.begin(), v2.end());
 
-    EXPECT_TRUE(v1 != v2);
+        EXPECT_TRUE(v1 != v2);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, RelationalOperatorsTwoEmptyVectors) {
@@ -1483,78 +1775,87 @@ TYPED_TEST(VectorTestBaseFixture, RelationalOperatorsTwoEmptyVectors) {
 }
 
 TYPED_TEST(VectorTestBaseFixture, RelationalOperatorsWithOneEmptyVector) {
-    typename TestFixture::vector v1; 
-    auto v2 = this->GetVectorOfSize(5);
- 
-    EXPECT_TRUE(v1 < v2);
-    EXPECT_TRUE(v1 <= v2);
-    EXPECT_FALSE(v1 > v2);
-    EXPECT_FALSE(v1 >= v2);
-    EXPECT_FALSE(v2 < v1);
-    EXPECT_FALSE(v2 <= v1);
-    EXPECT_TRUE(v2 > v1);
-    EXPECT_TRUE(v2 >= v1);
+    for (const auto& size : this->GetAllSizes()) {
+        typename TestFixture::vector v1; 
+        auto v2 = this->GetVectorOfSize(size);
+     
+        EXPECT_TRUE(v1 < v2);
+        EXPECT_TRUE(v1 <= v2);
+        EXPECT_FALSE(v1 > v2);
+        EXPECT_FALSE(v1 >= v2);
+        EXPECT_FALSE(v2 < v1);
+        EXPECT_FALSE(v2 <= v1);
+        EXPECT_TRUE(v2 > v1);
+        EXPECT_TRUE(v2 >= v1);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, RelationalOperatorsWithTwoNonEmptyEqualVectors) {
-    auto v1 = this->GetVectorOfSize(5);
-    auto v2 = this->GetVectorOfSize(5);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v1 = this->GetVectorOfSize(size);
+        auto v2 = this->GetVectorOfSize(size);
 
-    EXPECT_TRUE(v1 <= v2);
-    EXPECT_TRUE(v1 >= v2);
-    EXPECT_TRUE(v2 <= v1);
-    EXPECT_TRUE(v2 >= v1);
-    EXPECT_FALSE(v1 < v2);
-    EXPECT_FALSE(v1 > v2);
-    EXPECT_FALSE(v2 < v1);
-    EXPECT_FALSE(v2 > v1);
+        EXPECT_TRUE(v1 <= v2);
+        EXPECT_TRUE(v1 >= v2);
+        EXPECT_TRUE(v2 <= v1);
+        EXPECT_TRUE(v2 >= v1);
+        EXPECT_FALSE(v1 < v2);
+        EXPECT_FALSE(v1 > v2);
+        EXPECT_FALSE(v2 < v1);
+        EXPECT_FALSE(v2 > v1);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, RelationalOperatorsWithTwoNonEmptyEqualSizedVectors) {
-    auto v1 = this->GetVectorOfSize(5);
-    v1[2] = this->GetValue(1);
-    auto v2 = this->GetVectorOfSize(5);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v1 = this->GetVectorOfSize(size);
+        v1[2] = this->GetValue(1);
+        auto v2 = this->GetVectorOfSize(size);
 
-    EXPECT_TRUE(v1 <= v2);
-    EXPECT_FALSE(v1 >= v2);
-    EXPECT_FALSE(v2 <= v1);
-    EXPECT_TRUE(v2 >= v1);
-    EXPECT_TRUE(v1 < v2);
-    EXPECT_FALSE(v1 > v2);
-    EXPECT_FALSE(v2 < v1);
-    EXPECT_TRUE(v2 > v1);
+        EXPECT_TRUE(v1 <= v2);
+        EXPECT_FALSE(v1 >= v2);
+        EXPECT_FALSE(v2 <= v1);
+        EXPECT_TRUE(v2 >= v1);
+        EXPECT_TRUE(v1 < v2);
+        EXPECT_FALSE(v1 > v2);
+        EXPECT_FALSE(v2 < v1);
+        EXPECT_TRUE(v2 > v1);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, RelationalOperatorsWithTwoNonEmptyDifferentSizedVectorsOnePrefixOfAnother) {
-    auto v1 = this->GetVectorOfSize(4);
-    auto v2 = this->GetVectorOfSize(5);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v1 = this->GetVectorOfSize(size - 1);
+        auto v2 = this->GetVectorOfSize(size);
 
-    EXPECT_TRUE(v1 <= v2);
-    EXPECT_FALSE(v1 >= v2);
-    EXPECT_FALSE(v2 <= v1);
-    EXPECT_TRUE(v2 >= v1);
-    EXPECT_TRUE(v1 < v2);
-    EXPECT_FALSE(v1 > v2);
-    EXPECT_FALSE(v2 < v1);
-    EXPECT_TRUE(v2 > v1);
+        EXPECT_TRUE(v1 <= v2);
+        EXPECT_FALSE(v1 >= v2);
+        EXPECT_FALSE(v2 <= v1);
+        EXPECT_TRUE(v2 >= v1);
+        EXPECT_TRUE(v1 < v2);
+        EXPECT_FALSE(v1 > v2);
+        EXPECT_FALSE(v2 < v1);
+        EXPECT_TRUE(v2 > v1);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, RelationalOperatorsWithTwoNonEmptyDifferentVectors) {
-    typename TestFixture::vector v1 {
-        this->GetValue(0), this->GetValue(2), this->GetValue(1)
-    };
-    typename TestFixture::vector v2 {
-        this->GetValue(0), this->GetValue(9)
-    };
-    
-    EXPECT_TRUE(v1 <= v2);
-    EXPECT_FALSE(v1 >= v2);
-    EXPECT_FALSE(v2 <= v1);
-    EXPECT_TRUE(v2 >= v1);
-    EXPECT_TRUE(v1 < v2);
-    EXPECT_FALSE(v1 > v2);
-    EXPECT_FALSE(v2 < v1);
-    EXPECT_TRUE(v2 > v1);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v1 = this->GetVectorOfSize(size);
+        auto v2 = this->GetVectorOfSize(size - 1);
+        v1[1] = this->GetValue(2);
+        v1[2] = this->GetValue(1);
+        v2[1] = this->GetValue(9);
+        
+        EXPECT_TRUE(v1 <= v2);
+        EXPECT_FALSE(v1 >= v2);
+        EXPECT_FALSE(v2 <= v1);
+        EXPECT_TRUE(v2 >= v1);
+        EXPECT_TRUE(v1 < v2);
+        EXPECT_FALSE(v1 > v2);
+        EXPECT_FALSE(v2 < v1);
+        EXPECT_TRUE(v2 > v1);
+    }
 }
 
 #if CPP_ABOVE_17
@@ -1568,48 +1869,57 @@ TYPED_TEST(VectorTestBaseFixture, ThreeWayCompareOfEmptyVectors) {
 }
 
 TYPED_TEST(VectorTestBaseFixture, ThreeWayCompareOfOneEmpty) {
-    typename TestFixture::vector v1;
-    auto v2 = this->GetVectorOfSize(3);
-    
-    EXPECT_TRUE((v1 <=> v2) < 0);
-    EXPECT_TRUE((v2 <=> v1) > 0);
+    for (const auto& size : this->GetAllSizes()) {
+        typename TestFixture::vector v1;
+        auto v2 = this->GetVectorOfSize(size);
+        
+        EXPECT_TRUE((v1 <=> v2) < 0);
+        EXPECT_TRUE((v2 <=> v1) > 0);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, ThreeWayCompareOfNonEmptyEqualVectors) {
-    auto v1 = this->GetVectorOfSize(3);
-    auto v2 = this->GetVectorOfSize(3);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v1 = this->GetVectorOfSize(size);
+        auto v2 = this->GetVectorOfSize(size);
 
-    EXPECT_TRUE((v1 <=> v2) == 0);
-    EXPECT_TRUE((v2 <=> v1) == 0);
+        EXPECT_TRUE((v1 <=> v2) == 0);
+        EXPECT_TRUE((v2 <=> v1) == 0);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, ThreeWayCompareOfNonEmptyEqualSizedVectors) {
-    auto v1 = this->GetVectorOfSize(3);
-    auto v2 = this->GetVectorOfSize(3);
-    v2[1] = this->GetValue(3);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v1 = this->GetVectorOfSize(size);
+        auto v2 = this->GetVectorOfSize(size);
+        v2[1] = this->GetValue(size);
 
-    EXPECT_TRUE((v1 <=> v2) < 0);
-    EXPECT_TRUE((v2 <=> v1) > 0);
+        EXPECT_TRUE((v1 <=> v2) < 0);
+        EXPECT_TRUE((v2 <=> v1) > 0);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, ThreeWayCompareOfNonEmptyDifferentSizedVectorsOnePrefixOfOther) {
-    auto v1 = this->GetVectorOfSize(3);
-    auto v2 = this->GetVectorOfSize(4);
+    for (const auto& size : this->GetAllSizes()) {
+        auto v1 = this->GetVectorOfSize(size);
+        auto v2 = this->GetVectorOfSize(size + 1);
 
-    EXPECT_TRUE((v1 <=> v2) < 0);
-    EXPECT_TRUE((v2 <=> v1) > 0);
+        EXPECT_TRUE((v1 <=> v2) < 0);
+        EXPECT_TRUE((v2 <=> v1) > 0);
+    }
 }
 
 TYPED_TEST(VectorTestBaseFixture, ThreeWayCompareOfNonEmptyDifferentVectors) {
-    typename TestFixture::vector v1 {
-        this->GetValue(0), this->GetValue(2), this->GetValue(1)
-    };
-    typename TestFixture::vector v2 {
-        this->GetValue(0), this->GetValue(9)
-    };
+    for (const auto& size : this->GetAllSizes()) {
+        auto v1 = this->GetVectorOfSize(size);
+        auto v2 = this->GetVectorOfSize(size - 1);
+        v1[1] = this->GetValue(2);
+        v1[2] = this->GetValue(1);
+        v2[1] = this->GetValue(9);
 
-    EXPECT_TRUE((v1 <=> v2) < 0);
-    EXPECT_TRUE((v2 <=> v1) > 0);
+        EXPECT_TRUE((v1 <=> v2) < 0);
+        EXPECT_TRUE((v2 <=> v1) > 0);
+    }
 }
 
 #endif // CPP_ABOVE_17
