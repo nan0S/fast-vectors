@@ -126,7 +126,7 @@ typename VectorTestBaseFixture<V>::vector
 VectorTestBaseFixture<V>::GetVectorOfSize(size_type size) {
     vector v(size);
     for (size_type i = 0; i < size; ++i)
-        v[i] = get_value<value_type>(i);
+        v[i] = this->GetValue(i);
 
     return v;
 }
@@ -146,6 +146,7 @@ std::vector<typename VectorTestBaseFixture<V>::value_type>
 VectorTestBaseFixture<V>::GetInitializedVectorOfSize(size_type size) {
     std::vector<value_type> v;
     v.reserve(size);
+
     for (size_type i = 0; i < size; ++i)
         v.push_back(this->GetValue(i));
 
@@ -192,7 +193,7 @@ VectorTestBaseFixture<V>::InsertOneElementByCopy(vector& v, size_type pos, int i
     
     auto it = v.insert(v.begin() + pos, val);
 
-    ExpectInsertedInAt(v, pos, 1, save);
+    this->ExpectInsertedInAt(v, pos, 1, save);
     EXPECT_EQ(it, v.begin() + pos);
     EXPECT_EQ(*it, val);
 }
@@ -204,7 +205,7 @@ VectorTestBaseFixture<V>::InsertOneElementByMove(vector& v, size_type pos, int i
     
     auto it = v.insert(v.begin() + pos, get_value<value_type>(id));
 
-    ExpectInsertedInAt(v, pos, 1, save);
+    this->ExpectInsertedInAt(v, pos, 1, save);
     EXPECT_EQ(it, v.begin() + pos);
     EXPECT_EQ(*it, get_value<value_type>(id));
 }
@@ -217,7 +218,7 @@ VectorTestBaseFixture<V>::InsertMultipleElementsByFill(vector& v, size_type pos,
 
     auto it = v.insert(v.begin() + pos, count, val);
 
-    ExpectInsertedInAt(v, pos, count, save);
+    this->ExpectInsertedInAt(v, pos, count, save);
     EXPECT_EQ(it, v.begin() + pos);
     for (size_type i = 0; i < count; ++i)
         EXPECT_EQ(v[pos + i], val);
@@ -235,7 +236,7 @@ VectorTestBaseFixture<V>::InsertMultipleElementsByRange(vector& v, size_type pos
 
     auto it = v.insert(v.begin() + pos, begin, end);
 
-    ExpectInsertedInAt(v, pos, count, save);
+    this->ExpectInsertedInAt(v, pos, count, save);
     EXPECT_EQ(it, v.begin() + pos);
     for (size_type i = 0; i < count; ++i, ++begin) {
         EXPECT_EQ(*begin, save_range[i]);
@@ -254,7 +255,7 @@ VectorTestBaseFixture<V>::InsertMultipleElementsByInitializerList(vector& v, siz
 
     auto it = v.insert(v.begin() + pos, ilist);
 
-    ExpectInsertedInAt(v, pos, count, save);
+    this->ExpectInsertedInAt(v, pos, count, save);
     EXPECT_EQ(it, v.begin() + pos);
     for (size_type i = 0; i < count; ++i) {
         EXPECT_EQ(ilist.begin()[i], save_range[i]);
@@ -269,7 +270,7 @@ VectorTestBaseFixture<V>::EmplaceAt(vector& v, size_type pos, int id) {
     
     auto it = v.emplace(v.begin() + pos, get_value<value_type>(id));
 
-    ExpectInsertedInAt(v, pos, 1, save);
+    this->ExpectInsertedInAt(v, pos, 1, save);
     EXPECT_EQ(it, v.begin() + pos);
     EXPECT_EQ(*it, get_value<value_type>(id));
 }
@@ -282,7 +283,7 @@ VectorTestBaseFixture<V>::EraseOneElement(vector& v, size_type pos) {
 
     auto it = v.erase(v.begin() + pos);
 
-    ExpectErasedInAt(v, pos, pos == initial_size ? 0 : 1, save);
+    this->ExpectErasedInAt(v, pos, pos == initial_size ? 0 : 1, save);
     EXPECT_EQ(it, v.begin() + pos);
 }
 
@@ -295,7 +296,7 @@ VectorTestBaseFixture<V>::EraseMultipleElements(vector& v, size_type pos, size_t
 
     auto it = v.erase(v.begin() + pos, v.begin() + pos + count);
 
-    ExpectErasedInAt(v, pos, count, save);
+    this->ExpectErasedInAt(v, pos, count, save);
     EXPECT_EQ(it, v.begin() + pos);
 }
 
@@ -319,12 +320,12 @@ std::string TypeNames::GetName(int id) {
 
 using TestedTypes = ::testing::Types<
     tested_vector_t<int>,
-    // tested_vector_t<test_type>,
+    tested_vector_t<test_type>,
 #if !(CPP_ABOVE_17) && !defined(DONT_COMPARE)
     compare_vector_t<test_type>,
 #endif
-    tested_vector_t<std::string>
-    // tested_vector_t<std::array<int, 10>>
+    tested_vector_t<std::string>,
+    tested_vector_t<std::array<int, 10>>
 >;
 
 TYPED_TEST_SUITE(VectorTestBaseFixture, TestedTypes, TypeNames);
