@@ -187,7 +187,7 @@ NT_Move_A<T> shiftl(T* dest, T* begin, T* end);
  * implementations
  */
 
-// TODO: temporary
+// TODO: temporary, remove
 template<class T>
 UWR_FORCEINLINE
 T_Move<T> shiftr_data(T* begin, len_t end)
@@ -195,7 +195,7 @@ T_Move<T> shiftr_data(T* begin, len_t end)
     memmove(begin + 1, begin, end * sizeof(T));
 }
 
-// TODO: remove
+// TODO: temporary, remove
 template<class T>
 UWR_FORCEINLINE
 NT_Move<T> shiftr_data(T* begin, len_t end)
