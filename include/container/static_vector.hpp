@@ -122,8 +122,8 @@ private:
     template<class InputIterator>
     UWR_FORCEINLINE constexpr iterator priv_copy_insert(const_iterator pos, InputIterator first, InputIterator last, size_type n);
 
-    template<class ConstructProxy>
-    constexpr void priv_resize(size_type n, ConstructProxy&& proxy);
+    template<class ResizeProxy>
+    constexpr void priv_resize(ResizeProxy&& proxy);
     template<class AssignProxy>
     constexpr void priv_assign(AssignProxy&& proxy);
     template<class InsertProxy>
@@ -302,13 +302,13 @@ static_vector<T, C, size_t>::max_size() const noexcept {
 template<class T, len_t C, class size_t>
 constexpr void
 static_vector<T, C, size_t>::resize(size_type n) {
-    this->priv_resize(n, default_construct_proxy<T>());
+    this->priv_resize(default_construct_proxy<T>(n));
 }
 
 template<class T, len_t C, class size_t>
 constexpr void
 static_vector<T, C, size_t>::resize(size_type n, const T& val) {
-    this->priv_resize(n, unitialized_fill_proxy<T>(val));
+    this->priv_resize(unitialized_fill_proxy<T>(n, val));
 }
 
 template<class T, len_t C, class size_t>
@@ -416,7 +416,7 @@ static_vector<T, C, size_t>::assign(size_type n, const T& val) {
 template<class T, len_t C, class size_t>
 constexpr void
 static_vector<T, C, size_t>::assign(std::initializer_list<T> ilist) {
-    this->assign(ilist.begin(), ilist.end());
+    this->priv_copy_assign(ilist.begin(), ilist.end(), ilist.size());
 }
 
 template<class T, len_t C, class size_t>
@@ -590,18 +590,18 @@ static_vector<T, C, size_t>::data_at(size_type n) const noexcept {
 }
 
 template<class T, len_t C, class size_t>
-template<class ConstructProxy>
+template<class ResizeProxy>
 constexpr void
-static_vector<T, C, size_t>::priv_resize(size_type n, ConstructProxy&& proxy) {
+static_vector<T, C, size_t>::priv_resize(ResizeProxy&& proxy) {
     T* const m_end = this->data() + this->m_length;
-    T* const new_end = this->data() + n;
+    T* const new_end = this->data() + proxy.n;
 
-    if (n > this->m_length)
+    if (proxy.n > this->m_length)
         proxy.construct(m_end, new_end);
     else
         mem::destroy(new_end, m_end);
 
-    this->m_length = n;
+    this->m_length = proxy.n;
 }
 
 template<class T, len_t C, class size_t>
@@ -637,7 +637,6 @@ template<class T, len_t C, class size_t>
 template<class InputIterator>
 constexpr typename static_vector<T, C, size_t>::iterator
 static_vector<T, C, size_t>::priv_copy_insert(const_iterator pos, InputIterator first, InputIterator last, size_type n) {
-    UWR_ASSERT(static_cast<size_type>(std::distance(first, last)) == n);
     return this->priv_insert(pos, insert_copy_range_proxy<T, InputIterator>(first, last, n));
 }
 
