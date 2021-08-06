@@ -1,12 +1,11 @@
 #include <iostream>
-#include <vector>
 #include <chrono>
 #include <functional>
-
 #include <benchmark/benchmark.h>
 #include <utils/utils.hpp>
 #include <test_type/test_type.hpp>
 #include <boost/container/vector.hpp>
+#include <vector>
 #include <vector.hpp>
 #include <rvector.h>
 

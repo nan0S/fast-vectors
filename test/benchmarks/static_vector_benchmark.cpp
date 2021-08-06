@@ -1,6 +1,6 @@
+#include <boost/container/static_vector.hpp>
 #include <static_vector.hpp>
 #include <static_vector_alt.hpp>
-#include <boost/container/static_vector.hpp>
 #include <test_type/test_type.hpp>
 
 #include "vector_benchmark_base.hpp"

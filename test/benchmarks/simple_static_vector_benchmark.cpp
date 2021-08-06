@@ -7,8 +7,8 @@
 #include <utils/utils.hpp>
 #include <test_type/test_type.hpp>
 #include <boost/container/static_vector.hpp>
-#include <static_vector_alt.hpp>
 #include <static_vector.hpp>
+#include <static_vector_alt.hpp>
 
 using namespace benchmark; 
 
