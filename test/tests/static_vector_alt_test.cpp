@@ -9,6 +9,9 @@ using compare_vector_t = boost::container::static_vector<T, C>;
 
 #include "vector_test_base.hpp"
 
+static_assert(C == VectorTestBaseFixture<tested_vector_t<int>>::C,
+        "Capacity of static_vector should be the same as defined in VectorTestBaseFixture class!");
+
 template<class V>
 class StaticVectorTestFixture : public VectorTestBaseFixture<V> {
 };
