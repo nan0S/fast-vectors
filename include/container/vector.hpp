@@ -751,8 +751,8 @@ vector<T, size_t>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
             T* const i_begin = new_data + (position - this->m_data);
             T* const i_end = i_begin + proxy.count;
 
-            mem::umove(new_data, this->m_data, pos);
-            mem::umove(i_end, position, m_end);
+            mem::umove<T, const T*>(new_data, this->m_data, pos);
+            mem::umove<T, const T*>(i_end, pos, m_end);
             proxy.insert_with_spill(i_begin, i_begin, i_end);
 
             mem::destroy(this->m_data, m_end);
@@ -782,7 +782,6 @@ vector<T, size_t>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
         return position;
     }
 }
-
 
 
 /*
