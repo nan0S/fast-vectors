@@ -9,6 +9,13 @@
 namespace uwr::mem {
 
 /*
+ * fix capacity to be allocator designed,
+ * capacity of holding n objects of type T
+ */
+template<class T>
+len_t fix_capacity(len_t n);
+
+/*
  * allocate n objects of type T
  */
 template<class T>
@@ -101,20 +108,31 @@ static NT_Move_C<T, bool> do_expand_in_place_or_destroy_and_alloc_raw(T*& data, 
  *        special way
  */
 template<class T>
-bool expand_in_place_or_alloc_raw(T*& data, len_t cap, len_t req, T*& out_ptr);
+bool expand_in_place_or_alloc_raw(T* data, len_t cap, len_t req, T*& out_ptr);
 
 /*
  * expand_in_place_or_alloc_raw helper functions
  */
 template<class T>
-static T_Move_C<T, bool> do_expand_in_place_or_alloc_raw(T*& data, len_t cap, len_t req, T*& out_ptr);
+static T_Move_C<T, bool> do_expand_in_place_or_alloc_raw(T* data, len_t cap, len_t req, T*& out_ptr);
 template<class T>
-static NT_Move_C<T, bool> do_expand_in_place_or_alloc_raw(T*& data, len_t cap, len_t req, T*& out_ptr);
+static NT_Move_C<T, bool> do_expand_in_place_or_alloc_raw(T* data, len_t cap, len_t req, T*& out_ptr);
 
 
 /*
  * implementations
  */
+
+template<class T>
+len_t fix_capacity(len_t n) {
+    if (is_big<T>(n))
+        return (n * sizeof(T) + mem::page_size - 1) / mem::page_size
+            * mem::page_size / sizeof(T);
+    else
+        return n;
+        // return std::max((64 + sizeof(T) - 1) / sizeof(T), n);
+}
+
 template<class T>
 T* allocate(len_t n) {
     if (is_big<T>(n))
@@ -130,6 +148,7 @@ int is_big(len_t n) {
 
 template<class T>
 T* big_allocate(len_t n) {
+    UWR_ASSERT(is_big<T>(n));
     return (T*)mmap(NULL, n * sizeof(T),
                     PROT_READ | PROT_WRITE,
                     MAP_PRIVATE | MAP_ANONYMOUS,
@@ -217,7 +236,7 @@ NT_Move_C<T> reallocate(T*& data, len_t len, len_t cap, len_t req) {
                                      req * sizeof(T), 0);
             if (new_data != (T*)-1)
                 data = new_data;
-            if (new_data == (T*)-1) {
+            else {
                 new_data = big_allocate<T>(req);
                 umove(new_data, data, len);
                 destroy(data, len);
@@ -318,7 +337,7 @@ NT_Move_C<T, bool> do_expand_in_place_or_destroy_and_alloc_raw(T*& data, len_t l
 }
 
 template<class T>
-bool expand_in_place_or_alloc_raw(T*& data, len_t cap, len_t req, T*& out_ptr) {
+bool expand_in_place_or_alloc_raw(T* data, len_t cap, len_t req, T*& out_ptr) {
     UWR_ASSERT(req > len);
 
     if (UWR_LIKELY(!!data))
@@ -331,7 +350,7 @@ bool expand_in_place_or_alloc_raw(T*& data, len_t cap, len_t req, T*& out_ptr) {
 
 // TODO: simplify
 template<class T>
-T_Move_C<T, bool> do_expand_in_place_or_alloc_raw(T*& data, len_t cap, len_t req, T*& out_ptr) {
+T_Move_C<T, bool> do_expand_in_place_or_alloc_raw(T* data, len_t cap, len_t req, T*& out_ptr) {
     UWR_ASSERT(req > cap);
     int cond = is_big<T>(cap) | is_big<T>(req) << 1;
 
@@ -363,7 +382,7 @@ T_Move_C<T, bool> do_expand_in_place_or_alloc_raw(T*& data, len_t cap, len_t req
 }
 
 template<class T>
-NT_Move_C<T, bool> do_expand_in_place_or_alloc_raw(T*& data, len_t cap, len_t req, T*& out_ptr) {
+NT_Move_C<T, bool> do_expand_in_place_or_alloc_raw(T* data, len_t cap, len_t req, T*& out_ptr) {
     UWR_ASSERT(req > cap);
     int cond = is_big<T>(cap) | is_big<T>(req) << 1;
 
