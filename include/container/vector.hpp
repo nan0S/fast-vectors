@@ -641,8 +641,8 @@ vector<T, size_t>::next_capacity(size_type add) const noexcept {
     // constexpr int num = 2;
     // constexpr int den = 1;
     // return mem::fix_capacity<T>(std::max(2 * this->m_capacity, this->m_capacity + add));
-    return std::max(2 * this->m_capacity, this->m_capacity + add);
-    // return mem::fix_capacity<T>(this->m_capacity * 2 + add);
+    // return std::max(2 * this->m_capacity, this->m_capacity + add);
+    return mem::fix_capacity<T>(this->m_capacity * 2 + add);
     // return mem::fix_capacity<T>(std::max(num * this->m_capacity / den, this->m_capacity + add));
 }
 
