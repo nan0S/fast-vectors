@@ -7,16 +7,22 @@ namespace uwr {
 template<class T>
 class default_construct_proxy {
 public:
+    UWR_FORCEINLINE default_construct_proxy(mem::len_t n)
+        : n(n) {}
+
     UWR_FORCEINLINE void construct(T* begin, T* end) {
         mem::construct(begin, end);
     }
+
+public:
+    mem::len_t n;
 };
 
 template<class T>
 class unitialized_fill_proxy {
 public:
-    UWR_FORCEINLINE explicit unitialized_fill_proxy(const T& value)
-        : value(value) {}
+    UWR_FORCEINLINE explicit unitialized_fill_proxy(mem::len_t n, const T& value)
+        : value(value), n(n) {}
 
     UWR_FORCEINLINE void construct(T* begin, T* end) {
         mem::ufill(begin, end, value);
@@ -24,6 +30,9 @@ public:
 
 private:
     const T& value;
+
+public:
+    mem::len_t n;
 };
 
 template<class T, class InputIterator>
@@ -132,12 +141,12 @@ public:
         : value(value), count(count) {}
 
     UWR_FORCEINLINE void insert_without_spill(T* begin, T* end) {
-        mem::fill(begin, end, value);
+        mem::fill(begin, end, this->value);
     }
 
     UWR_FORCEINLINE void insert_with_spill(T* position, T* end, T* spill) {
-        mem::fill(position, end, value);
-        mem::ufill(end, spill, value);
+        mem::fill(position, end, this->value);
+        mem::ufill(end, spill, this->value);
     }
 
 private:
@@ -161,7 +170,7 @@ public:
 
     UWR_FORCEINLINE void insert_with_spill(T* position, T* end, T*) {
         mem::len_t rest = static_cast<mem::len_t>(std::distance(position, end));
-        InputIterator split = std::next(first, rest);
+        InputIterator split = std::next(this->first, rest);
 
         mem::copy(position, this->first, split);
         mem::ucopy(end, split, this->last);
