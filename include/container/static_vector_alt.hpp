@@ -4,6 +4,7 @@
 
 #include "../common/memory.hpp"
 #include "../common/define.hpp"
+#include "../common/proxy.hpp"
 #if CPP_ABOVE_17
 #include "../common/synth_three_way.hpp"
 #endif
@@ -61,8 +62,8 @@ public:
 
     UWR_FORCEINLINE constexpr size_type size() const noexcept;
     UWR_FORCEINLINE constexpr size_type max_size() const noexcept;
-    constexpr void resize(size_type n);
-    constexpr void resize(size_type n, const T& val);
+    UWR_FORCEINLINE constexpr void resize(size_type n);
+    UWR_FORCEINLINE constexpr void resize(size_type n, const T& val);
     UWR_FORCEINLINE constexpr size_type capacity() const noexcept;
     [[nodiscard]] UWR_FORCEINLINE constexpr bool empty() const noexcept;
     UWR_FORCEINLINE constexpr void reserve(size_type n) noexcept;
@@ -81,7 +82,7 @@ public:
 
     template<class InputIterator, class = typename std::iterator_traits<InputIterator>::value_type>
     UWR_FORCEINLINE constexpr void assign(InputIterator first, InputIterator last);
-    constexpr void assign(size_type n, const T& val);
+    UWR_FORCEINLINE constexpr void assign(size_type n, const T& val);
     UWR_FORCEINLINE constexpr void assign(std::initializer_list<T> ilist);
 
     UWR_FORCEINLINE constexpr void push_back(const T& value);
@@ -93,9 +94,9 @@ public:
 
     UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, const T& value);
     UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, T&& value);
-    constexpr iterator insert(const_iterator pos, size_type count, const T& value);
+    UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, size_type count, const T& value);
     template<class InputIterator, class = typename std::iterator_traits<InputIterator>::value_type>
-    constexpr iterator insert(const_iterator pos, InputIterator first, InputIterator last);
+    UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, InputIterator first, InputIterator last);
     UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, std::initializer_list<T> ilist);
 
     constexpr iterator erase(const_iterator pos);
@@ -114,12 +115,21 @@ public:
 private:
     UWR_FORCEINLINE constexpr T* data_at(size_type n) noexcept;
     UWR_FORCEINLINE constexpr const T* data_at(size_type n) const noexcept;
+    template<class InputIterator>
+    UWR_FORCEINLINE constexpr void priv_copy_assign(InputIterator first, InputIterator last, size_type n);
+    template<class InputIterator>
+    UWR_FORCEINLINE constexpr void priv_move_assign(InputIterator first, InputIterator last, size_type n);
+    template<class InputIterator>
+    UWR_FORCEINLINE constexpr iterator priv_copy_insert(const_iterator pos, InputIterator first, InputIterator last, size_type n);
+
+    template<class ResizeProxy>
+    constexpr void priv_resize(ResizeProxy&& proxy);
+    template<class AssignProxy>
+    constexpr void priv_assign(AssignProxy&& proxy);
+    template<class InsertProxy>
+    constexpr iterator priv_insert(const_iterator pos, InsertProxy&& proxy);
     constexpr void priv_swap(static_vector_alt& shorter, static_vector_alt& longer,
             size_type s_length, size_type l_length) const;
-    template<class InputIterator>
-    constexpr void priv_copy_assign(InputIterator first, InputIterator last, size_type n);
-    template<class InputIterator>
-    constexpr void priv_move_assign(InputIterator first, InputIterator last, size_type n);
 
 private:
     typename std::aligned_storage<sizeof(T), alignof(T)>::type m_data[C];
@@ -293,27 +303,13 @@ static_vector_alt<T, C, size_t>::max_size() const noexcept {
 template<class T, len_t C, class size_t>
 constexpr void
 static_vector_alt<T, C, size_t>::resize(size_type n) {
-    T* const new_end = this->data() + n;
-
-    if (new_end > this->m_end)
-        mem::construct(this->m_end, new_end);
-    else
-        mem::destroy(new_end, this->m_end);
-
-    this->m_end = new_end;
+    this->priv_resize(default_construct_proxy<T>(n));
 }
 
 template<class T, len_t C, class size_t>
 constexpr void
 static_vector_alt<T, C, size_t>::resize(size_type n, const T& val) {
-    T* const new_end = this->data() + n;
-
-    if (new_end > this->m_end)
-        mem::ufill(this->m_end, new_end, val);
-    else
-        mem::destroy(new_end, this->m_end);
-
-    this->m_end = new_end;
+    this->priv_resize(unitialized_fill_proxy<T>(n, val));
 }
 
 template<class T, len_t C, class size_t>
@@ -415,25 +411,13 @@ static_vector_alt<T, C, size_t>::assign(InputIterator first, InputIterator last)
 template<class T, len_t C, class size_t>
 constexpr void
 static_vector_alt<T, C, size_t>::assign(size_type n, const T& val) {
-    T* const m_data = this->data();
-    T* const split = m_data + n;
-    
-    if (split > this->m_end) {
-        mem::fill(m_data, this->m_end, val);
-        mem::ufill(this->m_end, split, val);
-    }
-    else {
-        mem::destroy(split, this->m_end);
-        mem::fill(m_data, split, val);
-    }
-
-    this->m_end = split;
+    this->priv_assign(assign_fill_proxy(n, val));
 }
 
 template<class T, len_t C, class size_t>
 constexpr void
 static_vector_alt<T, C, size_t>::assign(std::initializer_list<T> ilist) {
-    this->assign(ilist.begin(), ilist.end());
+    this->priv_copy_assign(ilist.begin(), ilist.end(), ilist.size());
 }
 
 template<class T, len_t C, class size_t>
@@ -486,62 +470,21 @@ static_vector_alt<T, C, size_t>::insert(const_iterator pos, T&& value) {
 template<class T, len_t C, class size_t>
 constexpr typename static_vector_alt<T, C, size_t>::iterator
 static_vector_alt<T, C, size_t>::insert(const_iterator pos, size_type count, const T& value) {
-    T* const position = const_cast<T* const>(pos);
-
-    if (UWR_UNLIKELY(!count))
-        return position;
-
-    T* const spill = position + count;
-
-    if (spill < this->m_end) {
-        mem::shiftr(spill, position, this->m_end);
-        mem::fill(position, spill, value);
-    }
-    else {
-        mem::umove(spill, position, this->m_end);
-        mem::fill(position, this->m_end, value);
-        mem::ufill(this->m_end, spill, value);
-    }
-
-    this->m_end += count;
-
-    return position;
+    return this->priv_insert(pos, insert_fill_proxy(count, value));
 }
 
 template<class T, len_t C, class size_t>
 template<class InputIterator, class>
 constexpr typename static_vector_alt<T, C, size_t>::iterator
 static_vector_alt<T, C, size_t>::insert(const_iterator pos, InputIterator first, InputIterator last) {
-    T* const position = const_cast<T* const>(pos);
-
-    if (UWR_UNLIKELY(first == last))
-        return position;
-    
-    size_type count = static_cast<size_type>(std::distance(first, last));
-    T* const spill = position + count;
-
-    if (spill < this->m_end) {
-        mem::shiftr(spill, position, this->m_end);
-        mem::copy(position, first, last);
-    }
-    else {
-        size_type rest = static_cast<size_type>(std::distance(position, this->m_end));
-        InputIterator split = std::next(first, rest);
-
-        mem::umove(spill, position, this->m_end);
-        mem::copy(position, first, split);
-        mem::ucopy(this->m_end, split, last);
-    }
-
-    this->m_end += count;
-
-    return position;
+    return this->priv_copy_insert(pos, first, last,
+            static_cast<size_type>(std::distance(first, last)));
 }
 
 template<class T, len_t C, class size_t>
 constexpr typename static_vector_alt<T, C, size_t>::iterator
 static_vector_alt<T, C, size_t>::insert(const_iterator pos, std::initializer_list<T> ilist) {
-    return this->insert(pos, ilist.begin(), ilist.end());
+    return this->priv_copy_insert(pos, ilist.begin(), ilist.end(), ilist.size());
 }
 
 template<class T, len_t C, class size_t>
@@ -648,6 +591,81 @@ static_vector_alt<T, C, size_t>::data_at(size_type n) const noexcept {
 }
 
 template<class T, len_t C, class size_t>
+template<class ResizeProxy>
+constexpr void
+static_vector_alt<T, C, size_t>::priv_resize(ResizeProxy&& proxy) {
+    T* const new_end = this->data() + proxy.n;
+
+    if (new_end > this->m_end)
+        proxy.construct(this->m_end, new_end);
+    else
+        mem::destroy(new_end, this->m_end);
+
+    this->m_end = new_end;
+}
+
+template<class T, len_t C, class size_t>
+template<class InputIterator>
+constexpr void
+static_vector_alt<T, C, size_t>::priv_copy_assign(InputIterator first, InputIterator last, size_type n) {
+    this->priv_assign(copy_assign_range_proxy<T, InputIterator>(first, last, n));
+}
+
+template<class T, len_t C, class size_t>
+template<class InputIterator>
+constexpr void
+static_vector_alt<T, C, size_t>::priv_move_assign(InputIterator first, InputIterator last, size_type n) {
+    this->priv_assign(move_assign_range_proxy<T, InputIterator>(first, last, n));
+}
+
+template<class T, len_t C, class size_t>
+template<class AssignProxy>
+constexpr void
+static_vector_alt<T, C, size_t>::priv_assign(AssignProxy&& proxy) {
+    T* const m_data = this->data();
+    T* const new_end = m_data + proxy.n;
+
+    if (new_end > this->m_end)
+        proxy.shorter_assign(m_data, this->m_end, this->size());
+    else
+        proxy.longer_assign(m_data, this->m_end, this->size());
+
+    this->m_end = new_end;
+}
+
+template<class T, len_t C, class size_t>
+template<class InputIterator>
+constexpr typename static_vector_alt<T, C, size_t>::iterator
+static_vector_alt<T, C, size_t>::priv_copy_insert(const_iterator pos, InputIterator first, InputIterator last, size_type n) {
+    return this->priv_insert(pos, insert_copy_range_proxy<T, InputIterator>(first, last, n));
+}
+
+template<class T, len_t C, class size_t>
+template<class InsertProxy>
+constexpr typename static_vector_alt<T, C, size_t>::iterator
+static_vector_alt<T, C, size_t>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
+    T* const position = const_cast<T* const>(pos);
+
+    if (UWR_UNLIKELY(!proxy.count))
+        return position;
+
+    T* const spill = position + proxy.count;
+
+    if (spill < this->m_end) {
+        mem::shiftr(spill, position, this->m_end);
+        proxy.insert_without_spill(position, spill);
+    }
+    else {
+        mem::umove(spill, position, this->m_end);
+        proxy.insert_with_spill(position, this->m_end, spill);
+    }
+
+    this->m_end += proxy.count;
+
+    return position;
+}
+
+template<class T, len_t C, class size_t>
 constexpr void
 static_vector_alt<T, C, size_t>::priv_swap(
         static_vector_alt<T, C, size_t>& shorter,
@@ -662,54 +680,6 @@ static_vector_alt<T, C, size_t>::priv_swap(
 
     shorter.m_end = s_begin + l_len;
     longer.m_end = l_begin + s_len;
-}
-
-template<class T, len_t C, class size_t>
-template<class InputIterator>
-constexpr void
-static_vector_alt<T, C, size_t>::priv_copy_assign(InputIterator first, InputIterator last, size_type n) {
-    UWR_ASSERT(std::distance(first, last) == n);
-
-    T* const m_data = this->data();
-    T* const new_end = m_data + n;
-
-    if (new_end < this->m_end) {
-        mem::destroy(new_end, this->m_end);
-        mem::copy(m_data, first, last);
-    }
-    else {
-        size_type m_len = this->size();
-        InputIterator split = std::next(first, m_len);
-
-        mem::copy(m_data, first, split);
-        mem::ucopy(this->m_end, split, last);
-    }
-
-    this->m_end = new_end;
-}
-
-template<class T, len_t C, class size_t>
-template<class InputIterator>
-constexpr void
-static_vector_alt<T, C, size_t>::priv_move_assign(InputIterator first, InputIterator last, size_type n) {
-    UWR_ASSERT(std::distance(first, last) == n);
-
-    T* const m_data = this->data();
-    T* const new_end = m_data + n;
-
-    if (new_end < this->m_end) {
-        mem::destroy(new_end, this->m_end);
-        mem::move(m_data, first, last);
-    }
-    else {
-        size_type m_len = this->size();
-        InputIterator split = std::next(first, m_len);
-
-        mem::move(m_data, first, split);
-        mem::umove(this->m_end, split, last);
-    }
-
-    this->m_end = new_end;
 }
 
 
