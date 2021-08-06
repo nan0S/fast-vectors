@@ -57,6 +57,7 @@ public:
     static void start_recording();
     static void stop_recording();
     static bool is_current_not_better();
+    static void print_stats();
 
 private:
     int val;

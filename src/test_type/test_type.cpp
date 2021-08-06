@@ -146,3 +146,18 @@ bool test_type::is_current_not_better() {
 
     return compare <= record;
 }
+
+void test_type::print_stats() {
+    std::cout << "()          = " << record.def_cons << std::endl;
+    std::cout << "(int)       = " << record.val_cons << std::endl;
+    std::cout << "(const&)    = " << record.copy_cons << std::endl;
+    std::cout << "(&&)        = " << record.move_cons << std::endl;
+    std::cout << "op=(const&) = " << record.copy_op << std::endl;
+    std::cout << "op=(&&)     = " << record.move_op << std::endl;
+    std::cout << "Total ~()   = " << record.dest << std::endl;
+    std::cout << "Total ()    = " << 
+        record.def_cons + record.val_cons +
+        record.copy_cons + record.move_cons << std::endl;
+    std::cout << "Total op    = " <<
+        record.copy_op + record.move_op << std::endl;
+}
