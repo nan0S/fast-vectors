@@ -26,13 +26,13 @@ template<class Vector>
 void f(const std::string& name) {
     cout << endl << name << ":" << endl;
     test_type::start_recording();
-    
-    Vector v(511);
-    cout << v.capacity() << endl;
-    test_type::start_recording();
-    v.emplace_back();
-    cout << v.capacity() << endl;
-    // v.insert(v.begin(), 10000, 1);
+
+    {
+        Vector v1(100);
+        Vector v2(100);
+        
+        v2 = v1;
+    }
 
     test_type::print_stats();
     cout << endl;
@@ -42,14 +42,17 @@ void f(const std::string& name) {
 
 int main() {
     using T = test_type;
+    // using Vector = rvector<T>;
     // using Vector = uwr::vector<T>;
     // using Vector = std::vector<T>;
     // using Vector = boost_vector<T>;
+    std::cout << mm::fix_capacity<T>(341);
 
-    RUN(uwr::vector<T>);
-    RUN(std::vector<T>);
-    RUN(rvector<T>);
-    RUN(boost_vector<T>);
+    // RUN(uwr::vector<T>);
+    // RUN(std::vector<T>);
+    // RUN(rvector<T>);
+    // RUN(boost_vector<T>);
+    
 
     return 0;
 }
