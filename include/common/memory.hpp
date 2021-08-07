@@ -54,12 +54,11 @@ template<class T>
 UWR_FORCEINLINE
 void fill(T* begin, len_t n, const T& val);
 
-
 /*
  * hybrid fill continuous memory,
  * initialized and unitialized variants
  */
-// TODO: temporaty
+// TODO: temporary
 #define HYBRID_THRESHOLD 1
 template<class T>
 void _hybrid_fill(T* begin, len_t n, const T& val);
