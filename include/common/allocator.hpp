@@ -1,7 +1,6 @@
 #pragma once
 
-// TODO: make sure sys instead of linux
-#include <sys/mman.h>
+#include <linux/mman.h>
 
 #include "define.hpp"
 #include "memory.hpp"
@@ -126,11 +125,10 @@ static NT_Move_C<T, bool> do_expand_in_place_or_alloc_raw(T* data, len_t cap, le
 template<class T>
 len_t fix_capacity(len_t n) {
     if (is_big<T>(n))
-        return (n * sizeof(T) + mem::page_size - 1) / mem::page_size
+        return ((n * sizeof(T) + mem::page_size - 1) / mem::page_size + 1)
             * mem::page_size / sizeof(T);
     else
-        return n;
-        // return std::max((64 + sizeof(T) - 1) / sizeof(T), n);
+        return std::max((64 + sizeof(T) - 1) / sizeof(T), n);
 }
 
 template<class T>

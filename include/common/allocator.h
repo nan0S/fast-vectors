@@ -178,6 +178,7 @@ namespace mm
 	void grow(T*& data, size_type length, size_type& capacity)
 	{
 		if(LIKELY(length < capacity)) return;
+        ++rvector<T>::reallocs;
 		change_capacity(data, length, capacity, capacity*2 + 1);
 	}
 
