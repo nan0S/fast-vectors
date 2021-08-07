@@ -144,7 +144,11 @@ private:
     size_type capacity_;
 public:
     constexpr static size_t map_threshold = 4096 / sizeof(T);
+    static int reallocs;
 };
+
+template<class T>
+int rvector<T>::reallocs = 0;
 
 template<typename T>
 rvector<T>::rvector() noexcept

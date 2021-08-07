@@ -131,7 +131,13 @@ private:
     size_type m_length;
     size_type m_capacity;
     T* m_data;
+
+public:
+    static int reallocs;
 };
+
+template<class T, class size_t>
+int vector<T, size_t>::reallocs = 0;
 
 template<class T, class size_t>
 constexpr
@@ -345,7 +351,7 @@ template<class T, class size_t>
 constexpr void
 vector<T, size_t>::reserve(size_type n) noexcept {
     // TODO: likely here (?)
-    if (n > this->m_capacity) {
+    if (UWR_LIKELY(n > this->m_capacity)) {
         size_type new_capacity = mem::fix_capacity<T>(n);
         mem::reallocate(this->m_data, this->m_length, this->m_capacity, new_capacity);
         this->m_capacity = new_capacity;
@@ -619,7 +625,8 @@ template<class... Args>
 constexpr typename vector<T, size_t>::reference
 vector<T, size_t>::emplace_back(Args&&... args) {
     // TODO: add unlikely (?)
-    if (this->m_length == this->m_capacity) {
+    if (UWR_UNLIKELY(this->m_length == this->m_capacity)) {
+        ++reallocs;
         size_type new_capacity = this->next_capacity(this->m_length + 1);
         mem::reallocate(this->m_data, this->m_length, this->m_capacity, new_capacity);
         this->m_capacity = new_capacity;
@@ -639,12 +646,7 @@ vector<T, size_t>::fast_emplace_back(Args&&... args) noexcept {
 template<class T, class size_t>
 constexpr size_t
 vector<T, size_t>::next_capacity(size_type new_length) const noexcept {
-    // constexpr int num = 2;
-    // constexpr int den = 1;
-    return mem::fix_capacity<T>(std::max(2 * this->m_capacity + 1, new_length));
-    // return std::max(2 * this->m_capacity + 1, this->m_capacity + add);
-    // return mem::fix_capacity<T>(this->m_capacity * 2 + add);
-    // return mem::fix_capacity<T>(std::max(num * this->m_capacity / den, this->m_capacity + add));
+    return mem::fix_capacity<T>(std::max(2 * this->m_capacity, new_length));
 }
 
 template<class T, class size_t>
