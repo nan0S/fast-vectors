@@ -155,9 +155,12 @@ void test_type::print_stats() {
     std::cout << "op=(const&) = " << record.copy_op << std::endl;
     std::cout << "op=(&&)     = " << record.move_op << std::endl;
     std::cout << "Total ~()   = " << record.dest << std::endl;
-    std::cout << "Total ()    = " << 
-        record.def_cons + record.val_cons +
-        record.copy_cons + record.move_cons << std::endl;
-    std::cout << "Total op    = " <<
-        record.copy_op + record.move_op << std::endl;
+
+    int total_cons = record.def_cons + record.val_cons +
+        record.copy_cons + record.move_cons;
+    int total_op = record.copy_op + record.move_op;
+
+    std::cout << "Total ()    = " << total_cons << std::endl;
+    std::cout << "Total op    = " << total_op << std::endl;
+    std::cout << "Total calls = " << total_cons + total_op + record.dest << std::endl;
 }
