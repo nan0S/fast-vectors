@@ -13,11 +13,11 @@ namespace uwr {
 
 using len_t = mem::len_t;
 
-template<class T, len_t C, class size_t=len_t>
+template<class T, len_t C>
 class static_vector_alt {
 public:
     using value_type = T;
-    using size_type = size_t;
+    using size_type = len_t;
     using difference_type = std::ptrdiff_t;
     using reference = T&;
     using const_reference = const T&;
@@ -136,317 +136,317 @@ private:
     T* m_end;
 };
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr
-static_vector_alt<T, C, size_t>::static_vector_alt() noexcept
+static_vector_alt<T, C>::static_vector_alt() noexcept
     : m_end(this->data()) {
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr
-static_vector_alt<T, C, size_t>::static_vector_alt(size_type n)
+static_vector_alt<T, C>::static_vector_alt(size_type n)
     : m_end(this->data() + n) {
     mem::construct(this->data(), this->m_end);
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr
-static_vector_alt<T, C, size_t>::static_vector_alt(size_type n, const T& val)
+static_vector_alt<T, C>::static_vector_alt(size_type n, const T& val)
     : m_end(this->data() + n) {
     mem::ufill(this->data(), this->m_end, val);
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 template<class InputIterator, class>
 constexpr
-static_vector_alt<T, C, size_t>::static_vector_alt(InputIterator first, InputIterator last)
+static_vector_alt<T, C>::static_vector_alt(InputIterator first, InputIterator last)
     : m_end(this->data() + std::distance(first, last)) {
     mem::ucopy(this->data(), first, last);
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr
-static_vector_alt<T, C, size_t>::static_vector_alt(const static_vector_alt& x)
+static_vector_alt<T, C>::static_vector_alt(const static_vector_alt& x)
     : m_end(this->data() + x.size()) {
     mem::ucopy(this->data(), x.begin(), x.end());
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr
-static_vector_alt<T, C, size_t>::static_vector_alt(static_vector_alt&& x) noexcept
+static_vector_alt<T, C>::static_vector_alt(static_vector_alt&& x) noexcept
     : m_end(this->data() + x.size()) {
     mem::umove(this->data(), x.begin(), x.end());
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr
-static_vector_alt<T, C, size_t>::static_vector_alt(std::initializer_list<T> ilist)
+static_vector_alt<T, C>::static_vector_alt(std::initializer_list<T> ilist)
     : m_end(this->data() + ilist.size()) {
     mem::ucopy(this->data(), ilist.begin(), ilist.end());
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 #if CPP_ABOVE_17
 constexpr
 #endif
-static_vector_alt<T, C, size_t>::~static_vector_alt() {
+static_vector_alt<T, C>::~static_vector_alt() {
     mem::destroy(this->data(), this->m_end);
 }
 
-template<class T, len_t C, class size_t>
-constexpr static_vector_alt<T, C, size_t>&
-static_vector_alt<T, C, size_t>::operator=(const static_vector_alt<T, C, size_t>& other) noexcept {
+template<class T, len_t C>
+constexpr static_vector_alt<T, C>&
+static_vector_alt<T, C>::operator=(const static_vector_alt<T, C>& other) noexcept {
     if (UWR_LIKELY(this != &other))
         this->priv_copy_assign(other.begin(), other.end(), other.size());
     return *this;
 }
 
-template<class T, len_t C, class size_t>
-constexpr static_vector_alt<T, C, size_t>&
-static_vector_alt<T, C, size_t>::operator=(static_vector_alt<T, C, size_t>&& other) noexcept {
+template<class T, len_t C>
+constexpr static_vector_alt<T, C>&
+static_vector_alt<T, C>::operator=(static_vector_alt<T, C>&& other) noexcept {
     if (UWR_LIKELY(this != &other))
         this->priv_move_assign(other.begin(), other.end(), other.size());
     return *this;
 }
 
-template<class T, len_t C, class size_t>
-constexpr static_vector_alt<T, C, size_t>&
-static_vector_alt<T, C, size_t>::operator=(std::initializer_list<T> ilist) noexcept {
+template<class T, len_t C>
+constexpr static_vector_alt<T, C>&
+static_vector_alt<T, C>::operator=(std::initializer_list<T> ilist) noexcept {
     this->assign(ilist.begin(), ilist.end());
     return *this;
 }
 
-template<class T, len_t C, class size_t>
-constexpr typename static_vector_alt<T, C, size_t>::iterator
-static_vector_alt<T, C, size_t>::begin() noexcept {
+template<class T, len_t C>
+constexpr typename static_vector_alt<T, C>::iterator
+static_vector_alt<T, C>::begin() noexcept {
     return this->data();
 }
 
-template<class T, len_t C, class size_t>
-constexpr typename static_vector_alt<T, C, size_t>::const_iterator
-static_vector_alt<T, C, size_t>::begin() const noexcept {
+template<class T, len_t C>
+constexpr typename static_vector_alt<T, C>::const_iterator
+static_vector_alt<T, C>::begin() const noexcept {
     return this->data();
 }
 
-template<class T, len_t C, class size_t>
-constexpr typename static_vector_alt<T, C, size_t>::iterator
-static_vector_alt<T, C, size_t>::end() noexcept {
+template<class T, len_t C>
+constexpr typename static_vector_alt<T, C>::iterator
+static_vector_alt<T, C>::end() noexcept {
     return this->m_end;
 }
 
-template<class T, len_t C, class size_t>
-constexpr typename static_vector_alt<T, C, size_t>::const_iterator
-static_vector_alt<T, C, size_t>::end() const noexcept {
+template<class T, len_t C>
+constexpr typename static_vector_alt<T, C>::const_iterator
+static_vector_alt<T, C>::end() const noexcept {
     return this->m_end;
 }
 
-template<class T, len_t C, class size_t>
-constexpr typename static_vector_alt<T, C, size_t>::reverse_iterator
-static_vector_alt<T, C, size_t>::rbegin() noexcept {
+template<class T, len_t C>
+constexpr typename static_vector_alt<T, C>::reverse_iterator
+static_vector_alt<T, C>::rbegin() noexcept {
     return reverse_iterator(this->m_end);
 }
 
-template<class T, len_t C, class size_t>
-constexpr typename static_vector_alt<T, C, size_t>::const_reverse_iterator
-static_vector_alt<T, C, size_t>::rbegin() const noexcept {
+template<class T, len_t C>
+constexpr typename static_vector_alt<T, C>::const_reverse_iterator
+static_vector_alt<T, C>::rbegin() const noexcept {
     return const_reverse_iterator(this->m_end);
 }
 
-template<class T, len_t C, class size_t>
-constexpr typename static_vector_alt<T, C, size_t>::reverse_iterator
-static_vector_alt<T, C, size_t>::rend() noexcept {
+template<class T, len_t C>
+constexpr typename static_vector_alt<T, C>::reverse_iterator
+static_vector_alt<T, C>::rend() noexcept {
     return reverse_iterator(this->data());
 }
 
-template<class T, len_t C, class size_t>
-constexpr typename static_vector_alt<T, C, size_t>::const_reverse_iterator
-static_vector_alt<T, C, size_t>::rend() const noexcept {
+template<class T, len_t C>
+constexpr typename static_vector_alt<T, C>::const_reverse_iterator
+static_vector_alt<T, C>::rend() const noexcept {
     return const_reverse_iterator(this->data());
 }
 
-template<class T, len_t C, class size_t>
-constexpr typename static_vector_alt<T, C, size_t>::const_iterator
-static_vector_alt<T, C, size_t>::cbegin() const noexcept {
+template<class T, len_t C>
+constexpr typename static_vector_alt<T, C>::const_iterator
+static_vector_alt<T, C>::cbegin() const noexcept {
     return this->data();
 }
 
-template<class T, len_t C, class size_t>
-typename static_vector_alt<T, C, size_t>::const_iterator
-constexpr static_vector_alt<T, C, size_t>::cend() const noexcept {
+template<class T, len_t C>
+typename static_vector_alt<T, C>::const_iterator
+constexpr static_vector_alt<T, C>::cend() const noexcept {
     return this->m_end;
 }
 
-template<class T, len_t C, class size_t>
-typename static_vector_alt<T, C, size_t>::const_reverse_iterator
-constexpr static_vector_alt<T, C, size_t>::crbegin() const noexcept {
+template<class T, len_t C>
+typename static_vector_alt<T, C>::const_reverse_iterator
+constexpr static_vector_alt<T, C>::crbegin() const noexcept {
     return const_reverse_iterator(this->m_end);
 }
 
-template<class T, len_t C, class size_t>
-typename static_vector_alt<T, C, size_t>::const_reverse_iterator
-constexpr static_vector_alt<T, C, size_t>::crend() const noexcept {
+template<class T, len_t C>
+typename static_vector_alt<T, C>::const_reverse_iterator
+constexpr static_vector_alt<T, C>::crend() const noexcept {
     return const_reverse_iterator(this->data());
 }
 
-template<class T, len_t C, class size_t>
-constexpr size_t
-static_vector_alt<T, C, size_t>::size() const noexcept {
+template<class T, len_t C>
+constexpr typename static_vector_alt<T, C>::size_type
+static_vector_alt<T, C>::size() const noexcept {
     return static_cast<size_type>(this->m_end - this->data());
 }
 
-template<class T, len_t C, class size_t>
-constexpr size_t
-static_vector_alt<T, C, size_t>::max_size() const noexcept {
+template<class T, len_t C>
+constexpr typename static_vector_alt<T, C>::size_type
+static_vector_alt<T, C>::max_size() const noexcept {
     return C;
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr void
-static_vector_alt<T, C, size_t>::resize(size_type n) {
+static_vector_alt<T, C>::resize(size_type n) {
     this->priv_resize(default_construct_proxy<T>(n));
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr void
-static_vector_alt<T, C, size_t>::resize(size_type n, const T& val) {
+static_vector_alt<T, C>::resize(size_type n, const T& val) {
     this->priv_resize(unitialized_fill_proxy<T>(n, val));
 }
 
-template<class T, len_t C, class size_t>
-constexpr size_t
-static_vector_alt<T, C, size_t>::capacity() const noexcept {
+template<class T, len_t C>
+constexpr typename static_vector_alt<T, C>::size_type
+static_vector_alt<T, C>::capacity() const noexcept {
     return C;
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr bool
-static_vector_alt<T, C, size_t>::empty() const noexcept {
+static_vector_alt<T, C>::empty() const noexcept {
     return this->data() == this->m_end;
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr void
-static_vector_alt<T, C, size_t>::reserve(size_type) noexcept {
+static_vector_alt<T, C>::reserve(size_type) noexcept {
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr void
-static_vector_alt<T, C, size_t>::shrink_to_fit() noexcept {
+static_vector_alt<T, C>::shrink_to_fit() noexcept {
 }
 
-template<class T, len_t C, class size_t>
-constexpr typename static_vector_alt<T, C, size_t>::reference
-static_vector_alt<T, C, size_t>::operator[](size_type n) {
+template<class T, len_t C>
+constexpr typename static_vector_alt<T, C>::reference
+static_vector_alt<T, C>::operator[](size_type n) {
     return *this->data_at(n);
 }
 
-template<class T, len_t C, class size_t>
-typename static_vector_alt<T, C, size_t>::const_reference
-constexpr static_vector_alt<T, C, size_t>::operator[](size_type n) const {
+template<class T, len_t C>
+typename static_vector_alt<T, C>::const_reference
+constexpr static_vector_alt<T, C>::operator[](size_type n) const {
     return *this->data_at(n);
 }
 
-template<class T, len_t C, class size_t>
-constexpr typename static_vector_alt<T, C, size_t>::reference
-static_vector_alt<T, C, size_t>::at(size_type n) {
+template<class T, len_t C>
+constexpr typename static_vector_alt<T, C>::reference
+static_vector_alt<T, C>::at(size_type n) {
     if (this->data() + n < this->m_end)
         return *this->data_at(n);
     else
         throw std::out_of_range("Index out of range: " + std::to_string(n));
 }
 
-template<class T, len_t C, class size_t>
-constexpr typename static_vector_alt<T, C, size_t>::const_reference
-static_vector_alt<T, C, size_t>::at(size_type n) const {
+template<class T, len_t C>
+constexpr typename static_vector_alt<T, C>::const_reference
+static_vector_alt<T, C>::at(size_type n) const {
     if (this->data() + n < this->m_end)
         return *this->data_at(n);
     else
         throw std::out_of_range("Index out of range: " + std::to_string(n));
 }
 
-template<class T, len_t C, class size_t>
-constexpr typename static_vector_alt<T, C, size_t>::reference
-static_vector_alt<T, C, size_t>::front() {
+template<class T, len_t C>
+constexpr typename static_vector_alt<T, C>::reference
+static_vector_alt<T, C>::front() {
     return *this->data_at(0);
 }
 
-template<class T, len_t C, class size_t>
-constexpr typename static_vector_alt<T, C, size_t>::const_reference
-static_vector_alt<T, C, size_t>::front() const {
+template<class T, len_t C>
+constexpr typename static_vector_alt<T, C>::const_reference
+static_vector_alt<T, C>::front() const {
     return *this->data_at(0);
 }
 
-template<class T, len_t C, class size_t>
-typename static_vector_alt<T, C, size_t>::reference
-constexpr static_vector_alt<T, C, size_t>::back() {
+template<class T, len_t C>
+typename static_vector_alt<T, C>::reference
+constexpr static_vector_alt<T, C>::back() {
     return *(this->m_end - 1);
 }
 
-template<class T, len_t C, class size_t>
-typename static_vector_alt<T, C, size_t>::const_reference
-constexpr static_vector_alt<T, C, size_t>::back() const {
+template<class T, len_t C>
+typename static_vector_alt<T, C>::const_reference
+constexpr static_vector_alt<T, C>::back() const {
     return *(this->m_end - 1);
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr T*
-static_vector_alt<T, C, size_t>::data() noexcept {
+static_vector_alt<T, C>::data() noexcept {
     return this->data_at(0);
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr const T*
-static_vector_alt<T, C, size_t>::data() const noexcept {
+static_vector_alt<T, C>::data() const noexcept {
     return this->data_at(0);
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 template<class InputIterator, class>
 constexpr void
-static_vector_alt<T, C, size_t>::assign(InputIterator first, InputIterator last) {
+static_vector_alt<T, C>::assign(InputIterator first, InputIterator last) {
     this->priv_copy_assign(first, last,
             static_cast<size_type>(std::distance(first, last)));
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr void
-static_vector_alt<T, C, size_t>::assign(size_type n, const T& val) {
+static_vector_alt<T, C>::assign(size_type n, const T& val) {
     this->priv_assign(assign_fill_proxy(n, val));
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr void
-static_vector_alt<T, C, size_t>::assign(std::initializer_list<T> ilist) {
+static_vector_alt<T, C>::assign(std::initializer_list<T> ilist) {
     this->priv_copy_assign(ilist.begin(), ilist.end(), ilist.size());
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr void
-static_vector_alt<T, C, size_t>::push_back(const_reference value) {
+static_vector_alt<T, C>::push_back(const_reference value) {
     this->emplace_back(value);
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr void
-static_vector_alt<T, C, size_t>::push_back(T&& value) {
+static_vector_alt<T, C>::push_back(T&& value) {
     this->emplace_back(std::move(value));
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr void
-static_vector_alt<T, C, size_t>::fast_push_back(T&& value) noexcept {
+static_vector_alt<T, C>::fast_push_back(T&& value) noexcept {
     this->fast_emplace_back(std::forward<T>(value));
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr void
-static_vector_alt<T, C, size_t>::pop_back() {
+static_vector_alt<T, C>::pop_back() {
     mem::destroy_at(--this->m_end);
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr bool
-static_vector_alt<T, C, size_t>::safe_pop_back() noexcept {
+static_vector_alt<T, C>::safe_pop_back() noexcept {
     if (UWR_LIKELY(this->m_end != this->data())) {
         this->pop_back();
         return true;
@@ -455,41 +455,41 @@ static_vector_alt<T, C, size_t>::safe_pop_back() noexcept {
         return false;
 }
 
-template<class T, len_t C, class size_t>
-constexpr typename static_vector_alt<T, C, size_t>::iterator
-static_vector_alt<T, C, size_t>::insert(const_iterator pos, const T& value) {
+template<class T, len_t C>
+constexpr typename static_vector_alt<T, C>::iterator
+static_vector_alt<T, C>::insert(const_iterator pos, const T& value) {
     return this->emplace(pos, value);
 }
 
-template<class T, len_t C, class size_t>
-constexpr typename static_vector_alt<T, C, size_t>::iterator
-static_vector_alt<T, C, size_t>::insert(const_iterator pos, T&& value) {
+template<class T, len_t C>
+constexpr typename static_vector_alt<T, C>::iterator
+static_vector_alt<T, C>::insert(const_iterator pos, T&& value) {
     return this->emplace(pos, std::move(value));
 }
 
-template<class T, len_t C, class size_t>
-constexpr typename static_vector_alt<T, C, size_t>::iterator
-static_vector_alt<T, C, size_t>::insert(const_iterator pos, size_type count, const T& value) {
+template<class T, len_t C>
+constexpr typename static_vector_alt<T, C>::iterator
+static_vector_alt<T, C>::insert(const_iterator pos, size_type count, const T& value) {
     return this->priv_insert(pos, insert_fill_proxy(count, value));
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 template<class InputIterator, class>
-constexpr typename static_vector_alt<T, C, size_t>::iterator
-static_vector_alt<T, C, size_t>::insert(const_iterator pos, InputIterator first, InputIterator last) {
+constexpr typename static_vector_alt<T, C>::iterator
+static_vector_alt<T, C>::insert(const_iterator pos, InputIterator first, InputIterator last) {
     return this->priv_copy_insert(pos, first, last,
             static_cast<size_type>(std::distance(first, last)));
 }
 
-template<class T, len_t C, class size_t>
-constexpr typename static_vector_alt<T, C, size_t>::iterator
-static_vector_alt<T, C, size_t>::insert(const_iterator pos, std::initializer_list<T> ilist) {
+template<class T, len_t C>
+constexpr typename static_vector_alt<T, C>::iterator
+static_vector_alt<T, C>::insert(const_iterator pos, std::initializer_list<T> ilist) {
     return this->priv_copy_insert(pos, ilist.begin(), ilist.end(), ilist.size());
 }
 
-template<class T, len_t C, class size_t>
-constexpr typename static_vector_alt<T, C, size_t>::iterator
-static_vector_alt<T, C, size_t>::erase(const_iterator pos) {
+template<class T, len_t C>
+constexpr typename static_vector_alt<T, C>::iterator
+static_vector_alt<T, C>::erase(const_iterator pos) {
     T* const position = const_cast<T* const>(pos);
     mem::shiftl(position, position + 1, this->m_end);
     this->pop_back();
@@ -497,9 +497,9 @@ static_vector_alt<T, C, size_t>::erase(const_iterator pos) {
     return position;
 }
 
-template<class T, len_t C, class size_t>
-constexpr typename static_vector_alt<T, C, size_t>::iterator
-static_vector_alt<T, C, size_t>::erase(const_iterator first, const_iterator last) {
+template<class T, len_t C>
+constexpr typename static_vector_alt<T, C>::iterator
+static_vector_alt<T, C>::erase(const_iterator first, const_iterator last) {
     T* const f = const_cast<T* const>(first);
     size_type count = static_cast<size_type>(std::distance(first, last));
 
@@ -514,9 +514,9 @@ static_vector_alt<T, C, size_t>::erase(const_iterator first, const_iterator last
     return f;
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr void
-static_vector_alt<T, C, size_t>::swap(static_vector_alt<T, C, size_t>& other) {
+static_vector_alt<T, C>::swap(static_vector_alt<T, C>& other) {
     size_type m_len = this->size();
     size_type o_len = other.size();
 
@@ -526,17 +526,17 @@ static_vector_alt<T, C, size_t>::swap(static_vector_alt<T, C, size_t>& other) {
         this->priv_swap(other, *this, o_len, m_len);
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr void
-static_vector_alt<T, C, size_t>::clear() noexcept {
+static_vector_alt<T, C>::clear() noexcept {
     mem::destroy(this->data(), this->m_end);
     this->m_end = this->data();
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 template<class... Args>
-constexpr typename static_vector_alt<T, C, size_t>::iterator
-static_vector_alt<T, C, size_t>::emplace(const_iterator pos, Args&&... args) {
+constexpr typename static_vector_alt<T, C>::iterator
+static_vector_alt<T, C>::emplace(const_iterator pos, Args&&... args) {
     T* const position = const_cast<T* const>(pos);
 
     if (position != this->m_end) {
@@ -560,40 +560,40 @@ static_vector_alt<T, C, size_t>::emplace(const_iterator pos, Args&&... args) {
     return position;
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 template<class... Args>
-constexpr typename static_vector_alt<T, C, size_t>::reference
-static_vector_alt<T, C, size_t>::emplace_back(Args&&... args) {
+constexpr typename static_vector_alt<T, C>::reference
+static_vector_alt<T, C>::emplace_back(Args&&... args) {
     if (UWR_LIKELY(this->m_end != this->data_at(C)))
         return this->fast_emplace_back(std::forward<Args>(args)...);
     else
         throw std::out_of_range("Out of bounds");
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 template<class... Args>
-constexpr typename static_vector_alt<T, C, size_t>::reference
-static_vector_alt<T, C, size_t>::fast_emplace_back(Args&&... args) noexcept {
+constexpr typename static_vector_alt<T, C>::reference
+static_vector_alt<T, C>::fast_emplace_back(Args&&... args) noexcept {
     new (this->m_end) T(std::forward<Args>(args)...);
     return *this->m_end++;
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr T*
-static_vector_alt<T, C, size_t>::data_at(size_type n) noexcept {
+static_vector_alt<T, C>::data_at(size_type n) noexcept {
     return reinterpret_cast<T*>(&this->m_data[n]);
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr const T*
-static_vector_alt<T, C, size_t>::data_at(size_type n) const noexcept {
+static_vector_alt<T, C>::data_at(size_type n) const noexcept {
     return reinterpret_cast<const T*>(&this->m_data[n]);
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 template<class ResizeProxy>
 constexpr void
-static_vector_alt<T, C, size_t>::priv_resize(ResizeProxy&& proxy) {
+static_vector_alt<T, C>::priv_resize(ResizeProxy&& proxy) {
     T* const new_end = this->data() + proxy.n;
 
     if (new_end > this->m_end)
@@ -604,24 +604,24 @@ static_vector_alt<T, C, size_t>::priv_resize(ResizeProxy&& proxy) {
     this->m_end = new_end;
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 template<class InputIterator>
 constexpr void
-static_vector_alt<T, C, size_t>::priv_copy_assign(InputIterator first, InputIterator last, size_type n) {
+static_vector_alt<T, C>::priv_copy_assign(InputIterator first, InputIterator last, size_type n) {
     this->priv_assign(copy_assign_range_proxy<T, InputIterator>(first, last, n));
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 template<class InputIterator>
 constexpr void
-static_vector_alt<T, C, size_t>::priv_move_assign(InputIterator first, InputIterator last, size_type n) {
+static_vector_alt<T, C>::priv_move_assign(InputIterator first, InputIterator last, size_type n) {
     this->priv_assign(move_assign_range_proxy<T, InputIterator>(first, last, n));
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 template<class AssignProxy>
 constexpr void
-static_vector_alt<T, C, size_t>::priv_assign(AssignProxy&& proxy) {
+static_vector_alt<T, C>::priv_assign(AssignProxy&& proxy) {
     T* const m_data = this->data();
     T* const new_end = m_data + proxy.n;
 
@@ -633,17 +633,17 @@ static_vector_alt<T, C, size_t>::priv_assign(AssignProxy&& proxy) {
     this->m_end = new_end;
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 template<class InputIterator>
-constexpr typename static_vector_alt<T, C, size_t>::iterator
-static_vector_alt<T, C, size_t>::priv_copy_insert(const_iterator pos, InputIterator first, InputIterator last, size_type n) {
+constexpr typename static_vector_alt<T, C>::iterator
+static_vector_alt<T, C>::priv_copy_insert(const_iterator pos, InputIterator first, InputIterator last, size_type n) {
     return this->priv_insert(pos, insert_copy_range_proxy<T, InputIterator>(first, last, n));
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 template<class InsertProxy>
-constexpr typename static_vector_alt<T, C, size_t>::iterator
-static_vector_alt<T, C, size_t>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
+constexpr typename static_vector_alt<T, C>::iterator
+static_vector_alt<T, C>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
     T* const position = const_cast<T* const>(pos);
 
     if (UWR_UNLIKELY(!proxy.count))
@@ -665,11 +665,11 @@ static_vector_alt<T, C, size_t>::priv_insert(const_iterator pos, InsertProxy&& p
     return position;
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr void
-static_vector_alt<T, C, size_t>::priv_swap(
-        static_vector_alt<T, C, size_t>& shorter,
-        static_vector_alt<T, C, size_t>& longer,
+static_vector_alt<T, C>::priv_swap(
+        static_vector_alt<T, C>& shorter,
+        static_vector_alt<T, C>& longer,
         size_type s_len, size_type l_len) const {
     T* const s_begin = shorter.begin();
     T* const l_begin = longer.begin();
@@ -686,25 +686,25 @@ static_vector_alt<T, C, size_t>::priv_swap(
 /*
  * non-member operators 
  */
-template<class T, len_t C, class size_t>
-UWR_FORCEINLINE constexpr bool operator==(const static_vector_alt<T, C, size_t>& lhs, const static_vector_alt<T, C, size_t>& rhs);
-template<class T, len_t C, class size_t>
-UWR_FORCEINLINE constexpr bool operator!=(const static_vector_alt<T, C, size_t>& lhs, const static_vector_alt<T, C, size_t>& rhs);
-template<class T, len_t C, class size_t>
-constexpr bool operator<(const static_vector_alt<T, C, size_t>& lhs, const static_vector_alt<T, C, size_t>& rhs);
-template<class T, len_t C, class size_t>
-UWR_FORCEINLINE constexpr bool operator<=(const static_vector_alt<T, C, size_t>& lhs, const static_vector_alt<T, C, size_t>& rhs);
-template<class T, len_t C, class size_t>
-UWR_FORCEINLINE constexpr bool operator>(const static_vector_alt<T, C, size_t>& lhs, const static_vector_alt<T, C, size_t>& rhs);
-template<class T, len_t C, class size_t>
-UWR_FORCEINLINE constexpr bool operator>=(const static_vector_alt<T, C, size_t>& lhs, const static_vector_alt<T, C, size_t>& rhs);
-template<class T, len_t C, class size_t>
-constexpr std::ostream& operator<<(std::ostream& out, const static_vector_alt<T, C, size_t>& v);
+template<class T, len_t C>
+UWR_FORCEINLINE constexpr bool operator==(const static_vector_alt<T, C>& lhs, const static_vector_alt<T, C>& rhs);
+template<class T, len_t C>
+UWR_FORCEINLINE constexpr bool operator!=(const static_vector_alt<T, C>& lhs, const static_vector_alt<T, C>& rhs);
+template<class T, len_t C>
+constexpr bool operator<(const static_vector_alt<T, C>& lhs, const static_vector_alt<T, C>& rhs);
+template<class T, len_t C>
+UWR_FORCEINLINE constexpr bool operator<=(const static_vector_alt<T, C>& lhs, const static_vector_alt<T, C>& rhs);
+template<class T, len_t C>
+UWR_FORCEINLINE constexpr bool operator>(const static_vector_alt<T, C>& lhs, const static_vector_alt<T, C>& rhs);
+template<class T, len_t C>
+UWR_FORCEINLINE constexpr bool operator>=(const static_vector_alt<T, C>& lhs, const static_vector_alt<T, C>& rhs);
+template<class T, len_t C>
+constexpr std::ostream& operator<<(std::ostream& out, const static_vector_alt<T, C>& v);
 
 #if CPP_ABOVE_17
 
-template<class T, len_t C, class size_t>
-constexpr auto operator<=>(const static_vector_alt<T, C, size_t>& lhs, const static_vector_alt<T, C, size_t>& rhs);
+template<class T, len_t C>
+constexpr auto operator<=>(const static_vector_alt<T, C>& lhs, const static_vector_alt<T, C>& rhs);
 
 #endif
 
@@ -712,46 +712,46 @@ constexpr auto operator<=>(const static_vector_alt<T, C, size_t>& lhs, const sta
 /*
  * non-member operators' implementations
  */
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr bool
-operator==(const static_vector_alt<T, C, size_t>& lhs, const static_vector_alt<T, C, size_t>& rhs) {
+operator==(const static_vector_alt<T, C>& lhs, const static_vector_alt<T, C>& rhs) {
     return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr bool
-operator!=(const static_vector_alt<T, C, size_t>& lhs, const static_vector_alt<T, C, size_t>& rhs) {
+operator!=(const static_vector_alt<T, C>& lhs, const static_vector_alt<T, C>& rhs) {
     return !(lhs == rhs);
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr bool
-operator<(const static_vector_alt<T, C, size_t>& lhs, const static_vector_alt<T, C, size_t>& rhs) {
+operator<(const static_vector_alt<T, C>& lhs, const static_vector_alt<T, C>& rhs) {
     return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr bool
-operator<=(const static_vector_alt<T, C, size_t>& lhs, const static_vector_alt<T, C, size_t>& rhs) {
+operator<=(const static_vector_alt<T, C>& lhs, const static_vector_alt<T, C>& rhs) {
     return !(rhs < lhs);
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr bool
-operator>(const static_vector_alt<T, C, size_t>& lhs, const static_vector_alt<T, C, size_t>& rhs) {
+operator>(const static_vector_alt<T, C>& lhs, const static_vector_alt<T, C>& rhs) {
     return rhs < lhs;
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr bool
-operator>=(const static_vector_alt<T, C, size_t>& lhs, const static_vector_alt<T, C, size_t>& rhs) {
+operator>=(const static_vector_alt<T, C>& lhs, const static_vector_alt<T, C>& rhs) {
     return !(lhs < rhs);
 }
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr std::ostream&
-operator<<(std::ostream& out, const static_vector_alt<T, C, size_t>& v) {
-    for (size_t i = 0; i < v.size() - 1; ++i)
+operator<<(std::ostream& out, const static_vector_alt<T, C>& v) {
+    for (typename static_vector_alt<T, C>::size_type i = 0; i < v.size() - 1; ++i)
         out << v[i] << ' ';
     if (!v.empty())
         out << v.back();
@@ -760,9 +760,9 @@ operator<<(std::ostream& out, const static_vector_alt<T, C, size_t>& v) {
 
 #if CPP_ABOVE_17
 
-template<class T, len_t C, class size_t>
+template<class T, len_t C>
 constexpr auto
-operator<=>(const static_vector_alt<T, C, size_t>& lhs, const static_vector_alt<T, C, size_t>& rhs) {
+operator<=>(const static_vector_alt<T, C>& lhs, const static_vector_alt<T, C>& rhs) {
     return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(),
                                                   rhs.begin(), rhs.end(),
                                                   mem::synth_three_way);
@@ -778,15 +778,17 @@ operator<=>(const static_vector_alt<T, C, size_t>& lhs, const static_vector_alt<
  */
 namespace std {
 
-template<class T, uwr::len_t C, class size_t>
-constexpr void swap(uwr::static_vector_alt<T, C, size_t>& x, uwr::static_vector_alt<T, C, size_t>& y);
+template<class T, uwr::len_t C>
+constexpr void swap(uwr::static_vector_alt<T, C>& x, uwr::static_vector_alt<T, C>& y);
 
 #if CPP_ABOVE_17
 
-template<class T, uwr::len_t C, class size_t, class U>
-constexpr size_t erase(uwr::static_vector_alt<T, C, size_t>& c, const U& value);
-template<class T, uwr::len_t C, class size_t, class Pred>
-constexpr size_t erase_if(uwr::static_vector_alt<T, C, size_t>& c, Pred pred);
+template<class T, uwr::len_t C, class U>
+constexpr typename uwr::static_vector_alt<T, C>::size_type
+erase(uwr::static_vector_alt<T, C>& c, const U& value);
+template<class T, uwr::len_t C, class Pred>
+constexpr typename uwr::static_vector_alt<T, C>::size_type
+erase_if(uwr::static_vector_alt<T, C>& c, Pred pred);
 
 #endif
 
@@ -794,32 +796,36 @@ constexpr size_t erase_if(uwr::static_vector_alt<T, C, size_t>& c, Pred pred);
 /*
  * non-member functions' implementations
  */
-template<class T, uwr::len_t C, class size_t>
+template<class T, uwr::len_t C>
 constexpr void
-swap(uwr::static_vector_alt<T, C, size_t>& x, uwr::static_vector_alt<T, C, size_t>& y) {
+swap(uwr::static_vector_alt<T, C>& x, uwr::static_vector_alt<T, C>& y) {
     x.swap(y);
 }
 
 #if CPP_ABOVE_17
 
-template<class T, uwr::len_t C, class size_t, class U>
-constexpr size_t
-erase(uwr::static_vector_alt<T, C, size_t>& c, const U& value) {
+template<class T, uwr::len_t C, class U>
+constexpr typename uwr::static_vector_alt<T, C>::size_type
+erase(uwr::static_vector_alt<T, C>& c, const U& value) {
+    using size_type = typename uwr::static_vector_alt<T, C>::size_type;
+
     T* const c_end = c.end();
     T* const mid = std::remove(c.begin(), c_end, value);
     c.erase(mid, c_end);
 
-    return static_cast<size_t>(std::distance(mid, c_end));
+    return static_cast<size_type>(std::distance(mid, c_end));
 }
 
-template<class T, uwr::len_t C, class size_t, class Pred>
-constexpr size_t
-erase_if(uwr::static_vector_alt<T, C, size_t>& c, Pred pred) {
+template<class T, uwr::len_t C, class Pred>
+constexpr typename uwr::static_vector_alt<T, C>::size_type
+erase_if(uwr::static_vector_alt<T, C>& c, Pred pred) {
+    using size_type = typename uwr::static_vector_alt<T, C>::size_type;
+
     T* const c_end = c.end();
     T* const mid = std::remove_if(c.begin(), c_end, pred);
     c.erase(mid, c_end);
 
-    return static_cast<size_t>(std::distance(mid, c_end));
+    return static_cast<size_type>(std::distance(mid, c_end));
 }
 
 #endif // CPP_ABOVE_17
