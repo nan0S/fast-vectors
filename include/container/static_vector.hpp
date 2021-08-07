@@ -218,73 +218,73 @@ static_vector<T, C>::operator=(std::initializer_list<T> ilist) noexcept {
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::begin() noexcept {
-    return this->data();
+    return iterator(this->data());
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::const_iterator
 static_vector<T, C>::begin() const noexcept {
-    return this->data();
+    return this->cbegin();
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::end() noexcept {
-    return this->data() + this->m_length;
+    return iterator(this->data() + this->m_length);
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::const_iterator
 static_vector<T, C>::end() const noexcept {
-    return this->data() + this->m_length;
+    return this->cend();
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::reverse_iterator
 static_vector<T, C>::rbegin() noexcept {
-    return reverse_iterator(this->data() + this->m_length);
+    return reverse_iterator(this->end());
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::const_reverse_iterator
 static_vector<T, C>::rbegin() const noexcept {
-    return const_reverse_iterator(this->data() + this->m_length);
+    return this->crbegin();
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::reverse_iterator
 static_vector<T, C>::rend() noexcept {
-    return reverse_iterator(this->data());
+    return reverse_iterator(this->begin());
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::const_reverse_iterator
 static_vector<T, C>::rend() const noexcept {
-    return const_reverse_iterator(this->data());
+    return this->crend();
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::const_iterator
 static_vector<T, C>::cbegin() const noexcept {
-    return this->data();
+    return const_iterator(this->data());
 }
 
 template<class T, len_t C>
 typename static_vector<T, C>::const_iterator
 constexpr static_vector<T, C>::cend() const noexcept {
-    return this->data() + this->m_length;
+    return const_iterator(this->data() + this->m_length);
 }
 
 template<class T, len_t C>
 typename static_vector<T, C>::const_reverse_iterator
 constexpr static_vector<T, C>::crbegin() const noexcept {
-    return const_reverse_iterator(this->data() + this->m_length);
+    return const_reverse_iterator(this->end());
 }
 
 template<class T, len_t C>
 typename static_vector<T, C>::const_reverse_iterator
 constexpr static_vector<T, C>::crend() const noexcept {
-    return const_reverse_iterator(this->data());
+    return const_reverse_iterator(this->begin());
 }
 
 template<class T, len_t C>
