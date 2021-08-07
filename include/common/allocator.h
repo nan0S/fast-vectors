@@ -8,6 +8,9 @@
 #define LIKELY(x)       __builtin_expect((x),1)
 #define UNLIKELY(x)     __builtin_expect((x),0)
 
+template<class T>
+class rvector;
+
 namespace mm
 {
 	// int mremap_skips = 0;
@@ -43,21 +46,21 @@ namespace mm
 	template<typename T>
 	T* allocate(size_type n)
 	{
-		if(n > map_threshold<T>)
+        if(n > map_threshold<T>)
 	    	return (T*) mmap(NULL, n*sizeof(T), 
 	                PROT_READ | PROT_WRITE,
 	                MAP_PRIVATE | MAP_ANONYMOUS,
 	                -1, 0);
-	    else
+        else
         	return (T*) malloc(n*sizeof(T));
 	}
 
 	template<typename T>
 	void deallocate(T* p, size_type n)
 	{
-		if(n > map_threshold<T>)
+        if (n > map_threshold<T>)
 	    	munmap(p, n*sizeof(T));
-	    else
+        else
 	        free(p);
 	}
 
@@ -91,7 +94,7 @@ namespace mm
 	template<typename T, typename InputIterator>
 	T_Copy<T> fill(T* data, InputIterator begin, InputIterator end)
 	{
-		memcpy(data, &*begin, (end - begin) * sizeof(T)); 
+        std::copy(begin, end, data);
 	}
 
 	template<typename T, typename InputIterator>
@@ -116,14 +119,14 @@ namespace mm
 							size_type capacity, 
 							size_type n)
 	{
-		if((n > map_threshold<T>) != (capacity > map_threshold<T>))
+        if((n > map_threshold<T>) != (capacity > map_threshold<T>))
 	    {
 	        T* new_data = allocate<T>(n);
 	        memcpy(new_data, data, length * sizeof(T));
 	        deallocate(data, capacity);
 	        return new_data;
 	    }
-	    else
+        else
 	    {
 	        if(capacity > map_threshold<T>)
             	return (T*) mremap(data, capacity*sizeof(T), 
@@ -191,6 +194,8 @@ namespace mm
 	NT_Move_a<T> 
 	shiftr_data(T* begin, size_type end)
 	{
+        if (UNLIKELY(!end))
+            return;
 		auto end_p = begin + end;
 		new (end_p) T(std::move(*(end_p - 1)));
 		std::move_backward(begin, end_p - 1, end_p);
