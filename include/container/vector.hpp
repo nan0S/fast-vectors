@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iterator>
+#include <limits>
 
 #include "../common/allocator.hpp"
 #include "../common/define.hpp"
@@ -113,7 +114,7 @@ public:
     UWR_FORCEINLINE constexpr reference fast_emplace_back(Args&&... args) noexcept;
 
 private:
-    UWR_FORCEINLINE constexpr size_type next_capacity(size_type add) const noexcept;
+    UWR_FORCEINLINE constexpr size_type next_capacity(size_type new_length) const noexcept;
     template<class InputIterator>
     UWR_FORCEINLINE constexpr void priv_copy_assign(InputIterator first, InputIterator last, size_type n);
     template<class InputIterator>
@@ -464,7 +465,7 @@ vector<T, size_t>::fast_push_back(T&& value) noexcept {
 template<class T, class size_t>
 constexpr void
 vector<T, size_t>::pop_back() {
-    mem::destroy_at(this->data() + --this->m_length);
+    mem::destroy_at(this->m_data + --this->m_length);
 }
 
 template<class T, class size_t>
@@ -560,7 +561,7 @@ vector<T, size_t>::emplace(const_iterator pos, Args&&... args) {
     T* const m_end = this->end();
 
     if (this->m_length == this->m_capacity) {
-        size_type new_capacity = this->next_capacity(1);
+        size_type new_capacity = this->next_capacity(this->m_length + 1);
 
         T* new_data;
         if (mem::expand_in_place_or_alloc_raw(
@@ -619,7 +620,7 @@ constexpr typename vector<T, size_t>::reference
 vector<T, size_t>::emplace_back(Args&&... args) {
     // TODO: add unlikely (?)
     if (this->m_length == this->m_capacity) {
-        size_type new_capacity = this->next_capacity(1);
+        size_type new_capacity = this->next_capacity(this->m_length + 1);
         mem::reallocate(this->m_data, this->m_length, this->m_capacity, new_capacity);
         this->m_capacity = new_capacity;
     }
@@ -637,12 +638,12 @@ vector<T, size_t>::fast_emplace_back(Args&&... args) noexcept {
 
 template<class T, class size_t>
 constexpr size_t
-vector<T, size_t>::next_capacity(size_type add) const noexcept {
+vector<T, size_t>::next_capacity(size_type new_length) const noexcept {
     // constexpr int num = 2;
     // constexpr int den = 1;
-    // return mem::fix_capacity<T>(std::max(2 * this->m_capacity, this->m_capacity + add));
-    // return std::max(2 * this->m_capacity, this->m_capacity + add);
-    return mem::fix_capacity<T>(this->m_capacity * 2 + add);
+    return mem::fix_capacity<T>(std::max(2 * this->m_capacity + 1, new_length));
+    // return std::max(2 * this->m_capacity + 1, this->m_capacity + add);
+    // return mem::fix_capacity<T>(this->m_capacity * 2 + add);
     // return mem::fix_capacity<T>(std::max(num * this->m_capacity / den, this->m_capacity + add));
 }
 
@@ -725,7 +726,7 @@ vector<T, size_t>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
     size_type new_length = this->m_length + proxy.count;
 
     if (new_length > this->m_capacity) {
-        size_type new_capacity = mem::fix_capacity<T>(new_length);
+        size_type new_capacity = this->next_capacity(new_length);
 
         T* new_data;
         if (mem::expand_in_place_or_alloc_raw(
