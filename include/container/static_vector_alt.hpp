@@ -129,7 +129,7 @@ private:
     template<class InsertProxy>
     constexpr iterator priv_insert(const_iterator pos, InsertProxy&& proxy);
     constexpr void priv_swap(static_vector_alt& shorter, static_vector_alt& longer,
-            size_type s_length, size_type l_length) const;
+            size_type s_size, size_type l_size) const;
 
 private:
     typename std::aligned_storage<sizeof(T), alignof(T)>::type m_data[C];
@@ -517,13 +517,13 @@ static_vector_alt<T, C>::erase(const_iterator first, const_iterator last) {
 template<class T, len_t C>
 constexpr void
 static_vector_alt<T, C>::swap(static_vector_alt<T, C>& other) {
-    size_type m_len = this->size();
-    size_type o_len = other.size();
+    size_type m_size = this->size();
+    size_type o_size = other.size();
 
-    if (m_len < o_len)
-        this->priv_swap(*this, other, m_len, o_len);
+    if (m_size < o_size)
+        this->priv_swap(*this, other, m_size, o_size);
     else
-        this->priv_swap(other, *this, o_len, m_len);
+        this->priv_swap(other, *this, o_size, m_size);
 }
 
 template<class T, len_t C>
