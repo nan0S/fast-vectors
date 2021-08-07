@@ -80,8 +80,8 @@ public:
     reverse_iterator rend() noexcept;
     const_reverse_iterator rend() const noexcept;
  
-    const_iterator cbegin() noexcept;
-    const_iterator cend() noexcept;
+    const_iterator cbegin() const noexcept;
+    const_iterator cend() const noexcept;
     const_reverse_iterator crbegin() const noexcept;
     const_reverse_iterator crend() const noexcept;
  
@@ -111,9 +111,9 @@ public:
  
  //    // modifiers:
     template <class... Args> 
-    void emplace_back(Args&&... args);
+    reference emplace_back(Args&&... args);
     template <class... Args> 
-    void fast_emplace_back(Args&&... args);
+    reference fast_emplace_back(Args&&... args);
 
     void push_back(const T& x);
     void fast_push_back(const T& x);
@@ -297,14 +297,14 @@ rvector<T>::rend() const noexcept
 
 template <typename T>
 typename rvector<T>::const_iterator 
-rvector<T>::cbegin() noexcept
+rvector<T>::cbegin() const noexcept
 {
     return const_iterator(data_);
 }
 
 template <typename T>
 typename rvector<T>::const_iterator 
-rvector<T>::cend() noexcept
+rvector<T>::cend() const noexcept
 {
     return  const_iterator(data_ + length_);
 }
@@ -327,8 +327,8 @@ template <typename T>
 rvector<T>& rvector<T>::operator=(const rvector<T>& other)
 {
     if(UNLIKELY(this == std::addressof(other))) return *this;
-    if(other.length_ > length_)
-        mm::change_capacity(data_, length_, capacity_, other.capacity_);
+    if(other.length_ > capacity_)
+        mm::change_capacity(data_, length_, capacity_, other.length_);
 
     mm::destruct(data_, data_ + length_);
     mm::fill(data_, other.begin(), other.end());
@@ -537,19 +537,19 @@ const T* rvector<T>::data() const noexcept
 
 template <typename T>
 template <class... Args> 
-void rvector<T>::emplace_back(Args&&... args)
+typename rvector<T>::reference rvector<T>::emplace_back(Args&&... args)
 {
     mm::grow(data_, length_, capacity_);
     new (data_ + length_) T(std::forward<Args>(args)...);
-    ++length_;
+    return *(data_ + length_++);
 }
 
 template <typename T>
 template <class... Args> 
-void rvector<T>::fast_emplace_back(Args&&... args)
+typename rvector<T>::reference rvector<T>::fast_emplace_back(Args&&... args)
 {
     new (data_ + length_) T(std::forward<Args>(args)...);
-    ++length_;
+    return *(data_ + length_++);
 }
 
 template <typename T>
@@ -644,10 +644,12 @@ template <typename T>
 typename rvector<T>::iterator 
 rvector<T>::insert(rvector<T>::iterator position, size_type n, const T& x)
 {
+    if (n == 0)
+        return position;
     if(length_ + n > capacity_)
     {
         auto m = std::distance(begin(), position);
-        size_type new_cap = std::max(length_ + n, capacity_ * 2);
+        size_type new_cap = std::max(length_ + n, capacity_ * 2 + 1);
         mm::change_capacity(data_, length_, capacity_, new_cap);
         position = begin() + m;
     }
@@ -672,6 +674,8 @@ typename rvector<T>::iterator
 rvector<T>::insert (rvector<T>::iterator position, InputIterator first, 
                      InputIterator last)
 {
+    if (first == last)
+        return position;
     size_type n = std::distance(first, last);
     if(length_ + n > capacity_)
     {
@@ -688,8 +692,8 @@ rvector<T>::insert (rvector<T>::iterator position, InputIterator first,
         std::copy(first, last, position);
     } else {
         std::uninitialized_move(position, end_, position + n);
-        std::copy(first, first + rest, position);
-        std::uninitialized_copy(first + rest, last, end_);
+        std::copy(first, std::next(first, rest), position);
+        std::uninitialized_copy(std::next(first, rest), last, end_);
     }
     length_ += n;
     return position;    
@@ -699,6 +703,8 @@ template <typename T>
 typename rvector<T>::iterator 
 rvector<T>::insert(rvector<T>::iterator position, std::initializer_list<T> ilist)
 {
+    if (ilist.size() == 0)
+        return position;
     auto first = ilist.begin();
     auto last = ilist.end();
     size_type n = std::distance(first, last);
@@ -738,6 +744,8 @@ template <typename T>
 typename rvector<T>::iterator 
 rvector<T>::erase(rvector<T>::iterator first, rvector<T>::iterator last)
 {
+    if (first == last)
+        return first;
     auto n = std::distance(first, last);
     if (last != end())
         std::move(last, end(), first);
