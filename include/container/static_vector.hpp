@@ -138,8 +138,7 @@ private:
 template<class T, len_t C>
 constexpr
 static_vector<T, C>::static_vector() noexcept
-    : m_size(0) {
-}
+    : m_size(0) {}
 
 template<class T, len_t C>
 constexpr
@@ -167,21 +166,21 @@ template<class T, len_t C>
 constexpr
 static_vector<T, C>::static_vector(const static_vector& x)
     : m_size(x.m_size) {
-    mem::ucopy(this->data(), x.begin(), x.end());
+    mem::ucopy(this->data(), x.begin(), x.size());
 }
 
 template<class T, len_t C>
 constexpr
 static_vector<T, C>::static_vector(static_vector&& x) noexcept
     : m_size(x.m_size) {
-    mem::umove(this->data(), x.begin(), x.end());
+    mem::umove(this->data(), x.begin(), x.size());
 }
 
 template<class T, len_t C>
 constexpr
 static_vector<T, C>::static_vector(std::initializer_list<T> ilist)
     : m_size(ilist.size()) {
-    mem::ucopy(this->data(), ilist.begin(), ilist.end());
+    mem::ucopy(this->data(), ilist.begin(), ilist.size());
 }
 
 template<class T, len_t C>
