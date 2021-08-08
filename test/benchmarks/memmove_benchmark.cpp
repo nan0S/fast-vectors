@@ -1,6 +1,6 @@
 #include <benchmark/benchmark.h>
 #include <common/memory.hpp>
-#include <test_type/test_type.hpp>
+#include <utils/utils.hpp>
 
 using namespace benchmark;
 using namespace uwr::mem;
@@ -13,13 +13,15 @@ using trivial_type_t = int;
  */
 template<class T>
 void BM_memmove(State& s) {
+    Random::seed(321);
     int n = s.range(0);
 
     for (auto _ : s) {
         T t[n];
         DoNotOptimize((void*)t);
-
-        std::memmove(t, t + 1, (n - 1) * sizeof(T));
+        
+        int shift = Random::rand(n) + 1;
+        std::memmove(t, t + shift, (n - shift) * sizeof(T));
 
         ClobberMemory();
     }
@@ -32,13 +34,15 @@ void BM_memmove(State& s) {
  */
 template<class T>
 void BM_move(State& s) {
+    Random::seed(321);
     int n = s.range(0);
 
     for (auto _ : s) {
         T t[n];
         DoNotOptimize((void*)t);
 
-        std::move(t + 1, t + n, t);
+        int shift = Random::rand(n) + 1;
+        std::move(t + shift, t + n, t);
 
         ClobberMemory();
     }
