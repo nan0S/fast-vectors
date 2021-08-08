@@ -4,7 +4,7 @@ CXX := g++
 VERSION := -std=c++20
 
 # OFLAGS := -Ofast -march=native -flto -fomit-frame-pointer -s -DNDEBUG
-OFLAGS := -O3 -DNDEBUG -march=native
+OFLAGS := -DNDEBUG -march=native
 WFLAGS := -Wall -Wextra
 IFLAGS := -I include -I src -I include/container
 DFLAGS := -ggdb -fno-omit-frame-pointer
@@ -56,15 +56,19 @@ run-%: $(BIN_DIR)/tests/%
 
 $(BIN_DIR)/tests/%: $(BUILD_DIR)/$(TEST_DIR)/tests/%.o $(OBJECTS)
 	@mkdir -p $(shell dirname $@)
-	$(CXX) $(CXXFLAGS) -lgtest -MMD -MP $< $(OBJECTS) -o $@
+	$(CXX) $(CXXFLAGS) -O3 -lgtest -MMD -MP $< $(OBJECTS) -o $@
 
 $(BIN_DIR)/benchmarks/%: $(BUILD_DIR)/$(TEST_DIR)/benchmarks/%.o $(OBJECTS)
 	@mkdir -p $(shell dirname $@)
-	$(CXX) $(CXXFLAGS) -lbenchmark -MMD -MP $< $(OBJECTS) -o $@
+	$(CXX) $(CXXFLAGS) -O3 -lbenchmark -MMD -MP $< $(OBJECTS) -o $@
 
 $(BUILD_DIR)/%.o: %.cpp
 	@mkdir -p $(shell dirname $@)
-	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
+	$(CXX) $(CXXFLAGS) -O3 -MMD -MP -c $< -o $@
+
+$(BUILD_DIR)/$(TEST_DIR)/tests/%.o: $(TEST_DIR)/tests/%.cpp
+	@mkdir -p $(shell dirname $@)
+	$(CXX) $(CXXFLAGS) -O0 -MMD -MP -c $< -o $@
 
 install:
 	@echo Installing ...
