@@ -306,7 +306,7 @@ vector<T, A>::resize(size_type n) {
 template<class T, class A>
 constexpr void
 vector<T, A>::resize(size_type n, const T& val) {
-    this->priv_resize(unitialized_fill_proxy(n, val));
+    this->priv_resize(uninitialized_fill_proxy(n, val));
 }
 
 template<class T, class A>
@@ -635,18 +635,14 @@ constexpr void
 vector<T, A>::priv_assign(AssignProxy&& proxy) {
     if (proxy.n > this->capacity()) {
         if (this->m_alloc.expand_or_dealloc_and_alloc_raw(proxy.n))
-            proxy.assign_to_short(this->data(), this->end(), this->size());
+            proxy.assign_to_short(this->data(), this->size());
         else
-            proxy.assign_to_short(this->data(), this->data(), 0);
+            proxy.assign_to_short(this->data(), 0);
     }
-    else {
-        T* const m_end = this->end();
-
-        if (proxy.n > this->size())
-            proxy.assign_to_short(this->data(), m_end, this->size());
-        else
-            proxy.assign_to_long(this->data(), m_end);
-    }
+    else if (proxy.n > this->size())
+        proxy.assign_to_short(this->data(), this->size());
+    else
+        proxy.assign_to_long(this->data(), this->size());
 
     this->m_alloc.m_size = proxy.n;
 }

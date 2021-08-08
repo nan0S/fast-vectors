@@ -299,7 +299,7 @@ static_vector_alt<T, C>::resize(size_type n) {
 template<class T, len_t C>
 constexpr void
 static_vector_alt<T, C>::resize(size_type n, const T& val) {
-    this->priv_resize(unitialized_fill_proxy<T>(n, val));
+    this->priv_resize(uninitialized_fill_proxy(n, val));
 }
 
 template<class T, len_t C>
@@ -611,11 +611,12 @@ constexpr void
 static_vector_alt<T, C>::priv_assign(AssignProxy&& proxy) {
     T* const m_data = this->data();
     T* const new_end = m_data + proxy.n;
+    size_type m_size = this->size();
 
     if (new_end > this->m_end)
-        proxy.assign_to_short(m_data, this->m_end, this->size());
+        proxy.assign_to_short(m_data, m_size);
     else
-        proxy.assign_to_long(m_data, this->m_end);
+        proxy.assign_to_long(m_data, m_size);
 
     this->m_end = new_end;
 }

@@ -307,7 +307,7 @@ static_vector<T, C>::resize(size_type n) {
 template<class T, len_t C>
 constexpr void
 static_vector<T, C>::resize(size_type n, const T& val) {
-    this->priv_resize(unitialized_fill_proxy<T>(n, val));
+    this->priv_resize(uninitialized_fill_proxy(n, val));
 }
 
 template<class T, len_t C>
@@ -593,7 +593,7 @@ template<class T, len_t C>
 template<class ResizeProxy>
 constexpr void
 static_vector<T, C>::priv_resize(ResizeProxy&& proxy) {
-    T* const m_end = this->data() + this->m_size;
+    T* const m_end = this->end();
     T* const new_end = this->data() + proxy.n;
 
     if (proxy.n > this->m_size)
@@ -623,12 +623,11 @@ template<class AssignProxy>
 constexpr void
 static_vector<T, C>::priv_assign(AssignProxy&& proxy) {
     T* const m_data = this->data();
-    T* const m_end = this->end();
 
     if (proxy.n > this->m_size)
-        proxy.assign_to_short(m_data, m_end, this->m_size);
+        proxy.assign_to_short(m_data, this->m_size);
     else
-        proxy.assign_to_long(m_data, m_end);
+        proxy.assign_to_long(m_data, this->m_size);
 
     this->m_size = proxy.n;
 }

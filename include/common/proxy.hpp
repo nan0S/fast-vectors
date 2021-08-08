@@ -22,12 +22,12 @@ public:
 };
 
 template<class T>
-class unitialized_fill_proxy {
+class uninitialized_fill_proxy {
 private:
     using size_type = mem::len_t;
 
 public:
-    UWR_FORCEINLINE explicit unitialized_fill_proxy(size_type n, const T& value)
+    UWR_FORCEINLINE explicit uninitialized_fill_proxy(size_type n, const T& value)
         : value(value), n(n) {}
 
     UWR_FORCEINLINE void construct(T* begin, T* end) {
@@ -53,21 +53,19 @@ public:
                     std::distance(this->first, this->last)));
     }
 
-    UWR_FORCEINLINE void assign_to_short(T* begin, T* end, size_type len) {
+    UWR_FORCEINLINE void assign_to_short(T* begin, size_type len) {
         UWR_ASSERT(len < this->n);
-        UWR_ASSERT(len == static_cast<size_type>(
-                    std::distance(begin, end)));
 
         InputIterator split = std::next(this->first, len);
 
-        mem::copy(begin, this->first, split);
+        T* end = mem::copy(begin, this->first, split);
         mem::ucopy(end, split, this->last);
     }
 
-    UWR_FORCEINLINE void assign_to_long(T* begin, T* end) {
+    UWR_FORCEINLINE void assign_to_long(T* begin, size_type len) {
         mem::destroy(
                 mem::copy(begin, this->first, this->last),
-                end);
+                begin + len);
     }
 
 private:
@@ -90,21 +88,19 @@ public:
                     std::distance(this->first, this->last)));
     }
 
-    UWR_FORCEINLINE void assign_to_short(T* begin, T* end, size_type len) {
+    UWR_FORCEINLINE void assign_to_short(T* begin, size_type len) {
         UWR_ASSERT(len < this->n);
-        UWR_ASSERT(len == static_cast<size_type>(
-                    std::distance(begin, end)));
 
         InputIterator split = std::next(this->first, len);
 
-        mem::move(begin, this->first, split);
+        T* end = mem::move(begin, this->first, split);
         mem::umove(end, split, this->last);
     }
 
-    UWR_FORCEINLINE void assign_to_long(T* begin, T* end) {
+    UWR_FORCEINLINE void assign_to_long(T* begin, size_type len) {
         mem::destroy(
                 mem::move(begin, this->first, this->last),
-                end);
+                begin + len);
     }
 
 private:
@@ -124,19 +120,17 @@ public:
     UWR_FORCEINLINE assign_fill_proxy(size_type n, const T& value)
         : value(value), n(n) { }
 
-    UWR_FORCEINLINE void assign_to_short(T* begin, T* end, UWR_UNUSED size_type len) {
+    UWR_FORCEINLINE void assign_to_short(T* begin, size_type len) {
         UWR_ASSERT(len < n);
-        UWR_ASSERT(len == static_cast<size_type>(
-                    std::distance(begin, end)));
 
-        mem::fill(begin, end, this->value);
+        T* end = mem::fill(begin, len, this->value);
         mem::ufill(end, begin + this->n, this->value);
     }
 
-    UWR_FORCEINLINE void assign_to_long(T* begin, T* end) {
+    UWR_FORCEINLINE void assign_to_long(T* begin, size_type len) {
         mem::destroy(
                 mem::fill(begin, this->n, this->value),
-                end);
+                begin + len);
     }
 
 private:
