@@ -637,17 +637,17 @@ constexpr void
 vector<T, A>::priv_assign(AssignProxy&& proxy) {
     if (proxy.n > this->capacity()) {
         if (this->m_alloc.expand_or_dealloc_and_alloc_raw(proxy.n))
-            proxy.shorter_assign(this->data(), this->end(), this->size());
+            proxy.assign_to_short(this->data(), this->end(), this->size());
         else
-            proxy.shorter_assign(this->data(), this->data(), 0);
+            proxy.assign_to_short(this->data(), this->data(), 0);
     }
     else {
         T* const m_end = this->end();
 
         if (proxy.n > this->size())
-            proxy.shorter_assign(this->data(), m_end, this->size());
+            proxy.assign_to_short(this->data(), m_end, this->size());
         else
-            proxy.longer_assign(this->data(), m_end, this->size());
+            proxy.assign_to_long(this->data(), m_end);
     }
 
     this->m_alloc.m_size = proxy.n;
