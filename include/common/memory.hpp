@@ -309,7 +309,7 @@ T* umove(T* dest, InputIterator begin, InputIterator end) {
 template<class T, class InputIterator>
 constexpr
 T* umove(T* dest, InputIterator begin, len_t n) {
-    return std::uninitialized_move_n(begin, n, dest);
+    return std::uninitialized_move_n(begin, n, dest).second;
 }
 
 template<class T>
