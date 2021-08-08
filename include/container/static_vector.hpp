@@ -489,29 +489,30 @@ static_vector<T, C>::insert(const_iterator pos, std::initializer_list<T> ilist) 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::erase(const_iterator pos) {
-    T* const position = const_cast<T* const>(pos);
-    mem::shiftl(position, position + 1, this->end());
+    T* const m_pos = const_cast<T* const>(pos);
+    mem::shiftl(m_pos, m_pos + 1, this->end());
     this->pop_back();
 
-    return position;
+    return m_pos;
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::erase(const_iterator first, const_iterator last) {
-    T* const f = const_cast<T* const>(first);
-    size_type count = static_cast<size_type>(std::distance(first, last));
+    T* const m_first = const_cast<T* const>(first);
 
-    if (UWR_LIKELY(count != 0)) {
-        T* const l = const_cast<T* const>(last);
-        T* const e = this->end();
+    if (UWR_LIKELY(first != last)) {
+        T* const m_end = this->end();
 
-        mem::shiftl(f, l, e);
-        mem::destroy(e - count, e);
-        this->m_size -= count;
+        mem::destroy(
+                mem::shiftl(m_first, last, m_end),
+                m_end);
+
+        this->m_size -= static_cast<size_type>(
+                std::distance(first, last));
     }
 
-    return f;
+    return m_first;
 }
 
 template<class T, len_t C>
@@ -534,28 +535,28 @@ template<class T, len_t C>
 template<class... Args>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::emplace(const_iterator pos, Args&&... args) {
-    T* const position = const_cast<T* const>(pos);
+    T* const m_pos = const_cast<T* const>(pos);
     T* const m_end = this->end();
 
-    if (position != m_end) {
-        mem::shiftr(position + 1, position, m_end);
+    if (m_pos != m_end) {
+        mem::shiftr(m_pos + 1, m_pos, m_end);
         // this strange construction is caused by the fact
         // args can be either "proper" constructor arguments
         // or it can be an object of type T, if it is, we don't want to do
-        // *position = T(args), because that would create unnecessary object,
-        // instead we would like to write *position = args
+        // *m_pos = T(args), because that would create unnecessary object,
+        // instead we would like to write *m_pos = args
         // note: this problem only happens when we use opeartor= (so we copy
         // into initialized memory), when we copy into unitialized memory
         // we have to call constructor in both situation so
         // T(std::forward<Args>(args)...) will do
-        *position = mem::create<T>(std::forward<Args>(args)...);
+        *m_pos = mem::create<T>(std::forward<Args>(args)...);
     }
     else
-        new (position) T(std::forward<Args>(args)...);
+        new (m_pos) T(std::forward<Args>(args)...);
     
     ++this->m_size;
 
-    return position;
+    return m_pos;
 }
 
 template<class T, len_t C>
@@ -626,9 +627,9 @@ static_vector<T, C>::priv_assign(AssignProxy&& proxy) {
     T* const m_end = this->end();
 
     if (proxy.n > this->m_size)
-        proxy.shorter_assign(m_data, m_end, this->m_size);
+        proxy.assign_to_short(m_data, m_end, this->m_size);
     else
-        proxy.longer_assign(m_data, m_end, this->m_size);
+        proxy.assign_to_long(m_data, m_end);
 
     this->m_size = proxy.n;
 }
@@ -644,26 +645,26 @@ template<class T, len_t C>
 template<class InsertProxy>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
-    T* const position = const_cast<T* const>(pos);
+    T* const m_pos = const_cast<T* const>(pos);
 
     if (UWR_UNLIKELY(!proxy.count))
-        return position;
+        return m_pos;
 
     T* const m_end = this->end();
-    T* const spill = position + proxy.count;
+    T* const spill = m_pos + proxy.count;
 
     if (spill < m_end) {
-        mem::shiftr(spill, position, m_end);
-        proxy.insert_without_spill(position, spill);
+        mem::shiftr(spill, m_pos, m_end);
+        proxy.insert_without_spill(m_pos, spill);
     }
     else {
-        mem::umove(spill, position, m_end);
-        proxy.insert_with_spill(position, m_end, spill);
+        mem::umove(spill, m_pos, m_end);
+        proxy.insert_with_spill(m_pos, m_end, spill);
     }
 
     this->m_size += proxy.count;
 
-    return position;
+    return m_pos;
 }
 
 template<class T, len_t C>
@@ -673,11 +674,10 @@ static_vector<T, C>::priv_swap(static_vector<T, C>& shorter, static_vector<T, C>
     T* const s_end = shorter.end();
     T* const l_begin = longer.begin();
     T* const l_end = longer.end();
-    T* const split = l_begin + shorter.m_size;
 
-    std::swap_ranges(s_begin, s_end, l_begin);
-    mem::umove(s_end, split, l_end);
-    mem::destroy(split, l_end);
+    T* const l_split = std::swap_ranges(s_begin, s_end, l_begin);
+    mem::umove(s_end, l_split, l_end);
+    mem::destroy(l_split, l_end);
 
     std::swap(shorter.m_size, longer.m_size);
 }

@@ -129,7 +129,7 @@ private:
     template<class InsertProxy>
     constexpr iterator priv_insert(const_iterator pos, InsertProxy&& proxy);
     constexpr void priv_swap(static_vector_alt& shorter, static_vector_alt& longer,
-            size_type s_size, size_type l_size) const;
+            size_type l_size) const;
 
 private:
     typename std::aligned_storage<sizeof(T), alignof(T)>::type m_data[C];
@@ -490,28 +490,25 @@ static_vector_alt<T, C>::insert(const_iterator pos, std::initializer_list<T> ili
 template<class T, len_t C>
 constexpr typename static_vector_alt<T, C>::iterator
 static_vector_alt<T, C>::erase(const_iterator pos) {
-    T* const position = const_cast<T* const>(pos);
-    mem::shiftl(position, position + 1, this->m_end);
+    T* const m_pos = const_cast<T* const>(pos);
+    mem::shiftl(m_pos, m_pos + 1, this->m_end);
     this->pop_back();
 
-    return position;
+    return m_pos;
 }
 
 template<class T, len_t C>
 constexpr typename static_vector_alt<T, C>::iterator
 static_vector_alt<T, C>::erase(const_iterator first, const_iterator last) {
-    T* const f = const_cast<T* const>(first);
-    size_type count = static_cast<size_type>(std::distance(first, last));
+    T* const m_first = const_cast<T* const>(first);
 
-    if (UWR_LIKELY(count != 0)) {
-        T* const l = const_cast<T* const>(last);
-
-        mem::shiftl(f, l, this->m_end);
-        mem::destroy(this->m_end - count, this->m_end);
-        this->m_end -= count;
+    if (UWR_LIKELY(first != last)) {
+        T* const new_end = mem::shiftl(m_first, last, this->m_end);
+        mem::destroy(new_end, this->m_end);
+        this->m_end = new_end;
     }
 
-    return f;
+    return m_first;
 }
 
 template<class T, len_t C>
@@ -521,9 +518,9 @@ static_vector_alt<T, C>::swap(static_vector_alt<T, C>& other) {
     size_type o_size = other.size();
 
     if (m_size < o_size)
-        this->priv_swap(*this, other, m_size, o_size);
+        this->priv_swap(*this, other, o_size);
     else
-        this->priv_swap(other, *this, o_size, m_size);
+        this->priv_swap(other, *this, m_size);
 }
 
 template<class T, len_t C>
@@ -537,10 +534,10 @@ template<class T, len_t C>
 template<class... Args>
 constexpr typename static_vector_alt<T, C>::iterator
 static_vector_alt<T, C>::emplace(const_iterator pos, Args&&... args) {
-    T* const position = const_cast<T* const>(pos);
+    T* const m_pos = const_cast<T* const>(pos);
 
-    if (position != this->m_end) {
-        mem::shiftr(position + 1, position, this->m_end);
+    if (m_pos != this->m_end) {
+        mem::shiftr(m_pos + 1, m_pos, this->m_end);
         // this strange construction is caused by the fact
         // args can be either "proper" constructor arguments
         // or it can be an object of type T, if it is, we don't want to do
@@ -550,14 +547,14 @@ static_vector_alt<T, C>::emplace(const_iterator pos, Args&&... args) {
         // into initialized memory), when we copy into unitialized memory
         // we have to call constructor in both situation so
         // T(std::forward<Args>(args)...) will do
-        *position = mem::create<T>(std::forward<Args>(args)...);
+        *m_pos = mem::create<T>(std::forward<Args>(args)...);
     }
     else
-        new (position) T(std::forward<Args>(args)...);
+        new (m_pos) T(std::forward<Args>(args)...);
 
     ++this->m_end;
 
-    return position;
+    return m_pos;
 }
 
 template<class T, len_t C>
@@ -626,9 +623,9 @@ static_vector_alt<T, C>::priv_assign(AssignProxy&& proxy) {
     T* const new_end = m_data + proxy.n;
 
     if (new_end > this->m_end)
-        proxy.shorter_assign(m_data, this->m_end, this->size());
+        proxy.assign_to_short(m_data, this->m_end, this->size());
     else
-        proxy.longer_assign(m_data, this->m_end, this->size());
+        proxy.assign_to_long(m_data, this->m_end);
 
     this->m_end = new_end;
 }
@@ -644,25 +641,25 @@ template<class T, len_t C>
 template<class InsertProxy>
 constexpr typename static_vector_alt<T, C>::iterator
 static_vector_alt<T, C>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
-    T* const position = const_cast<T* const>(pos);
+    T* const m_pos = const_cast<T* const>(pos);
 
     if (UWR_UNLIKELY(!proxy.count))
-        return position;
+        return m_pos;
 
-    T* const spill = position + proxy.count;
+    T* const spill = m_pos + proxy.count;
 
     if (spill < this->m_end) {
-        mem::shiftr(spill, position, this->m_end);
-        proxy.insert_without_spill(position, spill);
+        mem::shiftr(spill, m_pos, this->m_end);
+        proxy.insert_without_spill(m_pos, spill);
+        this->m_end += proxy.count;
     }
     else {
-        mem::umove(spill, position, this->m_end);
-        proxy.insert_with_spill(position, this->m_end, spill);
+        T* const new_end = mem::umove(spill, m_pos, this->m_end);
+        proxy.insert_with_spill(m_pos, this->m_end, spill);
+        this->m_end = new_end;
     }
 
-    this->m_end += proxy.count;
-
-    return position;
+    return m_pos;
 }
 
 template<class T, len_t C>
@@ -670,16 +667,16 @@ constexpr void
 static_vector_alt<T, C>::priv_swap(
         static_vector_alt<T, C>& shorter,
         static_vector_alt<T, C>& longer,
-        size_type s_len, size_type l_len) const {
+        size_type l_len) const {
     T* const s_begin = shorter.begin();
     T* const l_begin = longer.begin();
 
-    std::swap_ranges(s_begin, shorter.m_end, l_begin);
-    mem::umove(shorter.m_end, l_begin + s_len, longer.m_end);
-    mem::destroy(l_begin + s_len, longer.m_end);
+    T* const l_split = std::swap_ranges(s_begin, shorter.m_end, l_begin);
+    mem::umove(shorter.m_end, l_split, longer.m_end);
+    mem::destroy(l_split, longer.m_end);
 
     shorter.m_end = s_begin + l_len;
-    longer.m_end = l_begin + s_len;
+    longer.m_end = l_split;
 }
 
 
