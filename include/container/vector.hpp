@@ -13,8 +13,6 @@
 
 namespace uwr {
 
-using len_t = mem::len_t;
-
 template<class T, class A = mem::hybrid_allocator<T>>
 class vector {
 public:
