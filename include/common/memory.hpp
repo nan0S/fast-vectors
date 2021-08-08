@@ -111,7 +111,7 @@ UWR_FORCEINLINE constexpr
 T* move(T* dest, InputIterator begin, len_t n);
 
 /*
- * move into uninitialized memor
+ * move into uninitialized memory
  */
 template<class T, class InputIterator>
 UWR_FORCEINLINE constexpr
@@ -164,18 +164,19 @@ T create();
  */
 template<class T>
 UWR_FORCEINLINE constexpr
-T_Move<T> shiftr(T* dest, T* begin, T* end);
+T_Move<T> shiftr(T* dest, const T* begin, T* end);
 template<class T>
 UWR_FORCEINLINE constexpr
-NT_Move<T> shiftr(T* dest, T* begin, T* end);
+NT_Move<T> shiftr(T* dest, const T* begin, T* end);
 
 /*
  * shifts data to the left,
- * assumption: dest < begin
+ * assumption: dest < begin,
+ * returns dest + (end - begin)
  */
 template<class T>
 UWR_FORCEINLINE constexpr
-T* shiftl(T* dest, T* begin, T* end);
+T* shiftl(T* dest, const T* begin, const T* end);
 
 
 /*
@@ -331,21 +332,21 @@ void destroy_at(T* addr) {
 
 template<class T>
 constexpr
-T_Move<T> shiftr(T* dest, T* begin, T* end) {
+T_Move<T> shiftr(T* dest, const T* begin, T* end) {
     std::memmove(dest, begin, (end - begin) * sizeof(T));
 }
 
 template<class T>
 constexpr
-NT_Move<T> shiftr(T* dest, T* begin, T* end) {
-    T* seg = end - (dest - begin);
-    umove(end, seg, end);
+NT_Move<T> shiftr(T* dest, const T* begin, T* end) {
+    const T* seg = end - (dest - begin);
+    umove<T, const T*>(end, seg, end);
     std::move_backward(begin, seg, end);
 }
 
 template<class T>
 constexpr
-T* shiftl(T* dest, T* begin, T* end) {
+T* shiftl(T* dest, const T* begin, const T* end) {
     return std::move(begin, end, dest);
 }
 
