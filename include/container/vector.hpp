@@ -3,9 +3,10 @@
 #include <iterator>
 #include <limits>
 
-#include "../common/allocator.hpp"
+#include "../common/memory.hpp"
 #include "../common/define.hpp"
 #include "../common/proxy.hpp"
+#include "../common/hybrid_allocator.hpp"
 #if CPP_ABOVE_17
 #include "../common/synth_three_way.hpp"
 #endif
@@ -14,11 +15,12 @@ namespace uwr {
 
 using len_t = mem::len_t;
 
-template<class T>
+template<class T, class A = mem::hybrid_allocator<T>>
 class vector {
 public:
     using value_type = T;
-    using size_type = len_t;
+    using allocator_type = A;
+    using size_type = typename allocator_type::size_type;
     using difference_type = std::ptrdiff_t;
     using reference = T&;
     using const_reference = const T&;
@@ -114,7 +116,7 @@ public:
     UWR_FORCEINLINE constexpr reference fast_emplace_back(Args&&... args) noexcept;
 
 private:
-    UWR_FORCEINLINE constexpr size_type next_capacity(size_type new_length) const noexcept;
+    UWR_FORCEINLINE constexpr size_type next_capacity(size_type new_size) const noexcept;
     template<class InputIterator>
     UWR_FORCEINLINE constexpr void priv_copy_assign(InputIterator first, InputIterator last, size_type n);
     template<class InputIterator>
@@ -128,356 +130,328 @@ private:
     constexpr iterator priv_insert(const_iterator pos, InsertProxy&& proxy);
 
 private:
-    size_type m_length;
-    size_type m_capacity;
-    T* m_data;
+    allocator_type m_alloc;
 
 public:
     static int reallocs;
 };
 
-template<class T>
-int vector<T>::reallocs = 0;
+template<class T, class A>
+int vector<T, A>::reallocs = 0;
 
-template<class T>
+template<class T, class A>
 constexpr
-vector<T>::vector() noexcept
-    : m_length(0),
-      m_capacity(0),
-      m_data(nullptr) {
+vector<T, A>::vector() noexcept {}
+
+template<class T, class A>
+constexpr
+vector<T, A>::vector(size_type n)
+    : m_alloc(n) {
+    mem::construct(this->data(), n);
 }
 
-template<class T>
+template<class T, class A>
 constexpr
-vector<T>::vector(size_type n)
-    : m_length(n),
-      m_capacity(mem::fix_capacity<T>(this->m_length)),
-      m_data(mem::allocate<T>(this->m_capacity)) {
-    mem::construct(this->m_data, n);
+vector<T, A>::vector(size_type n, const T& val)
+    : m_alloc(n) {
+    mem::ufill(this->data(), n, val);
 }
 
-template<class T>
-constexpr
-vector<T>::vector(size_type n, const T& val)
-    : m_length(n),
-      m_capacity(mem::fix_capacity<T>(n)),
-      m_data(mem::allocate<T>(this->m_capacity)) {
-    mem::ufill(this->m_data, n, val);
-}
-
-template<class T>
+template<class T, class A>
 template<class InputIterator, class>
 constexpr
-vector<T>::vector(InputIterator first, InputIterator last)
-    : m_length(std::distance(first, last)),
-      m_capacity(mem::fix_capacity<T>(this->m_length)),
-      m_data(mem::allocate<T>(this->m_capacity)) {
-    mem::ucopy(this->m_data, first, last);
+vector<T, A>::vector(InputIterator first, InputIterator last)
+    : m_alloc(std::distance(first, last)) {
+    mem::ucopy(this->data(), first, last);
 }
 
-template<class T>
+template<class T, class A>
 constexpr
-vector<T>::vector(const vector& x)
-    : m_length(x.m_length),
-      m_capacity(mem::fix_capacity<T>(this->m_length)),
-      m_data(mem::allocate<T>(this->m_capacity)) {
-    mem::ucopy(this->m_data, x.begin(), x.end());
+vector<T, A>::vector(const vector& x)
+    : m_alloc(x.size()) {
+    mem::ucopy(this->data(), x.begin(), x.end());
 }
 
-template<class T>
+template<class T, class A>
 constexpr
-vector<T>::vector(vector&& x) noexcept
-    : m_length(x.m_length),
-      m_capacity(x.m_capacity),
-      m_data(x.m_data) {
-    x.m_length = 0;
-    x.m_capacity = 0;
-    x.m_data = nullptr;
+vector<T, A>::vector(vector&& x) noexcept
+    : m_alloc(std::move(x.m_alloc)) {
 }
 
-template<class T>
+template<class T, class A>
 constexpr
-vector<T>::vector(std::initializer_list<T> ilist)
-    : m_length(ilist.size()),
-      m_capacity(mem::fix_capacity<T>(this->m_length)),
-      m_data(mem::allocate<T>(this->m_capacity)) {
-    mem::ucopy(this->m_data, ilist.begin(), ilist.end());
+vector<T, A>::vector(std::initializer_list<T> ilist)
+    : m_alloc(ilist.size()) {
+    mem::ucopy(this->data(), ilist.begin(), ilist.end());
 }
 
-template<class T>
+template<class T, class A>
 #if CPP_ABOVE_17
 constexpr
 #endif
-vector<T>::~vector() {
-    mem::destroy(this->m_data, this->m_length);
-    mem::deallocate(this->m_data, this->m_capacity);
+vector<T, A>::~vector() {
+    mem::destroy(this->data(), this->size());
 }
 
-template<class T>
+template<class T, class A>
 constexpr
-vector<T>& vector<T>::operator=(const vector<T>& other) noexcept {
+vector<T, A>& vector<T, A>::operator=(const vector<T, A>& other) noexcept {
     if (UWR_LIKELY(this != &other))
-        this->priv_copy_assign(other.begin(), other.end(), other.m_length);
+        this->priv_copy_assign(other.begin(), other.end(), other.size());
     return *this;
 }
 
-// TODO: maybe deallocate moved
-template<class T>
+template<class T, class A>
 constexpr
-vector<T>& vector<T>::operator=(vector<T>&& other) noexcept {
-    std::swap(m_data, other.m_data);
-    std::swap(m_length, other.m_length);
-    std::swap(m_capacity, other.m_capacity);
-
+vector<T, A>& vector<T, A>::operator=(vector<T, A>&& other) noexcept {
+    if (UWR_LIKELY(this != &other))
+        this->m_alloc = std::move(other.m_alloc);
     return *this;
 }
 
-template<class T>
+template<class T, class A>
 constexpr
-vector<T>& vector<T>::operator=(std::initializer_list<T> ilist) noexcept {
+vector<T, A>& vector<T, A>::operator=(std::initializer_list<T> ilist) noexcept {
     this->priv_copy_assign(ilist.begin(), ilist.end(), ilist.size());
     return *this;
 }
 
-template<class T>
-constexpr typename vector<T>::iterator
-vector<T>::begin() noexcept {
-    return this->m_data;
+template<class T, class A>
+constexpr typename vector<T, A>::iterator
+vector<T, A>::begin() noexcept {
+    return iterator(this->data());
 }
 
-template<class T>
-constexpr typename vector<T>::const_iterator
-vector<T>::begin() const noexcept {
-    return this->m_data;
+template<class T, class A>
+constexpr typename vector<T, A>::const_iterator
+vector<T, A>::begin() const noexcept {
+    return this->cbegin();
 }
 
-template<class T>
-constexpr typename vector<T>::iterator
-vector<T>::end() noexcept {
-    return this->m_data + this->m_length;
+template<class T, class A>
+constexpr typename vector<T, A>::iterator
+vector<T, A>::end() noexcept {
+    return iterator(this->data() + this->size());
 }
 
-template<class T>
-constexpr typename vector<T>::const_iterator
-vector<T>::end() const noexcept {
-    return this->m_data + this->m_length;
+template<class T, class A>
+constexpr typename vector<T, A>::const_iterator
+vector<T, A>::end() const noexcept {
+    return this->cend();
 }
 
-template<class T>
-constexpr typename vector<T>::reverse_iterator
-vector<T>::rbegin() noexcept {
-    return reverse_iterator(this->m_data + this->m_length);
+template<class T, class A>
+constexpr typename vector<T, A>::reverse_iterator
+vector<T, A>::rbegin() noexcept {
+    return reverse_iterator(this->end());
 }
 
-template<class T>
-constexpr typename vector<T>::const_reverse_iterator
-vector<T>::rbegin() const noexcept {
-    return const_reverse_iterator(this->m_data + this->m_length);
+template<class T, class A>
+constexpr typename vector<T, A>::const_reverse_iterator
+vector<T, A>::rbegin() const noexcept {
+    return this->crbegin();
 }
 
-template<class T>
-constexpr typename vector<T>::reverse_iterator
-vector<T>::rend() noexcept {
-    return reverse_iterator(this->m_data);
+template<class T, class A>
+constexpr typename vector<T, A>::reverse_iterator
+vector<T, A>::rend() noexcept {
+    return reverse_iterator(this->begin());
 }
 
-template<class T>
-constexpr typename vector<T>::const_reverse_iterator
-vector<T>::rend() const noexcept {
-    return const_reverse_iterator(this->m_data);
+template<class T, class A>
+constexpr typename vector<T, A>::const_reverse_iterator
+vector<T, A>::rend() const noexcept {
+    return this->crend();
 }
 
-template<class T>
-constexpr typename vector<T>::const_iterator
-vector<T>::cbegin() const noexcept {
-    return this->m_data;
+template<class T, class A>
+constexpr typename vector<T, A>::const_iterator
+vector<T, A>::cbegin() const noexcept {
+    return const_iterator(this->data());
 }
 
-template<class T>
-constexpr typename vector<T>::const_iterator
-vector<T>::cend() const noexcept {
-    return this->m_data + this->m_length;
+template<class T, class A>
+constexpr typename vector<T, A>::const_iterator
+vector<T, A>::cend() const noexcept {
+    return const_iterator(this->data() + this->size());
 }
 
-template<class T>
-constexpr typename vector<T>::const_reverse_iterator
-vector<T>::crbegin() const noexcept {
-    return const_reverse_iterator(this->m_data + this->m_length);
+template<class T, class A>
+constexpr typename vector<T, A>::const_reverse_iterator
+vector<T, A>::crbegin() const noexcept {
+    return const_reverse_iterator(this->end());
 }
 
-template<class T>
-constexpr typename vector<T>::const_reverse_iterator
-vector<T>::crend() const noexcept {
-    return const_reverse_iterator(this->m_data);
+template<class T, class A>
+constexpr typename vector<T, A>::const_reverse_iterator
+vector<T, A>::crend() const noexcept {
+    return const_reverse_iterator(this->begin());
 }
 
-template<class T>
-constexpr size_t
-vector<T>::size() const noexcept {
-    return this->m_length;
+template<class T, class A>
+constexpr typename vector<T, A>::size_type
+vector<T, A>::size() const noexcept {
+    return this->m_alloc.m_size;
 }
 
-template<class T>
-constexpr size_t
-vector<T>::max_size() const noexcept {
+template<class T, class A>
+constexpr typename vector<T, A>::size_type
+vector<T, A>::max_size() const noexcept {
     return std::numeric_limits<size_type>::max() / sizeof(T);
 }
 
-template<class T>
+template<class T, class A>
 constexpr void
-vector<T>::resize(size_type n) {
+vector<T, A>::resize(size_type n) {
     this->priv_resize(default_construct_proxy<T>(n));
 }
 
-template<class T>
+template<class T, class A>
 constexpr void
-vector<T>::resize(size_type n, const T& val) {
+vector<T, A>::resize(size_type n, const T& val) {
     this->priv_resize(unitialized_fill_proxy(n, val));
 }
 
-template<class T>
-constexpr size_t
-vector<T>::capacity() const noexcept {
-    return this->m_capacity;
+template<class T, class A>
+constexpr typename vector<T, A>::size_type
+vector<T, A>::capacity() const noexcept {
+    return this->m_alloc.m_capacity;
 }
 
-template<class T>
+template<class T, class A>
 constexpr bool
-vector<T>::empty() const noexcept {
-    return this->m_length == 0;
+vector<T, A>::empty() const noexcept {
+    return this->size() == 0;
 }
 
-template<class T>
+template<class T, class A>
 constexpr void
-vector<T>::reserve(size_type n) noexcept {
+vector<T, A>::reserve(size_type n) noexcept {
     // TODO: likely here (?)
-    if (UWR_LIKELY(n > this->m_capacity)) {
-        size_type new_capacity = mem::fix_capacity<T>(n);
-        mem::reallocate(this->m_data, this->m_length, this->m_capacity, new_capacity);
-        this->m_capacity = new_capacity;
-    }
+    if (UWR_LIKELY(n > this->capacity()))
+        this->m_alloc.realloc(n);
 }
 
-template<class T>
+template<class T, class A>
 constexpr void
-vector<T>::shrink_to_fit() noexcept {
+vector<T, A>::shrink_to_fit() noexcept {
     // TODO: now we don't shrink, maybe in the future
 }
 
-template<class T>
-constexpr typename vector<T>::reference
-vector<T>::operator[](size_type n) {
-    return this->m_data[n];
+template<class T, class A>
+constexpr typename vector<T, A>::reference
+vector<T, A>::operator[](size_type n) {
+    return this->data()[n];
 }
 
-template<class T>
-constexpr typename vector<T>::const_reference
-vector<T>::operator[](size_type n) const {
-    return this->m_data[n];
+template<class T, class A>
+constexpr typename vector<T, A>::const_reference
+vector<T, A>::operator[](size_type n) const {
+    return this->data()[n];
 }
 
-template<class T>
-constexpr typename vector<T>::reference
-vector<T>::at(size_type n) {
-    if (UWR_LIKELY(n < this->m_length))
-        return this->m_data[n];
+template<class T, class A>
+constexpr typename vector<T, A>::reference
+vector<T, A>::at(size_type n) {
+    if (UWR_LIKELY(n < this->size()))
+        return this->data()[n];
     else
         throw std::out_of_range("Index out of range: " + std::to_string(n));
 }
 
-template<class T>
-constexpr typename vector<T>::const_reference
-vector<T>::at(size_type n) const {
-    if (UWR_LIKELY(n < this->m_length))
-        return this->m_data[n];
+template<class T, class A>
+constexpr typename vector<T, A>::const_reference
+vector<T, A>::at(size_type n) const {
+    if (UWR_LIKELY(n < this->size()))
+        return this->data()[n];
     else
         throw std::out_of_range("Index out of range: " + std::to_string(n));
 }
 
-template<class T>
-constexpr typename vector<T>::reference
-vector<T>::front() {
-    return this->m_data[0];
+template<class T, class A>
+constexpr typename vector<T, A>::reference
+vector<T, A>::front() {
+    return *this->data();
 }
 
-template<class T>
-constexpr typename vector<T>::const_reference
-vector<T>::front() const {
-    return this->m_data[0];
+template<class T, class A>
+constexpr typename vector<T, A>::const_reference
+vector<T, A>::front() const {
+    return *this->data();
 }
 
-template<class T>
-constexpr typename vector<T>::reference
-vector<T>::back() {
-    return this->m_data[this->m_length - 1];
+template<class T, class A>
+constexpr typename vector<T, A>::reference
+vector<T, A>::back() {
+    return this->data()[this->size() - 1];
 }
 
-template<class T>
-constexpr typename vector<T>::const_reference
-vector<T>::back() const {
-    return this->m_data[this->m_length - 1];
+template<class T, class A>
+constexpr typename vector<T, A>::const_reference
+vector<T, A>::back() const {
+    return this->data()[this->size() - 1];
 }
 
-template<class T>
+template<class T, class A>
 constexpr T*
-vector<T>::data() noexcept {
-    return this->m_data;
+vector<T, A>::data() noexcept {
+    return this->m_alloc.m_data;
 }
 
-template<class T>
+template<class T, class A>
 constexpr const T*
-vector<T>::data() const noexcept {
-    return this->m_data;
+vector<T, A>::data() const noexcept {
+    return this->m_alloc.m_data;
 }
 
-template<class T>
+template<class T, class A>
 template<class InputIterator, class>
 constexpr void
-vector<T>::assign(InputIterator first, InputIterator last) {
+vector<T, A>::assign(InputIterator first, InputIterator last) {
     this->priv_copy_assign(first, last,
             static_cast<size_type>(std::distance(first, last)));
 }
 
-template<class T>
+template<class T, class A>
 constexpr void
-vector<T>::assign(size_type n, const T& val) {
+vector<T, A>::assign(size_type n, const T& val) {
     this->priv_assign(assign_fill_proxy(n, val));
 }
 
-template<class T>
+template<class T, class A>
 constexpr void
-vector<T>::assign(std::initializer_list<T> ilist) {
+vector<T, A>::assign(std::initializer_list<T> ilist) {
     this->priv_copy_assign(ilist.begin(), ilist.end(), ilist.size());
 }
 
-template<class T>
+template<class T, class A>
 constexpr void
-vector<T>::push_back(const_reference value) {
+vector<T, A>::push_back(const_reference value) {
     this->emplace_back(value);
 }
 
-template<class T>
+template<class T, class A>
 constexpr void
-vector<T>::push_back(T&& value) {
+vector<T, A>::push_back(T&& value) {
     this->emplace_back(std::move(value));
 }
 
-template<class T>
+template<class T, class A>
 constexpr void
-vector<T>::fast_push_back(T&& value) noexcept {
+vector<T, A>::fast_push_back(T&& value) noexcept {
     this->fast_emplace_back(std::forward<T>(value));
 }
 
-template<class T>
+template<class T, class A>
 constexpr void
-vector<T>::pop_back() {
-    mem::destroy_at(this->m_data + --this->m_length);
+vector<T, A>::pop_back() {
+    mem::destroy_at(this->data() + --this->m_alloc.m_size);
 }
 
-template<class T>
+template<class T, class A>
 constexpr bool
-vector<T>::safe_pop_back() noexcept {
-    if (UWR_LIKELY(this->m_length != 0)) {
+vector<T, A>::safe_pop_back() noexcept {
+    if (UWR_LIKELY(this->size() != 0)) {
         this->pop_back();
         return true;
     }
@@ -485,41 +459,41 @@ vector<T>::safe_pop_back() noexcept {
         return false;
 }
 
-template<class T>
-constexpr typename vector<T>::iterator
-vector<T>::insert(const_iterator pos, const T& value) {
+template<class T, class A>
+constexpr typename vector<T, A>::iterator
+vector<T, A>::insert(const_iterator pos, const T& value) {
     return this->emplace(pos, value);
 }
 
-template<class T>
-constexpr typename vector<T>::iterator
-vector<T>::insert(const_iterator pos, T&& value) {
+template<class T, class A>
+constexpr typename vector<T, A>::iterator
+vector<T, A>::insert(const_iterator pos, T&& value) {
     return this->emplace(pos, std::move(value));
 }
 
-template<class T>
-constexpr typename vector<T>::iterator
-vector<T>::insert(const_iterator pos, size_type count, const T& value) {
+template<class T, class A>
+constexpr typename vector<T, A>::iterator
+vector<T, A>::insert(const_iterator pos, size_type count, const T& value) {
     return this->priv_insert(pos, insert_fill_proxy(count, value));
 }
 
-template<class T>
+template<class T, class A>
 template<class InputIterator, class>
-constexpr typename vector<T>::iterator
-vector<T>::insert(const_iterator pos, InputIterator first, InputIterator last) {
+constexpr typename vector<T, A>::iterator
+vector<T, A>::insert(const_iterator pos, InputIterator first, InputIterator last) {
     return this->priv_copy_insert(pos, first, last,
             static_cast<size_type>(std::distance(first, last)));
 }
 
-template<class T>
-constexpr typename vector<T>::iterator
-vector<T>::insert(const_iterator pos, std::initializer_list<T> ilist) {
+template<class T, class A>
+constexpr typename vector<T, A>::iterator
+vector<T, A>::insert(const_iterator pos, std::initializer_list<T> ilist) {
     return this->priv_copy_insert(pos, ilist.begin(), ilist.end(), ilist.size());
 }
 
-template<class T>
-constexpr typename vector<T>::iterator
-vector<T>::erase(const_iterator pos) {
+template<class T, class A>
+constexpr typename vector<T, A>::iterator
+vector<T, A>::erase(const_iterator pos) {
     T* const position = const_cast<T* const>(pos);
     mem::shiftl(position, position + 1, this->end());
     this->pop_back();
@@ -527,9 +501,9 @@ vector<T>::erase(const_iterator pos) {
     return position;
 }
 
-template<class T>
-constexpr typename vector<T>::iterator
-vector<T>::erase(const_iterator first, const_iterator last) {
+template<class T, class A>
+constexpr typename vector<T, A>::iterator
+vector<T, A>::erase(const_iterator first, const_iterator last) {
     T* const f = const_cast<T* const>(first);
     size_type count = static_cast<size_type>(std::distance(first, last));
 
@@ -539,39 +513,37 @@ vector<T>::erase(const_iterator first, const_iterator last) {
 
         mem::shiftl(f, l, e);
         mem::destroy(e - count, e);
-        this->m_length -= count;
+        this->m_alloc.m_size -= count;
     }
 
     return f;
 }
 
-template<class T>
+template<class T, class A>
 constexpr void
-vector<T>::swap(vector<T>& other) {
-    std::swap(m_data, other.m_data);
-    std::swap(m_length, other.m_length);
-    std::swap(m_capacity, other.m_capacity);
+vector<T, A>::swap(vector<T, A>& other) {
+    this->m_alloc.swap(other.m_alloc);
 }
 
-template<class T>
+template<class T, class A>
 constexpr void
-vector<T>::clear() noexcept {
-    mem::destroy(this->m_data, this->m_length);
-    this->m_length = 0;
+vector<T, A>::clear() noexcept {
+    mem::destroy(this->data(), this->size());
+    this->m_alloc.m_size = 0;
 }
 
-template<class T>
+template<class T, class A>
 template<class... Args>
-constexpr typename vector<T>::iterator
-vector<T>::emplace(const_iterator pos, Args&&... args) {
+constexpr typename vector<T, A>::iterator
+vector<T, A>::emplace(const_iterator pos, Args&&... args) {
     T* const m_end = this->end();
 
-    if (this->m_length == this->m_capacity) {
-        size_type new_capacity = this->next_capacity(this->m_length + 1);
-
+    if (this->size() == this->capacity()) {
+        size_type new_capacity = this->m_alloc.fix_capacity(
+                this->next_capacity(this->size() + 1));
         T* new_data;
-        if (mem::expand_in_place_or_alloc_raw(
-                    this->m_data, this->m_capacity,
+
+        if (this->m_alloc.expand_or_alloc_raw(
                     new_capacity, new_data)) {
             T* const position = const_cast<T* const>(pos);
             
@@ -582,24 +554,24 @@ vector<T>::emplace(const_iterator pos, Args&&... args) {
             else
                 new (position) T(std::forward<Args>(args)...);
 
-            ++this->m_length;
-            this->m_capacity = new_capacity;
+            ++this->m_alloc.m_size;
+            this->m_alloc.m_capacity = new_capacity;
 
             return position;
         }
         else {
-            T* const e_begin = new_data + (pos - this->m_data);
+            T* const e_begin = new_data + (pos - this->data());
 
-            mem::umove<T, const T*>(new_data, this->m_data, pos);
+            mem::umove<T, const T*>(new_data, this->data(), pos);
             mem::umove<T, const T*>(e_begin + 1, pos, m_end);
             new (e_begin) T(std::forward<Args>(args)...);
             
-            mem::destroy(this->m_data, m_end);
-            mem::deallocate(this->m_data, this->m_capacity);
+            mem::destroy(this->data(), m_end);
+            this->m_alloc.dealloc(this->data(), this->capacity());
 
-            ++this->m_length;
-            this->m_capacity = new_capacity;
-            this->m_data = new_data;
+            ++this->m_alloc.m_size;
+            this->m_alloc.m_capacity = new_capacity;
+            this->m_alloc.m_data = new_data;
 
             return e_begin;
         }
@@ -614,125 +586,114 @@ vector<T>::emplace(const_iterator pos, Args&&... args) {
         else
             new (position) T(std::forward<Args>(args)...);
 
-        ++this->m_length;
+        ++this->m_alloc.m_size;
 
         return position;
     }
 }
 
-template<class T>
+template<class T, class A>
 template<class... Args>
-constexpr typename vector<T>::reference
-vector<T>::emplace_back(Args&&... args) {
+constexpr typename vector<T, A>::reference
+vector<T, A>::emplace_back(Args&&... args) {
     // TODO: add unlikely (?)
-    if (UWR_UNLIKELY(this->m_length == this->m_capacity)) {
+    if (UWR_UNLIKELY(this->size() == this->capacity())) {
         ++reallocs;
-        size_type new_capacity = this->next_capacity(this->m_length + 1);
-        mem::reallocate(this->m_data, this->m_length, this->m_capacity, new_capacity);
-        this->m_capacity = new_capacity;
+        this->m_alloc.realloc(this->next_capacity(this->size() + 1));
     }
     return this->fast_emplace_back(std::forward<Args>(args)...);
 }
 
-template<class T>
+template<class T, class A>
 template<class... Args>
-constexpr typename vector<T>::reference
-vector<T>::fast_emplace_back(Args&&... args) noexcept {
-    T* const last_end = this->m_data + this->m_length++;
+constexpr typename vector<T, A>::reference
+vector<T, A>::fast_emplace_back(Args&&... args) noexcept {
+    T* const last_end = this->data() + this->m_alloc.m_size++;
     new (last_end) T(std::forward<Args>(args)...);
     return *last_end;
 }
 
-template<class T>
-constexpr size_t
-vector<T>::next_capacity(size_type new_length) const noexcept {
-    return mem::fix_capacity<T>(std::max(2 * this->m_capacity, new_length));
+template<class T, class A>
+constexpr typename vector<T, A>::size_type
+vector<T, A>::next_capacity(size_type new_size) const noexcept {
+    return std::max(2 * this->capacity(), new_size);
 }
 
-template<class T>
+template<class T, class A>
 template<class InputIterator>
 constexpr void
-vector<T>::priv_copy_assign(InputIterator first, InputIterator last, size_type n) {
+vector<T, A>::priv_copy_assign(InputIterator first, InputIterator last, size_type n) {
     this->priv_assign(copy_assign_range_proxy<T, InputIterator>(first, last, n));
 }
 
-template<class T>
+template<class T, class A>
 template<class InputIterator>
-constexpr typename vector<T>::iterator
-vector<T>::priv_copy_insert(const_iterator pos, InputIterator first, InputIterator last, size_type n) {
+constexpr typename vector<T, A>::iterator
+vector<T, A>::priv_copy_insert(const_iterator pos, InputIterator first, InputIterator last, size_type n) {
     return this->priv_insert(pos, insert_copy_range_proxy<T, InputIterator>(first, last, n));
 }
 
-template<class T>
+template<class T, class A>
 template<class AssignProxy>
 constexpr void
-vector<T>::priv_assign(AssignProxy&& proxy) {
-    if (proxy.n > this->m_capacity) {
-        size_type new_capacity = mem::fix_capacity<T>(proxy.n);
-        
-        if (mem::expand_in_place_or_destroy_and_alloc_raw(
-                    this->m_data, this->m_length,
-                    this->m_capacity, new_capacity))
-            proxy.shorter_assign(this->m_data, this->end(), this->m_length);
+vector<T, A>::priv_assign(AssignProxy&& proxy) {
+    if (proxy.n > this->capacity()) {
+        if (this->m_alloc.expand_or_dealloc_and_alloc_raw(proxy.n))
+            proxy.shorter_assign(this->data(), this->end(), this->size());
         else
-            proxy.shorter_assign(this->m_data, this->m_data, 0);
-
-        this->m_capacity = new_capacity;
+            proxy.shorter_assign(this->data(), this->data(), 0);
     }
     else {
         T* const m_end = this->end();
-        if (proxy.n > this->m_length)
-            proxy.shorter_assign(this->m_data, m_end, this->m_length);
+
+        if (proxy.n > this->size())
+            proxy.shorter_assign(this->data(), m_end, this->size());
         else
-            proxy.longer_assign(this->m_data, m_end, this->m_length);
+            proxy.longer_assign(this->data(), m_end, this->size());
     }
 
-    this->m_length = proxy.n;
+    this->m_alloc.m_size = proxy.n;
 }
 
-template<class T>
+template<class T, class A>
 template<class ResizeProxy>
 constexpr void
-vector<T>::priv_resize(ResizeProxy&& proxy) {
-    if (proxy.n > this->m_capacity) {
-        size_type new_capacity = mem::fix_capacity<T>(proxy.n);
-        
-        mem::reallocate(this->m_data, this->m_length, this->m_capacity, new_capacity);
-        proxy.construct(this->end(), this->m_data + proxy.n);
-
-        this->m_capacity = new_capacity;
+vector<T, A>::priv_resize(ResizeProxy&& proxy) {
+    if (proxy.n > this->capacity()) {
+        this->m_alloc.realloc(proxy.n);
+        proxy.construct(this->end(), this->data() + proxy.n);
     }
     else {
         T* const m_end = this->end();
-        T* const new_end = this->m_data + proxy.n;
+        T* const new_end = this->data() + proxy.n;
 
-        if (proxy.n > this->m_length)
+        if (proxy.n > this->size())
             proxy.construct(m_end, new_end);
         else
             mem::destroy(new_end, m_end);
     }
 
-    this->m_length = proxy.n;
+    this->m_alloc.m_size = proxy.n;
 }
 
-template<class T>
+template<class T, class A>
 template<class InsertProxy>
-constexpr typename vector<T>::iterator
-vector<T>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
+constexpr typename vector<T, A>::iterator
+vector<T, A>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
     T* const position = const_cast<T* const>(pos);
 
     if (UWR_UNLIKELY(!proxy.count))
         return position;
 
     T* const m_end = this->end();
-    size_type new_length = this->m_length + proxy.count;
+    size_type new_size = this->size() + proxy.count;
 
-    if (new_length > this->m_capacity) {
-        size_type new_capacity = this->next_capacity(new_length);
-
+    if (new_size > this->capacity()) {
+        size_type new_capacity = this->m_alloc.fix_capacity(
+                this->next_capacity(new_size));
         T* new_data;
-        if (mem::expand_in_place_or_alloc_raw(
-                    this->m_data, this->m_capacity,
+
+        if (this->m_alloc.expand_or_alloc_raw(
                     new_capacity, new_data)) {
             T* const spill = position + proxy.count;
 
@@ -745,25 +706,25 @@ vector<T>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
                 proxy.insert_with_spill(position, m_end, spill);
             }
 
-            this->m_capacity = new_capacity;
-            this->m_length = new_length;
+            this->m_alloc.m_capacity = new_capacity;
+            this->m_alloc.m_size = new_size;
 
             return position;
         }
         else {
-            T* const i_begin = new_data + (position - this->m_data);
+            T* const i_begin = new_data + (position - this->data());
             T* const i_end = i_begin + proxy.count;
 
-            mem::umove<T, const T*>(new_data, this->m_data, pos);
+            mem::umove<T, const T*>(new_data, this->data(), pos);
             mem::umove<T, const T*>(i_end, pos, m_end);
             proxy.insert_with_spill(i_begin, i_begin, i_end);
 
-            mem::destroy(this->m_data, m_end);
-            mem::deallocate(this->m_data, this->m_capacity);
+            mem::destroy(this->data(), m_end);
+            this->m_alloc.dealloc(this->data(), this->capacity());
 
-            this->m_data = new_data;
-            this->m_capacity = new_capacity;
-            this->m_length = new_length;
+            this->m_alloc.m_data = new_data;
+            this->m_alloc.m_capacity = new_capacity;
+            this->m_alloc.m_size = new_size;
             
             return i_begin;
         }
@@ -780,7 +741,7 @@ vector<T>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
             proxy.insert_with_spill(position, m_end, spill);
         }
 
-        this->m_length = new_length;
+        this->m_alloc.m_size = new_size;
 
         return position;
     }
@@ -790,25 +751,25 @@ vector<T>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
 /*
  * non-member operators 
  */
-template<class T>
-UWR_FORCEINLINE constexpr bool operator==(const vector<T>& lhs, const vector<T>& rhs);
-template<class T>
-UWR_FORCEINLINE constexpr bool operator!=(const vector<T>& lhs, const vector<T>& rhs);
-template<class T>
-constexpr bool operator<(const vector<T>& lhs, const vector<T>& rhs);
-template<class T>
-UWR_FORCEINLINE constexpr bool operator<=(const vector<T>& lhs, const vector<T>& rhs);
-template<class T>
-UWR_FORCEINLINE constexpr bool operator>(const vector<T>& lhs, const vector<T>& rhs);
-template<class T>
-UWR_FORCEINLINE constexpr bool operator>=(const vector<T>& lhs, const vector<T>& rhs);
-template<class T>
-constexpr std::ostream& operator<<(std::ostream& out, const vector<T>& v);
+template<class T, class A>
+UWR_FORCEINLINE constexpr bool operator==(const vector<T, A>& lhs, const vector<T, A>& rhs);
+template<class T, class A>
+UWR_FORCEINLINE constexpr bool operator!=(const vector<T, A>& lhs, const vector<T, A>& rhs);
+template<class T, class A>
+constexpr bool operator<(const vector<T, A>& lhs, const vector<T, A>& rhs);
+template<class T, class A>
+UWR_FORCEINLINE constexpr bool operator<=(const vector<T, A>& lhs, const vector<T, A>& rhs);
+template<class T, class A>
+UWR_FORCEINLINE constexpr bool operator>(const vector<T, A>& lhs, const vector<T, A>& rhs);
+template<class T, class A>
+UWR_FORCEINLINE constexpr bool operator>=(const vector<T, A>& lhs, const vector<T, A>& rhs);
+template<class T, class A>
+constexpr std::ostream& operator<<(std::ostream& out, const vector<T, A>& v);
 
 #if CPP_ABOVE_17
 
-template<class T>
-constexpr auto operator<=>(const vector<T>& lhs, const vector<T>& rhs);
+template<class T, class A>
+constexpr auto operator<=>(const vector<T, A>& lhs, const vector<T, A>& rhs);
 
 #endif
 
@@ -816,46 +777,46 @@ constexpr auto operator<=>(const vector<T>& lhs, const vector<T>& rhs);
 /*
  * non-member operators' implementations
  */
-template<class T>
+template<class T, class A>
 constexpr bool
-operator==(const vector<T>& lhs, const vector<T>& rhs) {
+operator==(const vector<T, A>& lhs, const vector<T, A>& rhs) {
     return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
-template<class T>
+template<class T, class A>
 constexpr bool
-operator!=(const vector<T>& lhs, const vector<T>& rhs) {
+operator!=(const vector<T, A>& lhs, const vector<T, A>& rhs) {
     return !(lhs == rhs);
 }
 
-template<class T>
+template<class T, class A>
 constexpr bool
-operator<(const vector<T>& lhs, const vector<T>& rhs) {
+operator<(const vector<T, A>& lhs, const vector<T, A>& rhs) {
     return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
 }
 
-template<class T>
+template<class T, class A>
 constexpr bool
-operator<=(const vector<T>& lhs, const vector<T>& rhs) {
+operator<=(const vector<T, A>& lhs, const vector<T, A>& rhs) {
     return !(rhs < lhs);
 }
 
-template<class T>
+template<class T, class A>
 constexpr bool
-operator>(const vector<T>& lhs, const vector<T>& rhs) {
+operator>(const vector<T, A>& lhs, const vector<T, A>& rhs) {
     return rhs < lhs;
 }
 
-template<class T>
+template<class T, class A>
 constexpr bool
-operator>=(const vector<T>& lhs, const vector<T>& rhs) {
+operator>=(const vector<T, A>& lhs, const vector<T, A>& rhs) {
     return !(lhs < rhs);
 }
 
-template<class T>
+template<class T, class A>
 constexpr std::ostream&
-operator<<(std::ostream& out, const vector<T>& v) {
-    for (size_t i = 0; i < v.size() - 1; ++i)
+operator<<(std::ostream& out, const vector<T, A>& v) {
+    for (typename vector<T, A>::size_type i = 0; i < v.size() - 1; ++i)
         out << v[i] << ' ';
     if (!v.empty())
         out << v.back();
@@ -864,9 +825,9 @@ operator<<(std::ostream& out, const vector<T>& v) {
 
 #if CPP_ABOVE_17
 
-template<class T>
+template<class T, class A>
 constexpr auto
-operator<=>(const vector<T>& lhs, const vector<T>& rhs) {
+operator<=>(const vector<T, A>& lhs, const vector<T, A>& rhs) {
     return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(),
                                                   rhs.begin(), rhs.end(),
                                                   mem::synth_three_way);
@@ -882,15 +843,17 @@ operator<=>(const vector<T>& lhs, const vector<T>& rhs) {
  */
 namespace std {
 
-template<class T>
-constexpr void swap(uwr::vector<T>& x, uwr::vector<T>& y);
+template<class T, class A>
+constexpr void swap(uwr::vector<T, A>& x, uwr::vector<T, A>& y);
 
 #if CPP_ABOVE_17
 
-template<class T, class U>
-constexpr size_t erase(uwr::vector<T>& c, const U& value);
-template<class T, class Pred>
-constexpr size_t erase_if(uwr::vector<T>& c, Pred pred);
+template<class T, class A, class U>
+constexpr typename uwr::vector<T, A>::size_type
+erase(uwr::vector<T, A>& c, const U& value);
+template<class T, class A, class Pred>
+constexpr typename uwr::vector<T, A>::size_type
+erase_if(uwr::vector<T, A>& c, Pred pred);
 
 #endif
 
@@ -898,17 +861,17 @@ constexpr size_t erase_if(uwr::vector<T>& c, Pred pred);
 /*
  * non-member functions' implementations
  */
-template<class T>
+template<class T, class A>
 constexpr void
-swap(uwr::vector<T>& x, uwr::vector<T>& y) {
+swap(uwr::vector<T, A>& x, uwr::vector<T, A>& y) {
     x.swap(y);
 }
 
 #if CPP_ABOVE_17
 
-template<class T, class U>
-constexpr size_t
-erase(uwr::vector<T>& c, const U& value) {
+template<class T, class A, class U>
+constexpr typename uwr::vector<T, A>::size_type
+erase(uwr::vector<T, A>& c, const U& value) {
     T* const c_end = c.end();
     T* const mid = std::remove(c.begin(), c_end, value);
     c.erase(mid, c_end);
@@ -916,9 +879,9 @@ erase(uwr::vector<T>& c, const U& value) {
     return static_cast<size_t>(std::distance(mid, c_end));
 }
 
-template<class T, class Pred>
-constexpr size_t
-erase_if(uwr::vector<T>& c, Pred pred) {
+template<class T, class A, class Pred>
+constexpr typename uwr::vector<T, A>::size_type
+erase_if(uwr::vector<T, A>& c, Pred pred) {
     T* const c_end = c.end();
     T* const mid = std::remove_if(c.begin(), c_end, pred);
     c.erase(mid, c_end);
