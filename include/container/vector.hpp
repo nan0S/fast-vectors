@@ -167,20 +167,19 @@ template<class T, class A>
 constexpr
 vector<T, A>::vector(const vector& x)
     : m_alloc(x.size()) {
-    mem::ucopy(this->data(), x.begin(), x.end());
+    mem::ucopy(this->data(), x.begin(), x.size());
 }
 
 template<class T, class A>
 constexpr
 vector<T, A>::vector(vector&& x) noexcept
-    : m_alloc(std::move(x.m_alloc)) {
-}
+    : m_alloc(std::move(x.m_alloc)) {}
 
 template<class T, class A>
 constexpr
 vector<T, A>::vector(std::initializer_list<T> ilist)
     : m_alloc(ilist.size()) {
-    mem::ucopy(this->data(), ilist.begin(), ilist.end());
+    mem::ucopy(this->data(), ilist.begin(), ilist.size());
 }
 
 template<class T, class A>
@@ -492,29 +491,30 @@ vector<T, A>::insert(const_iterator pos, std::initializer_list<T> ilist) {
 template<class T, class A>
 constexpr typename vector<T, A>::iterator
 vector<T, A>::erase(const_iterator pos) {
-    T* const position = const_cast<T* const>(pos);
-    mem::shiftl(position, position + 1, this->end());
+    T* const m_pos = const_cast<T* const>(pos);
+    mem::shiftl(m_pos, m_pos + 1, this->end());
     this->pop_back();
 
-    return position;
+    return m_pos;
 }
 
 template<class T, class A>
 constexpr typename vector<T, A>::iterator
 vector<T, A>::erase(const_iterator first, const_iterator last) {
-    T* const f = const_cast<T* const>(first);
-    size_type count = static_cast<size_type>(std::distance(first, last));
+    T* const m_first = const_cast<T* const>(first);
 
-    if (UWR_LIKELY(count != 0)) {
-        T* const l = const_cast<T* const>(last);
-        T* const e = this->end();
+    if (UWR_LIKELY(first != last)) {
+        T* const m_end = this->end();
 
-        mem::shiftl(f, l, e);
-        mem::destroy(e - count, e);
-        this->m_alloc.m_size -= count;
+        mem::destroy(
+                mem::shiftl(m_first, last, m_end),
+                m_end);
+
+        this->m_alloc.m_size -= static_cast<size_type>(
+                std::distance(first, last));
     }
 
-    return f;
+    return m_first;
 }
 
 template<class T, class A>
@@ -543,24 +543,22 @@ vector<T, A>::emplace(const_iterator pos, Args&&... args) {
 
         if (this->m_alloc.expand_or_alloc_raw(
                     new_capacity, new_data)) {
-            T* const position = const_cast<T* const>(pos);
+            T* const m_pos = const_cast<T* const>(pos);
             
-            if (position != m_end) {
-                mem::shiftr(position + 1, position, m_end);
-                *position = mem::create<T>(std::forward<Args>(args)...);
+            if (m_pos != m_end) {
+                mem::shiftr(m_pos + 1, m_pos, m_end);
+                *m_pos = mem::create<T>(std::forward<Args>(args)...);
             }
             else
-                new (position) T(std::forward<Args>(args)...);
+                new (m_pos) T(std::forward<Args>(args)...);
 
             ++this->m_alloc.m_size;
             this->m_alloc.m_capacity = new_capacity;
 
-            return position;
+            return m_pos;
         }
         else {
-            T* const e_begin = new_data + (pos - this->data());
-
-            mem::umove<T, const T*>(new_data, this->data(), pos);
+            T* const e_begin = mem::umove( new_data, this->cbegin(), pos);
             mem::umove<T, const T*>(e_begin + 1, pos, m_end);
             new (e_begin) T(std::forward<Args>(args)...);
             
@@ -575,18 +573,18 @@ vector<T, A>::emplace(const_iterator pos, Args&&... args) {
         }
     }
     else {
-        T* const position = const_cast<T* const>(pos);
+        T* const m_pos = const_cast<T* const>(pos);
         
-        if (position != m_end) {
-            mem::shiftr(position + 1, position, m_end);
-            *position = mem::create<T>(std::forward<Args>(args)...);
+        if (m_pos != m_end) {
+            mem::shiftr(m_pos + 1, m_pos, m_end);
+            *m_pos = mem::create<T>(std::forward<Args>(args)...);
         }
         else
-            new (position) T(std::forward<Args>(args)...);
+            new (m_pos) T(std::forward<Args>(args)...);
 
         ++this->m_alloc.m_size;
 
-        return position;
+        return m_pos;
     }
 }
 
@@ -678,10 +676,10 @@ template<class T, class A>
 template<class InsertProxy>
 constexpr typename vector<T, A>::iterator
 vector<T, A>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
-    T* const position = const_cast<T* const>(pos);
+    T* const m_pos = const_cast<T* const>(pos);
 
     if (UWR_UNLIKELY(!proxy.count))
-        return position;
+        return m_pos;
 
     T* const m_end = this->end();
     size_type new_size = this->size() + proxy.count;
@@ -693,27 +691,25 @@ vector<T, A>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
 
         if (this->m_alloc.expand_or_alloc_raw(
                     new_capacity, new_data)) {
-            T* const spill = position + proxy.count;
+            T* const spill = m_pos + proxy.count;
 
             if (spill < m_end) {
-                mem::shiftr(spill, position, m_end);
-                proxy.insert_without_spill(position, spill);
+                mem::shiftr(spill, m_pos, m_end);
+                proxy.insert_without_spill(m_pos, spill);
             }
             else {
-                mem::umove(spill, position, m_end);
-                proxy.insert_with_spill(position, m_end, spill);
+                mem::umove(spill, m_pos, m_end);
+                proxy.insert_with_spill(m_pos, m_end, spill);
             }
 
             this->m_alloc.m_capacity = new_capacity;
             this->m_alloc.m_size = new_size;
 
-            return position;
+            return m_pos;
         }
         else {
-            T* const i_begin = new_data + (position - this->data());
+            T* const i_begin = mem::umove(new_data, this->cbegin(), pos);
             T* const i_end = i_begin + proxy.count;
-
-            mem::umove<T, const T*>(new_data, this->data(), pos);
             mem::umove<T, const T*>(i_end, pos, m_end);
             proxy.insert_with_spill(i_begin, i_begin, i_end);
 
@@ -728,20 +724,20 @@ vector<T, A>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
         }
     }
     else {
-        T* const spill = position + proxy.count;
+        T* const spill = m_pos + proxy.count;
 
         if (spill < m_end) {
-            mem::shiftr(spill, position, m_end);
-            proxy.insert_without_spill(position, spill);
+            mem::shiftr(spill, m_pos, m_end);
+            proxy.insert_without_spill(m_pos, spill);
         }
         else {
-            mem::umove(spill, position, m_end);
-            proxy.insert_with_spill(position, m_end, spill);
+            mem::umove(spill, m_pos, m_end);
+            proxy.insert_with_spill(m_pos, m_end, spill);
         }
 
         this->m_alloc.m_size = new_size;
 
-        return position;
+        return m_pos;
     }
 }
 
