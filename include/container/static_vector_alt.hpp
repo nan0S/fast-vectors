@@ -139,8 +139,7 @@ private:
 template<class T, len_t C>
 constexpr
 static_vector_alt<T, C>::static_vector_alt() noexcept
-    : m_end(this->data()) {
-}
+    : m_end(this->data()) {}
 
 template<class T, len_t C>
 constexpr
@@ -152,37 +151,28 @@ static_vector_alt<T, C>::static_vector_alt(size_type n)
 template<class T, len_t C>
 constexpr
 static_vector_alt<T, C>::static_vector_alt(size_type n, const T& val)
-    : m_end(this->data() + n) {
-    mem::ufill(this->data(), this->m_end, val);
-}
+    : m_end(mem::ufill(this->data(), n, val)) {}
 
 template<class T, len_t C>
 template<class InputIterator, class>
 constexpr
 static_vector_alt<T, C>::static_vector_alt(InputIterator first, InputIterator last)
-    : m_end(this->data() + std::distance(first, last)) {
-    mem::ucopy(this->data(), first, last);
-}
+    : m_end(mem::ucopy(this->data(), first, last)) {}
 
 template<class T, len_t C>
 constexpr
 static_vector_alt<T, C>::static_vector_alt(const static_vector_alt& x)
-    : m_end(this->data() + x.size()) {
-    mem::ucopy(this->data(), x.begin(), x.end());
-}
+    : m_end(mem::ucopy(this->data(), x.begin(), x.end())) {}
 
 template<class T, len_t C>
 constexpr
 static_vector_alt<T, C>::static_vector_alt(static_vector_alt&& x) noexcept
-    : m_end(this->data() + x.size()) {
-    mem::umove(this->data(), x.begin(), x.end());
-}
+    : m_end(mem::umove(this->data(), x.begin(), x.end())) {}
 
 template<class T, len_t C>
 constexpr
 static_vector_alt<T, C>::static_vector_alt(std::initializer_list<T> ilist)
-    : m_end(this->data() + ilist.size()) {
-    mem::ucopy(this->data(), ilist.begin(), ilist.end());
+    : m_end(mem::ucopy(this->data(), ilist.begin(), ilist.size())) {
 }
 
 template<class T, len_t C>
