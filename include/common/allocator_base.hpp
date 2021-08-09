@@ -1,5 +1,6 @@
 #pragma once
 
+#include "type_traits.hpp"
 #include "memory.hpp"
 
 namespace uwr::mem {
