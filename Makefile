@@ -57,7 +57,7 @@ run-%: $(BIN_DIR)/tests/%
 
 $(BIN_DIR)/tests/%: $(BUILD_DIR)/$(TEST_DIR)/tests/%.o $(OBJECTS)
 	@mkdir -p $(shell dirname $@)
-	$(CXX) $(CXXFLAGS) $(OFLAGS) -lgtest -MMD -MP $< $(OBJECTS) -o $@
+	$(CXX) $(CXXFLAGS) $(TFLAGS) -lgtest -MMD -MP $< $(OBJECTS) -o $@
 
 $(BIN_DIR)/benchmarks/%: $(BUILD_DIR)/$(TEST_DIR)/benchmarks/%.o $(OBJECTS)
 	@mkdir -p $(shell dirname $@)
