@@ -558,7 +558,7 @@ vector<T, A>::emplace(const_iterator pos, Args&&... args) {
             return m_pos;
         }
         else {
-            T* const e_begin = mem::umove( new_data, this->cbegin(), pos);
+            T* const e_begin = mem::umove(new_data, this->cbegin(), pos);
             mem::umove<T, const T*>(e_begin + 1, pos, m_end);
             new (e_begin) T(std::forward<Args>(args)...);
             
