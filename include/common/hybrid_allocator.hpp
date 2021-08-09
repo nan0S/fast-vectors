@@ -18,10 +18,11 @@ public:
     using value_type = T;
     using pointer = typename base_t::pointer;
 
-    hybrid_allocator() noexcept;
-    explicit hybrid_allocator(size_type n);
+    constexpr hybrid_allocator() noexcept;
+    constexpr explicit hybrid_allocator(size_type n);
 
     UWR_FORCEINLINE constexpr size_type fix_capacity(size_type n) const;
+
     UWR_FORCEINLINE constexpr pointer alloc(size_type n) const;
     UWR_FORCEINLINE constexpr void dealloc(pointer data, size_type n) const;
     UWR_FORCEINLINE constexpr void realloc(size_type req);
@@ -31,6 +32,7 @@ public:
 
 private:
     UWR_FORCEINLINE constexpr int is_big(size_type n) const;
+
     UWR_FORCEINLINE constexpr pointer big_alloc(size_type n) const;
     UWR_FORCEINLINE constexpr pointer small_alloc(size_type n) const;
     UWR_FORCEINLINE constexpr void big_dealloc(pointer data, size_type n) const;
@@ -38,6 +40,7 @@ private:
 
     constexpr void do_realloc(size_type req, true_type);
     constexpr void do_realloc(size_type req, false_type);
+
     constexpr bool do_expand_or_alloc_raw(size_type req, pointer& out_ptr, true_type);
     constexpr bool do_expand_or_alloc_raw(size_type req, pointer& out_ptr, false_type);
     constexpr bool do_expand_or_dealloc_and_alloc_raw(size_type req, true_type);
@@ -45,12 +48,30 @@ private:
 };
 
 template<class T>
+constexpr
 hybrid_allocator<T>::hybrid_allocator() noexcept
     : base_t() {}
 
 template<class T>
+constexpr
 hybrid_allocator<T>::hybrid_allocator(size_type n)
     : base_t(n) {}
+
+template<class T>
+constexpr typename hybrid_allocator<T>::size_type
+hybrid_allocator<T>::fix_capacity(size_type n) const {
+#ifndef NDEBUG
+    if (!n) return 0;
+#endif
+    if (this->is_big(n))
+        return ((n * sizeof(T) + page_size - 1) / page_size)
+            * page_size / sizeof(T);
+        // TODO: change
+        // return ((n * sizeof(T) + page_size - 1) / page_size + 1)
+            // * page_size / sizeof(T);
+    else
+        return std::max((64 + sizeof(T) - 1) / sizeof(T), n);
+}
 
 template<class T>
 constexpr typename hybrid_allocator<T>::pointer
@@ -119,22 +140,6 @@ template<class T>
 constexpr int
 hybrid_allocator<T>::is_big(size_type n) const {
     return n * sizeof(T) >= page_size;
-}
-
-template<class T>
-constexpr typename hybrid_allocator<T>::size_type
-hybrid_allocator<T>::fix_capacity(size_type n) const {
-#ifndef NDEBUG
-    if (!n) return 0;
-#endif
-    if (this->is_big(n))
-        // return ((n * sizeof(T) + page_size - 1) / page_size)
-            // * page_size / sizeof(T);
-        // TODO: change
-        return ((n * sizeof(T) + page_size - 1) / page_size + 1)
-            * page_size / sizeof(T);
-    else
-        return std::max((64 + sizeof(T) - 1) / sizeof(T), n);
 }
 
 template<class T>
