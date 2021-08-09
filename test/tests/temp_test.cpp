@@ -46,7 +46,6 @@ int main() {
     // using Vector = uwr::vector<T>;
     // using Vector = std::vector<T>;
     // using Vector = boost_vector<T>;
-    std::cout << mm::fix_capacity<T>(341);
 
     // RUN(uwr::vector<T>);
     // RUN(std::vector<T>);
