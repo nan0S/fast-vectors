@@ -280,7 +280,7 @@ void BM_environment(State& s) {
     int iters = s.range(0);
     int r = 0;
 
-    test_type::start_recording();
+    // test_type::start_recording();
 
     for (auto _ : s) {
         vector_bench_env<V, Ts...> v_env(seed + r++);
@@ -291,7 +291,8 @@ void BM_environment(State& s) {
         ClobberMemory();
     }
 
-    test_type::print_stats();
+    // test_type::print_stats();
+    // std::cout << "reallocs: " << V<test_type>::reallocs << std::endl;
 
     int id = s.range(1);
     s.counters["t" + std::to_string(id)];

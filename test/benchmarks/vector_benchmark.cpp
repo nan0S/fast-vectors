@@ -3,6 +3,8 @@
 #include <vector>
 #include <rvector.h>
 #include <vector.hpp>
+#include <std_vector.hpp>
+#include <simple_vector.hpp>
 
 #include "vector_benchmark_base.hpp"
 
@@ -13,13 +15,13 @@ using namespace benchmark;
  */
 static  constexpr  int  INT_ARG               =  2000;
 static  constexpr  int  STRING_ARG            =  1000;
-static  constexpr  int  TEST_TYPE_ARG         =  1200;
+static  constexpr  int  TEST_TYPE_ARG         =  400;
 static  constexpr  int  ARRAY_ARG             =  1200;
 static  constexpr  int  INT_STRING_ARG        =  1000;
 static  constexpr  int  INT_STRING_ARRAY_ARG  =  1000;
 
 /* use the same number of iterations in all benchmarks */
-#define COMMON_ITERS 0
+#define COMMON_ITERS 1
 
 #define  INT_ITERS               (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 #define  STRING_ITERS            (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
@@ -30,6 +32,8 @@ static  constexpr  int  INT_STRING_ARRAY_ARG  =  1000;
 
 #define DO_RVECTOR_BENCH
 #define DO_UWR_VECTOR_BENCH
+#define DO_UWR_STD_VECTOR_BENCH
+#define DO_SIMPLE_VECTOR_BENCH
 
 static constexpr int N = 10; // used in std::array<int, N>
 
@@ -42,6 +46,10 @@ template<class T>
 using std_vector = std::vector<T>;
 template<class T>
 using uwr_vector = uwr::vector<T>;
+template<class T>
+using uwr_std_vector = uwr::std_vector<T>;
+template<class T>
+using simple_vector = uwr::simple_vector<T>;
 
 /*
  * some macro magic
@@ -55,13 +63,6 @@ using uwr_vector = uwr::vector<T>;
         ->Iterations(CONCAT(varname, _ITERS)) \
         ->Args({CONCAT(varname, _ARG), counter})
 
-#ifdef DO_UWR_VECTOR_BENCH
-#define REGISTER_BENCHMARK_FOR_UWR_VECTOR(unit, varname, counter, ...) \
-    REGISTER_BENCHMARK_FOR_VECTOR(unit, varname, counter, uwr_vector, __VA_ARGS__)
-#else
-#define REGISTER_BENCHMARK_FOR_UWR_VECTOR(unit, varname, counter, ...)
-#endif
-
 #ifdef DO_RVECTOR_BENCH
 #define REGISTER_BENCHMARK_FOR_RVECTOR(unit, varname, counter, ...) \
     REGISTER_BENCHMARK_FOR_VECTOR(unit, varname, counter, rvector, __VA_ARGS__)
@@ -69,11 +70,34 @@ using uwr_vector = uwr::vector<T>;
 #define REGISTER_BENCHMARK_FOR_RVECTOR(unit, varname, counter, ...)
 #endif
 
+#ifdef DO_UWR_VECTOR_BENCH
+#define REGISTER_BENCHMARK_FOR_UWR_VECTOR(unit, varname, counter, ...) \
+    REGISTER_BENCHMARK_FOR_VECTOR(unit, varname, counter, uwr_vector, __VA_ARGS__)
+#else
+#define REGISTER_BENCHMARK_FOR_UWR_VECTOR(unit, varname, counter, ...)
+#endif
+
+#ifdef DO_UWR_STD_VECTOR_BENCH
+#define REGISTER_BENCHMARK_FOR_UWR_STD_VECTOR(unit, varname, counter, ...) \
+    REGISTER_BENCHMARK_FOR_VECTOR(unit, varname, counter, uwr_std_vector, __VA_ARGS__)
+#else
+#define REGISTER_BENCHMARK_FOR_UWR_STD_VECTOR(unit, varname, counter, ...)
+#endif
+
+#ifdef DO_SIMPLE_VECTOR_BENCH
+#define REGISTER_BENCHMARK_FOR_SIMPLE_VECTOR(unit, varname, counter, ...) \
+    REGISTER_BENCHMARK_FOR_VECTOR(unit, varname, counter, simple_vector, __VA_ARGS__)
+#else
+#define REGISTER_BENCHMARK_FOR_SIMPLE_VECTOR(unit, varname, counter, ...)
+#endif
+
 #define REGISTER_BENCHMARK(unit, varname, counter, ...) \
     REGISTER_BENCHMARK_FOR_VECTOR(unit, varname, counter, boost_vector, __VA_ARGS__); \
     REGISTER_BENCHMARK_FOR_VECTOR(unit, varname, counter, std_vector, __VA_ARGS__); \
     REGISTER_BENCHMARK_FOR_RVECTOR(unit, varname, counter, __VA_ARGS__); \
-    REGISTER_BENCHMARK_FOR_UWR_VECTOR(unit, varname, counter, __VA_ARGS__)
+    REGISTER_BENCHMARK_FOR_UWR_VECTOR(unit, varname, counter, __VA_ARGS__); \
+    REGISTER_BENCHMARK_FOR_UWR_STD_VECTOR(unit, varname, counter, __VA_ARGS__); \
+    REGISTER_BENCHMARK_FOR_SIMPLE_VECTOR(unit, varname, counter, __VA_ARGS__)
 
 /*
  * register all benchmarks
