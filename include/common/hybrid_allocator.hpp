@@ -1,7 +1,7 @@
 #pragma once
 
-#include "allocator_holder.hpp"
 #include "memory.hpp"
+#include "allocator_base.hpp"
 
 #include <sys/mman.h>
 
