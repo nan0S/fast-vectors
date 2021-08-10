@@ -32,20 +32,20 @@ public:
     friend std::ostream& operator<<(std::ostream& out, const test_type& o);
 
 public:
-    static int do_print;
-    static int instances;
+    static bool do_print;
+    static long instances;
 
     struct record_t {
         static constexpr int ops_count = 7;
 
         union {
             struct {
-                int copy_cons, copy_op;
-                int move_cons, move_op;
-                int val_cons, def_cons;
-                int dest;
+                long copy_cons, copy_op;
+                long move_cons, move_op;
+                long val_cons, def_cons;
+                long dest;
             };
-            int ops[ops_count];
+            long ops[ops_count];
         };
 
         friend bool operator<=(const record_t& x, const record_t& y);

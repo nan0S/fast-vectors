@@ -6,8 +6,8 @@
 #include <algorithm>
 #include <cstring>
 
-int test_type::do_print = false;
-int test_type::instances = 0;
+bool test_type::do_print = false;
+long test_type::instances = 0;
 test_type::record_t test_type::record;
 std::deque<test_type::record_t> test_type::records;
 
@@ -156,9 +156,9 @@ void test_type::print_stats() {
     std::cout << "op=(&&)     = " << record.move_op << std::endl;
     std::cout << "Total ~()   = " << record.dest << std::endl;
 
-    int total_cons = record.def_cons + record.val_cons +
+    long total_cons = record.def_cons + record.val_cons +
         record.copy_cons + record.move_cons;
-    int total_op = record.copy_op + record.move_op;
+    long total_op = record.copy_op + record.move_op;
 
     std::cout << "Total ()    = " << total_cons << std::endl;
     std::cout << "Total op    = " << total_op << std::endl;
