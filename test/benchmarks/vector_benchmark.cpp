@@ -30,10 +30,10 @@ static  constexpr  int  INT_STRING_ARRAY_ARG  =  1000;
 #define  INT_STRING_ITERS        (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 #define  INT_STRING_ARRAY_ITERS  (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 
-#define DO_RVECTOR_BENCH
+// #define DO_RVECTOR_BENCH
 #define DO_UWR_VECTOR_BENCH
-#define DO_UWR_STD_VECTOR_BENCH
-#define DO_SIMPLE_VECTOR_BENCH
+// #define DO_UWR_STD_VECTOR_BENCH
+// #define DO_SIMPLE_VECTOR_BENCH
 
 static constexpr int N = 10; // used in std::array<int, N>
 
