@@ -1,5 +1,5 @@
 # fast-vectors
-Different fast vectors/containers in `C++`. My bachelor's thesis at UWr.
+Different fast vectors/containers in `C++`. My bachelor's thesis at University of Wrocław.
 
 All vectors are implemented for `C++20` although they are guaranteed to be compatible with `C++17`. Vectors implement standard methods although they may break the standard sometimes if it is time-complexity beneficial.
 
