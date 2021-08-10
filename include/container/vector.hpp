@@ -612,7 +612,7 @@ vector<T, A>::fast_emplace_back(Args&&... args) noexcept {
 template<class T, class A>
 constexpr typename vector<T, A>::size_type
 vector<T, A>::next_capacity(size_type new_size) const noexcept {
-    return std::max(2 * this->capacity(), new_size);
+    return std::max(2 * this->capacity() + 1, new_size);
 }
 
 template<class T, class A>
