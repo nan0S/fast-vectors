@@ -25,5 +25,5 @@ if [ $# = 1 ]; then
 else
     run_test \
         "vector_benchmark" \
-        "--benchmark_filter=(r|uwr_)vector,.test_type>"
+        "--benchmark_filter=test_type>"
 fi
