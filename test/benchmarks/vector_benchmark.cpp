@@ -30,7 +30,9 @@ static  constexpr  int  INT_STRING_ARRAY_ARG  =  1000;
 #define  INT_STRING_ITERS        (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 #define  INT_STRING_ARRAY_ITERS  (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 
-// #define DO_RVECTOR_BENCH
+// #define DO_BOOST_VECTOR_BENCH
+// #define DO_STD_VECTOR_BENCH
+#define DO_RVECTOR_BENCH
 #define DO_UWR_VECTOR_BENCH
 // #define DO_UWR_STD_VECTOR_BENCH
 // #define DO_SIMPLE_VECTOR_BENCH
@@ -63,6 +65,20 @@ using simple_vector = uwr::simple_vector<T>;
         ->Iterations(CONCAT(varname, _ITERS)) \
         ->Args({CONCAT(varname, _ARG), counter})
 
+#ifdef DO_BOOST_VECTOR_BENCH
+#define REGISTER_BENCHMARK_FOR_BOOST_VECTOR(unit, varname, counter, ...) \
+    REGISTER_BENCHMARK_FOR_VECTOR(unit, varname, counter, boost_vector, __VA_ARGS__)
+#else
+#define REGISTER_BENCHMARK_FOR_BOOST_VECTOR(unit, varname, counter, ...)
+#endif
+
+#ifdef DO_STD_VECTOR_BENCH
+#define REGISTER_BENCHMARK_FOR_STD_VECTOR(unit, varname, counter, ...) \
+    REGISTER_BENCHMARK_FOR_VECTOR(unit, varname, counter, std_vector, __VA_ARGS__)
+#else
+#define REGISTER_BENCHMARK_FOR_STD_VECTOR(unit, varname, counter, ...)
+#endif
+
 #ifdef DO_RVECTOR_BENCH
 #define REGISTER_BENCHMARK_FOR_RVECTOR(unit, varname, counter, ...) \
     REGISTER_BENCHMARK_FOR_VECTOR(unit, varname, counter, rvector, __VA_ARGS__)
@@ -92,8 +108,8 @@ using simple_vector = uwr::simple_vector<T>;
 #endif
 
 #define REGISTER_BENCHMARK(unit, varname, counter, ...) \
-    REGISTER_BENCHMARK_FOR_VECTOR(unit, varname, counter, boost_vector, __VA_ARGS__); \
-    REGISTER_BENCHMARK_FOR_VECTOR(unit, varname, counter, std_vector, __VA_ARGS__); \
+    REGISTER_BENCHMARK_FOR_BOOST_VECTOR(unit, varname, counter, __VA_ARGS__); \
+    REGISTER_BENCHMARK_FOR_STD_VECTOR(unit, varname, counter, __VA_ARGS__); \
     REGISTER_BENCHMARK_FOR_RVECTOR(unit, varname, counter, __VA_ARGS__); \
     REGISTER_BENCHMARK_FOR_UWR_VECTOR(unit, varname, counter, __VA_ARGS__); \
     REGISTER_BENCHMARK_FOR_UWR_STD_VECTOR(unit, varname, counter, __VA_ARGS__); \
