@@ -1,0 +1,29 @@
+#!/bin/bash
+
+COMMON_OPTS="
+    --benchmark_color=true
+    --benchmark_counters_tabular=true
+    --benchmark_display_aggregates_only=true
+"
+
+BIN_PATH="bin/benchmarks"
+
+run_test() {
+    test_exe="$1"
+    opts="$2"
+    test_path="$BIN_PATH/$test_exe"
+
+    make -j2 "$test_path" && \
+    "$test_path" $COMMON_OPTS $opts \
+        --benchmark_out="./logs/$test_exe.log" \
+        --benchmark_out_format="console"
+}
+
+if [ $# = 1 ]; then
+    test_name="$1"
+    run_test "$test_name"
+else
+    run_test \
+        "vector_benchmark" \
+        "--benchmark_filter=(r|uwr_)vector,.test_type>"
+fi
