@@ -223,9 +223,9 @@ template<class T>
 constexpr
 T_Copy_A<T> hybrid_fill(T* begin, len_t n, const T& val) {
     if (n <= HYBRID_THRESHOLD)
-        return fill(begin, n, val);
+        fill(begin, n, val);
     else
-        return _hybrid_fill(begin, n, val);
+        _hybrid_fill(begin, n, val);
 }
 
 // TODO: remove or standarize
