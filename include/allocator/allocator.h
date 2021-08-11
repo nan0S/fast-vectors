@@ -15,7 +15,8 @@ class rvector;
 namespace mm
 {
 	// int mremap_skips = 0;
-	// int grows = 0;
+    int expands = 0;
+    int opps = 0;
 	// Policies
 	template<typename T>
 	using Trivial = std::enable_if_t<std::is_trivial<T>::value>;
@@ -147,8 +148,11 @@ namespace mm
         {
             void* new_data = mremap(data, capacity*sizeof(T), 
                         		n*sizeof(T), 0);
-            if(new_data != (void*)-1)
-            	return (T*) new_data;
+            ++opps;
+            if(new_data != (void*)-1) {
+                ++expands;
+                return (T*) new_data;
+            }
         }
 	    T* new_data = allocate<T>(n);
 	    std::uninitialized_move_n(data, length, new_data);

@@ -113,6 +113,10 @@ public:
     template<class... Args>
     UWR_FORCEINLINE constexpr reference fast_emplace_back(Args&&... args) noexcept;
 
+    UWR_FORCEINLINE static std::vector<int> get_stats() {
+        return { allocator_type::expands, allocator_type::opps };
+    }
+
 private:
     UWR_FORCEINLINE constexpr size_type next_capacity(size_type new_size) const noexcept;
     template<class InputIterator>
@@ -539,7 +543,7 @@ vector<T, A>::emplace(const_iterator pos, Args&&... args) {
     if (this->size() == this->capacity()) {
         size_type new_capacity = this->m_alloc.fix_capacity(
                 this->next_capacity(this->size() + 1));
-        T* new_data;
+        T* new_data = nullptr;
 
         if (this->m_alloc.expand_or_alloc_raw(
                     new_capacity, new_data)) {
@@ -558,6 +562,8 @@ vector<T, A>::emplace(const_iterator pos, Args&&... args) {
             return m_pos;
         }
         else {
+            UWR_ASSERT(new_data);
+
             T* const e_begin = mem::umove(new_data, this->cbegin(), pos);
             mem::umove<T, const T*>(e_begin + 1, pos, m_end);
             new (e_begin) T(std::forward<Args>(args)...);
@@ -593,7 +599,7 @@ template<class... Args>
 constexpr typename vector<T, A>::reference
 vector<T, A>::emplace_back(Args&&... args) {
     // TODO: add unlikely (?)
-    if (UWR_UNLIKELY(this->size() == this->capacity())) {
+    if ((this->size() == this->capacity())) {
         ++reallocs;
         this->m_alloc.realloc(this->next_capacity(this->size() + 1));
     }
@@ -612,7 +618,7 @@ vector<T, A>::fast_emplace_back(Args&&... args) noexcept {
 template<class T, class A>
 constexpr typename vector<T, A>::size_type
 vector<T, A>::next_capacity(size_type new_size) const noexcept {
-    return std::max(2 * this->capacity() + 1, new_size);
+    return std::max(3 * this->capacity() / 2+ 1, new_size);
 }
 
 template<class T, class A>
@@ -668,11 +674,12 @@ vector<T, A>::priv_resize(ResizeProxy&& proxy) {
     this->m_alloc.m_size = proxy.n;
 }
 
+#include <iostream>
 template<class T, class A>
 template<class InsertProxy>
 constexpr typename vector<T, A>::iterator
 vector<T, A>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
-    T* const m_pos = const_cast<T* const>(pos);
+    T* m_pos = const_cast<T*>(pos);
 
     if (UWR_UNLIKELY(!proxy.count))
         return m_pos;
@@ -681,9 +688,12 @@ vector<T, A>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
     size_type new_size = this->size() + proxy.count;
 
     if (new_size > this->capacity()) {
+        // size_type m = m_pos - this->data();
+        // this->m_alloc.realloc(new_size);
+        // m_pos = this->data() + m;
         size_type new_capacity = this->m_alloc.fix_capacity(
                 this->next_capacity(new_size));
-        T* new_data;
+        T* new_data = nullptr;
 
         if (this->m_alloc.expand_or_alloc_raw(
                     new_capacity, new_data)) {
@@ -704,6 +714,8 @@ vector<T, A>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
             return m_pos;
         }
         else {
+            UWR_ASSERT(new_data);
+
             T* const i_begin = mem::umove(new_data, this->cbegin(), pos);
             T* const i_end = i_begin + proxy.count;
             mem::umove<T, const T*>(i_end, pos, m_end);
@@ -719,6 +731,8 @@ vector<T, A>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
             return i_begin;
         }
     }
+
+    // T* const m_end = this->end();
     else {
         T* const spill = m_pos + proxy.count;
 

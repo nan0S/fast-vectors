@@ -71,6 +71,7 @@ private:
         while (q--) {
             typed_env.emplace_back(size_dist(this->gen));
             DoNotOptimize(typed_env.back().data());
+            ClobberMemory();
         }
     }
 
@@ -93,6 +94,7 @@ private:
 
             std::swap(typed_env[pick], typed_env.back());
             typed_env.pop_back();
+            ClobberMemory();
         }
     }
 
@@ -118,8 +120,10 @@ private:
             auto can_put_in = picked.max_size() - picked.size();
             auto put_in = random<size_type<T>>(0, std::min(max_size, can_put_in));
 
-            while (put_in--)
+            while (put_in--) {
                 picked.emplace_back();
+                ClobberMemory();
+            }
         }
     }
 
@@ -142,8 +146,10 @@ private:
             auto& picked = typed_env[pick_dist(this->gen)];
             auto cnt = random<size_type<T>>(0, picked.size());
 
-            while (cnt--)
+            while (cnt--) {
                 picked.pop_back();
+                ClobberMemory();
+            }
         }
     }
 
@@ -167,6 +173,8 @@ private:
 
             typed_env.emplace_back();
             typed_env.back() = typed_env[pick];
+
+            ClobberMemory();
         }
     }
 
@@ -193,6 +201,7 @@ private:
             auto pos = random<size_type<T>>(0, picked.size());
 
             picked.insert(picked.begin() + pos, cnt, T());
+            ClobberMemory();
         }
     }
 
@@ -221,6 +230,7 @@ private:
             auto begin = random<decltype(picked_size)>(0, end - 1);
 
             picked.erase(picked.begin() + begin, picked.begin() + end);
+            ClobberMemory();
         }
     }
 
@@ -280,7 +290,7 @@ void BM_environment(State& s) {
     int iters = s.range(0);
     int r = 0;
 
-    test_type::start_recording();
+    // test_type::start_recording();
 
     for (auto _ : s) {
         vector_bench_env<V, Ts...> v_env(seed + r++);
@@ -291,8 +301,8 @@ void BM_environment(State& s) {
         ClobberMemory();
     }
 
-    test_type::print_stats();
-    std::cout << "reallocs: " << V<test_type>::reallocs << std::endl;
+    // test_type::print_stats();
+    // std::cout << "reallocs: " << V<test_type>::reallocs << std::endl;
 
     int id = s.range(1);
     s.counters["t" + std::to_string(id)];

@@ -4,6 +4,7 @@ COMMON_OPTS="
     --benchmark_color=true
     --benchmark_counters_tabular=true
     --benchmark_display_aggregates_only=true
+    --benchmark_report_aggregates_only=true
 "
 
 BIN_PATH="bin/benchmarks"
@@ -14,9 +15,21 @@ run_test() {
     test_path="$BIN_PATH/$test_exe"
 
     make -j2 "$test_path" && \
-    "$test_path" $COMMON_OPTS $opts \
+        "$test_path" $COMMON_OPTS $opts \
+            --benchmark_out="./logs/$test_exe.log" \
+            --benchmark_out_format="console"
+}
+
+run_bench() {
+    test_exe="$1"
+    opts="$2"
+    test_path="$BIN_PATH/$test_exe"
+
+    make -j2 "$test_path" && \
+    perf record -g -- "$test_path" $COMMON_OPTS $opts \
         --benchmark_out="./logs/$test_exe.log" \
-        --benchmark_out_format="console"
+        --benchmark_out_format="console" && \
+    perf report -g "graph,0.5,caller"
 }
 
 if [ $# = 1 ]; then
@@ -24,6 +37,18 @@ if [ $# = 1 ]; then
     run_test "$test_name"
 else
     run_test \
-        "vector_benchmark" \
-        "--benchmark_filter=test_type>"
+        "simple_vector_benchmark" \
+        "--benchmark_repetitions=10 --benchmark_filter=BM_insert"
+    # run_test \
+        # "simple_vector_benchmark" \
+        # "--benchmark_repetitions=100 --benchmark_filter=BM_create"
+    # run_test \
+        # "vector_benchmark" \
+        # "--benchmark_repetitions=10
+         # --benchmark_filter=vector,.std::string>"
+    # run_bench \
+        # "vector_benchmark" \
+        # "--benchmark_repetitions=10
+         # --benchmark_filter=vector,.std::string>"
+        # "--benchmark_filter=int> --benchmark_repetitions=10"
 fi

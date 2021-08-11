@@ -140,6 +140,11 @@ public:
     iterator erase(iterator first, iterator last);
     void     swap(rvector<T>& other);
     void     clear() noexcept;
+
+    static std::vector<int> get_stats() {
+        return { mm::expands, mm::opps };
+    }
+
 private:
 	T* data_;
 	size_type length_;
@@ -709,31 +714,32 @@ template <typename T>
 typename rvector<T>::iterator 
 rvector<T>::insert(rvector<T>::iterator position, std::initializer_list<T> ilist)
 {
-    if (ilist.size() == 0)
-        return position;
-    auto first = ilist.begin();
-    auto last = ilist.end();
-    size_type n = std::distance(first, last);
-    if(length_ + n > capacity_)
-    {
-        auto m = std::distance(begin(), position);
-        size_type new_cap = std::max(length_ + n, capacity_ * 2);
-        mm::change_capacity(data_, length_, capacity_, new_cap);
-        position = begin() + m;  
-    }
-    auto end_ = end();
-    size_type rest = std::distance(position, end_);
-    if(rest > n) {
-        std::uninitialized_move(end_ - n, end_, end_);
-        std::move_backward(position, end_ - n, end_);
-        std::move(first, last, position);
-    } else {
-        std::uninitialized_move(position, end_, position + n);
-        std::move(first, first + rest, position);
-        std::uninitialized_move(first + rest, last, end_);
-    }
-    length_ += n;
-    return position; 
+    return insert(position, ilist.begin(), ilist.end());
+    // if (ilist.size() == 0)
+        // return position;
+    // auto first = ilist.begin();
+    // auto last = ilist.end();
+    // size_type n = std::distance(first, last);
+    // if(length_ + n > capacity_)
+    // {
+        // auto m = std::distance(begin(), position);
+        // size_type new_cap = std::max(length_ + n, capacity_ * 2);
+        // mm::change_capacity(data_, length_, capacity_, new_cap);
+        // position = begin() + m;  
+    // }
+    // auto end_ = end();
+    // size_type rest = std::distance(position, end_);
+    // if(rest > n) {
+        // std::uninitialized_move(end_ - n, end_, end_);
+        // std::move_backward(position, end_ - n, end_);
+        // std::move(first, last, position);
+    // } else {
+        // std::uninitialized_move(position, end_, position + n);
+        // std::move(first, first + rest, position);
+        // std::uninitialized_move(first + rest, last, end_);
+    // }
+    // length_ += n;
+    // return position; 
 }
 
 template <typename T>

@@ -10,25 +10,35 @@
 #include <rvector.h>
 
 using namespace benchmark; 
+using args_t = std::vector<int64_t>;
 
 /*
  * configurable parameters
  */
 using value_type = std::string;
 
-static  constexpr  int  PUSH_BACK_ARG           =  1000000;
-static  constexpr  int  PUSH_BACK_POP_BACK_ARG  =  500000;
-static  constexpr  int  SWAP_ARG                =  10000;
-static  constexpr  int  RESIZE_ARG              =  500000;
+// number of consecutive push backs in one iteration
+static const args_t PUSH_BACK_ARG = { 100000 };
+// number of push_back/pop_back rounds in iteration and maximum vector size
+static const args_t PUSH_BACK_POP_BACK_ARG = { 10, 50000 };
+// number of resize rounds and maximum resize size
+static const args_t RESIZE_ARG = { 10, 50000 };
+// maximum size of created vector
+static const args_t INSERT_ARG = { 50000 };
+// maximum size of created vector
+static const args_t CREATE_ARG = { 50000 };
 
 /* use the same number of iterations in all benchmarks */
 #define COMMON_ITERS 0
 
 #define  PUSH_BACK_ITERS           (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 #define  PUSH_BACK_POP_BACK_ITERS  (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
-#define  SWAP_ITERS                (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 #define  RESIZE_ITERS              (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
+#define  INSERT_ITERS              (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
+#define  CREATE_ITERS              (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 
+// #define DO_STD_VECTOR_BENCH
+// #define DO_BOOST_VECTOR_BENCH
 #define DO_UWR_VECTOR_BENCH
 #define DO_RVECTOR_BENCH
 
@@ -71,6 +81,7 @@ void BM_push_back_pop_back(State& s) {
     Random::seed(12321);
 
     int times = s.range(0);
+    int max_size = s.range(1);
 
     for (auto _ : s) {
         Vector v;
@@ -79,8 +90,8 @@ void BM_push_back_pop_back(State& s) {
 
         for (int i = 0; i < times; ++i) {
             if (Random::rand(2)) {
-                size_type rest = v.capacity() - v.size();
-                size_type c = Random::rand<size_type>(0, rest + 1);
+                size_type rest = max_size - v.size();
+                size_type c = Random::rand<size_type>(rest + 1);
 
                 while (c--) {
                     v.push_back(get_value<T>(c));
@@ -102,40 +113,14 @@ void BM_push_back_pop_back(State& s) {
 }
 
 /*
- * benchmark swapping vectors of parameterized size
- */
-template<class Vector>
-void BM_swap(State& s) {
-    Random::seed(3213121);
-
-    int size1 = s.range(0);
-    int size2 = size1 * 3 / 4;
-
-    if (Random::rand(2))
-        std::swap(size1, size2);
-
-    for (auto _ : s) {
-        Vector v1 = get_container<Vector>(size1);
-        Vector v2 = get_container<Vector>(size2);
-
-        DoNotOptimize(v1.data());
-        DoNotOptimize(v2.data());
-
-        v1.swap(v2);
-
-        ClobberMemory();
-    }
-
-    s.counters["t3"];
-}
-
-/*
  * benchmark resizing vector
  */
 template<class Vector>
 void BM_resize(State& s) {
     Random::seed(31231);
+
     int times = s.range(0);
+    int max_size = s.range(1);
 
     for (auto _ : s) {
         Vector v;
@@ -143,13 +128,66 @@ void BM_resize(State& s) {
         DoNotOptimize(v.data());
 
         for (int i = 0; i < times; ++i) {
-            int new_size = Random::rand(v.capacity() + 1);
+            int new_size = Random::rand(max_size + 1);
             v.resize(new_size);
             ClobberMemory();
         }
     }
 
+    s.counters["t3"];
+}
+
+/*
+ * benchmark inserting to vector
+ */
+template<class Vector>
+void BM_insert(State& s) {
+    using size_type = typename Vector::size_type;
+    using T = typename Vector::value_type;
+    Random::seed(123);
+
+    size_type max_size = s.range(0);
+
+    for (auto _ : s) {
+        size_type size = Random::rand(max_size + 1);
+        Vector v(size, get_value<T>(size + 10));
+
+        DoNotOptimize(v.data());
+        ClobberMemory();
+        
+        size_type pos = Random::rand(size + 1);
+        size_type count = Random::rand(size + 1);
+
+        v.insert(v.begin() + pos, count, get_value<T>(size));
+
+        ClobberMemory();
+    }
+
+    auto stats = Vector::get_stats();
+    std::cout << stats[0] << ", " << stats[1] << std::endl;
+    
     s.counters["t4"];
+}
+
+/*
+ * benchmark creating vector
+ */
+template<class Vector>
+void BM_create(State& s) {
+    using size_type = typename Vector::size_type;
+    Random::seed(123);
+
+    size_type max_size = s.range(0);
+
+    for (auto _ : s) {
+        size_type size = Random::rand(max_size + 1);
+        Vector v(size);
+
+        DoNotOptimize(v.data());
+        ClobberMemory();
+    }
+    
+    s.counters["t5"];
 }
 
 /*
@@ -162,7 +200,21 @@ void BM_resize(State& s) {
     BENCHMARK_TEMPLATE(func, vector) \
         ->Unit(unit) \
         ->Iterations(CONCAT(varname, _ITERS)) \
-        ->Arg(CONCAT(varname, _ARG))
+        ->Args(CONCAT(varname, _ARG))
+
+#ifdef DO_STD_VECTOR_BENCH
+#define REGISTER_BENCHMARK_FOR_STD_VECTOR(func, unit, varname) \
+    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, std_vector)
+#else
+#define REGISTER_BENCHMARK_FOR_STD_VECTOR(func, unit, varname)
+#endif
+
+#ifdef DO_BOOST_VECTOR_BENCH
+#define REGISTER_BENCHMARK_FOR_BOOST_VECTOR(func, unit, varname) \
+    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, boost_vector)
+#else
+#define REGISTER_BENCHMARK_FOR_BOOST_VECTOR(func, unit, varname)
+#endif
 
 #ifdef DO_UWR_VECTOR_BENCH
 #define REGISTER_BENCHMARK_FOR_UWR_VECTOR(func, unit, varname) \
@@ -179,17 +231,18 @@ void BM_resize(State& s) {
 #endif
 
 #define REGISTER_BENCHMARK(func, unit, varname) \
-    REGISTER_BENCHMARK_FOR_UWR_VECTOR(func, unit, varname); \
-    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, std_vector); \
-    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, boost_vector); \
-    REGISTER_BENCHMARK_FOR_RVECTOR(func, unit, varname)
+    REGISTER_BENCHMARK_FOR_STD_VECTOR(func, unit, varname); \
+    REGISTER_BENCHMARK_FOR_BOOST_VECTOR(func, unit, varname); \
+    REGISTER_BENCHMARK_FOR_RVECTOR(func, unit, varname); \
+    REGISTER_BENCHMARK_FOR_UWR_VECTOR(func, unit, varname)
 
 /*
  * register all benchmarks
  */
 REGISTER_BENCHMARK(BM_push_back,           kMicrosecond,  PUSH_BACK);
 REGISTER_BENCHMARK(BM_push_back_pop_back,  kMicrosecond,  PUSH_BACK_POP_BACK);
-REGISTER_BENCHMARK(BM_swap,                kMicrosecond,  SWAP);
-REGISTER_BENCHMARK(BM_resize,              kNanosecond,   RESIZE);
+REGISTER_BENCHMARK(BM_resize,              kMicrosecond,  RESIZE);
+REGISTER_BENCHMARK(BM_insert,              kMicrosecond,  INSERT);
+REGISTER_BENCHMARK(BM_create,              kMicrosecond,  CREATE);
 
 BENCHMARK_MAIN();

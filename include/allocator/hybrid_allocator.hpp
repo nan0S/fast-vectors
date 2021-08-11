@@ -30,6 +30,9 @@ public:
     UWR_FORCEINLINE constexpr bool expand_or_alloc_raw(size_type req, pointer& out_ptr);
     UWR_FORCEINLINE constexpr bool expand_or_dealloc_and_alloc_raw(size_type req);
 
+    static int expands;
+    static int opps;
+
 private:
     UWR_FORCEINLINE constexpr int is_big(size_type n) const;
 
@@ -46,6 +49,11 @@ private:
     constexpr bool do_expand_or_dealloc_and_alloc_raw(size_type req, true_type);
     constexpr bool do_expand_or_dealloc_and_alloc_raw(size_type req, false_type);
 };
+
+template<class T>
+int hybrid_allocator<T>::expands = 0;
+template<class T>
+int hybrid_allocator<T>::opps = 0;
 
 template<class T>
 constexpr
@@ -103,15 +111,17 @@ hybrid_allocator<T>::realloc(size_type req) {
     this->m_capacity = req;
 }
 
+#include <iostream>
 template<class T>
 constexpr bool
 hybrid_allocator<T>::expand_or_alloc_raw(size_type req, pointer& out_ptr) {
     UWR_ASSERT(req > this->m_capacity);
     UWR_ASSERT(req == this->fix_capacity(req));
 
-    if (UWR_LIKELY(!!this->m_data))
+    if (UWR_LIKELY(!!this->m_data)) {
         return this->do_expand_or_alloc_raw(req, out_ptr,
                 std::is_trivially_move_constructible<T>());
+    }
     else {
         out_ptr = this->alloc(req);
         return false;
@@ -344,12 +354,14 @@ hybrid_allocator<T>::do_expand_or_alloc_raw(size_type req, pointer& out_ptr, fal
                     this->m_capacity * sizeof(T),
                     req * sizeof(T), 0);
 
+            ++opps;
             // TODO: unlikely here (?)
             if (out_ptr == (pointer)-1) {
                 out_ptr = this->big_alloc(req);
                 return false;
             }
             else {
+                ++expands;
                 UWR_ASSERT(out_ptr == this->m_data);
                 return true;
             }
