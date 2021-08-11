@@ -1,7 +1,7 @@
 #pragma once
 
 #include "vector.hpp"
-#include "../common/big_allocator.hpp"
+#include "../allocator/big_allocator.hpp"
 
 namespace uwr {
 

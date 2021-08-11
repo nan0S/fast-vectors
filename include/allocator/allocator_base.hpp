@@ -1,7 +1,7 @@
 #pragma once
 
-#include "type_traits.hpp"
-#include "memory.hpp"
+#include "../common/type_traits.hpp"
+#include "../common/memory.hpp"
 
 namespace uwr::mem {
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "memory.hpp"
+#include "../common/memory.hpp"
 #include "allocator_base.hpp"
 
 namespace uwr::mem {

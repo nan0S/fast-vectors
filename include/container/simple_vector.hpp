@@ -6,10 +6,10 @@
 #include "../common/memory.hpp"
 #include "../common/define.hpp"
 #include "../common/proxy.hpp"
-#include "../common/hybrid_allocator.hpp"
 #if CPP_ABOVE_17
 #include "../common/synth_three_way.hpp"
 #endif
+#include "../allocator/hybrid_allocator.hpp"
 
 namespace uwr {
 

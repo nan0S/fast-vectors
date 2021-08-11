@@ -2,8 +2,8 @@
 
 #include <linux/mman.h>
 
-#include "define.hpp"
-#include "memory.hpp"
+#include "../common//define.hpp"
+#include "../common/memory.hpp"
 
 namespace uwr::mem {
 

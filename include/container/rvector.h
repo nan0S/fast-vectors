@@ -1,4 +1,5 @@
 #pragma once
+
 // #define _GNU_SOURCE
 #include <sys/mman.h> // mremap
 #include <iterator>
@@ -8,7 +9,8 @@
 #include <type_traits>
 #include <string.h>
 #include <limits>
-#include "../common/allocator.h"
+
+#include "../allocator/allocator.h"
 #include "../common/define.hpp"
 
 template <class T> 
