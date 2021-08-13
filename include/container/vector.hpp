@@ -133,13 +133,7 @@ private:
 
 private:
     allocator_type m_alloc;
-
-public:
-    static int reallocs;
 };
-
-template<class T, class A>
-int vector<T, A>::reallocs = 0;
 
 template<class T, class A>
 constexpr
@@ -599,10 +593,8 @@ template<class... Args>
 constexpr typename vector<T, A>::reference
 vector<T, A>::emplace_back(Args&&... args) {
     // TODO: add unlikely (?)
-    if ((this->size() == this->capacity())) {
-        ++reallocs;
+    if (UWR_UNLIKELY(this->size() == this->capacity()))
         this->m_alloc.realloc(this->next_capacity(this->size() + 1));
-    }
     return this->fast_emplace_back(std::forward<Args>(args)...);
 }
 
@@ -618,7 +610,7 @@ vector<T, A>::fast_emplace_back(Args&&... args) noexcept {
 template<class T, class A>
 constexpr typename vector<T, A>::size_type
 vector<T, A>::next_capacity(size_type new_size) const noexcept {
-    return std::max(3 * this->capacity() / 2+ 1, new_size);
+    return std::max(2 * this->capacity() + 1, new_size);
 }
 
 template<class T, class A>

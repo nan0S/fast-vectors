@@ -30,9 +30,6 @@ public:
     UWR_FORCEINLINE constexpr bool expand_or_alloc_raw(size_type req, pointer& out_ptr);
     UWR_FORCEINLINE constexpr bool expand_or_dealloc_and_alloc_raw(size_type req);
 
-    static int expands;
-    static int opps;
-
 private:
     UWR_FORCEINLINE constexpr int is_big(size_type n) const;
 
@@ -41,19 +38,14 @@ private:
     UWR_FORCEINLINE constexpr void big_dealloc(pointer data, size_type n) const;
     UWR_FORCEINLINE constexpr void small_dealloc(pointer data, size_type n) const;
 
-    constexpr void do_realloc(size_type req, true_type);
-    constexpr void do_realloc(size_type req, false_type);
+    constexpr pointer do_realloc(size_type req, true_type);
+    constexpr pointer do_realloc(size_type req, false_type);
 
     constexpr bool do_expand_or_alloc_raw(size_type req, pointer& out_ptr, true_type);
     constexpr bool do_expand_or_alloc_raw(size_type req, pointer& out_ptr, false_type);
     constexpr bool do_expand_or_dealloc_and_alloc_raw(size_type req, true_type);
     constexpr bool do_expand_or_dealloc_and_alloc_raw(size_type req, false_type);
 };
-
-template<class T>
-int hybrid_allocator<T>::expands = 0;
-template<class T>
-int hybrid_allocator<T>::opps = 0;
 
 template<class T>
 constexpr
@@ -107,11 +99,11 @@ template<class T>
 constexpr void
 hybrid_allocator<T>::realloc(size_type req) {
     req = this->fix_capacity(req);
-    this->do_realloc(req, std::is_trivially_move_constructible<T>());
+    this->m_data = this->do_realloc(req,
+            std::is_trivially_move_constructible<T>());
     this->m_capacity = req;
 }
 
-#include <iostream>
 template<class T>
 constexpr bool
 hybrid_allocator<T>::expand_or_alloc_raw(size_type req, pointer& out_ptr) {
@@ -191,103 +183,143 @@ hybrid_allocator<T>::small_dealloc(pointer data, UWR_UNUSED size_type n) const {
     free(data);
 }
 
+#if 1
+template<class T>
+constexpr typename hybrid_allocator<T>::pointer
+hybrid_allocator<T>::do_realloc(size_type req, true_type) {
+    UWR_ASSERT(req > this->m_capacity);
+    UWR_ASSERT(req == this->fix_capacity(req));
+
+    uint8_t cond = this->is_big(this->m_capacity) |
+                   this->is_big(req) << 1;
+
+    switch (cond) {
+        case 0b00: { /* both are small sizes */
+            return (pointer)::realloc(this->m_data,
+                    req * sizeof(T));
+        }
+        case 0b10: { /* new size is big, old is small */
+            pointer new_data = this->big_alloc(req);
+
+            umove(new_data, this->m_data, this->m_size);
+            destroy(this->m_data, this->m_size);
+            this->small_dealloc(this->m_data, this->m_capacity);
+
+            return new_data;
+        }
+        case 0b11: { /* both are big sizes */
+            return (pointer)mremap(
+                    this->m_data,
+                    this->m_capacity * sizeof(T),
+                    req * sizeof(T),
+                    MREMAP_MAYMOVE);
+        }
+        default: { /* impossible */
+            UWR_ASSERT(false);
+            return nullptr; // keep compiler happy
+        }
+    }
+}
+#else
 template<class T>
 constexpr void
 hybrid_allocator<T>::do_realloc(size_type req, true_type) {
     UWR_ASSERT(req > this->m_capacity);
     UWR_ASSERT(req == this->fix_capacity(req));
 
-    int cond = this->is_big(this->m_capacity) |
-               this->is_big(req) << 1;
+    if (this->is_big(req) != this->is_big(this->m_capacity)) {
+        pointer new_data = this->alloc(req);
+        std::memcpy(new_data, this->m_data, this->m_size * sizeof(T));
+        this->dealloc(this->m_data, this->m_capacity);
 
-    switch (cond) {
-        case 0: { /* both are small sizes */
-            this->m_data = (pointer)::realloc(this->m_data,
-                    req * sizeof(T));
-
-            break;
-        }
-        case 2: { /* new size is big, old is small */
-            pointer new_data = this->big_alloc(req);
-
-            umove(new_data, this->m_data, this->m_size);
-            destroy(this->m_data, this->m_size);
-
-            this->small_dealloc(this->m_data, this->m_capacity);
-            this->m_data = new_data;
-
-            break;
-        }
-        case 3: { /* both are big sizes */
-            this->m_data = (pointer)mremap(
-                    this->m_data,
-                    this->m_capacity * sizeof(T),
-                    req * sizeof(T),
-                    MREMAP_MAYMOVE);
-
-            break;
-        }
-        default: /* impossible */
-            UWR_ASSERT(false);
+        return new_data;
+    }
+    else {
+        if (this->is_big(this->m_capacity))
+            return (pointer)mremap(
+                    this->m_data, this->m_capacity * sizeof(T),
+                    req * sizeof(T), MREMAP_MAYMOVE);
+        else
+            return (pointer)::realloc(this->m_data,
+                                      req * sizeof(T));
     }
 }
+#endif
 
+#if 1
 template<class T>
-constexpr void
+constexpr typename hybrid_allocator<T>::pointer
 hybrid_allocator<T>::do_realloc(size_type req, false_type) {
     UWR_ASSERT(req > this->m_capacity);
     UWR_ASSERT(req == this->fix_capacity(req));
 
-    int cond = this->is_big(this->m_capacity) |
-               this->is_big(req) << 1;
+    uint8_t cond = this->is_big(this->m_capacity) |
+                   this->is_big(req) << 1;
 
     switch (cond) {
-        case 0: { /* both are small sizes */
+        case 0b00: { /* both are small sizes */
             pointer new_data = this->small_alloc(req);
 
             umove(new_data, this->m_data, this->m_size);
             destroy(this->m_data, this->m_size);
-
             this->small_dealloc(this->m_data, this->m_capacity);
-            this->m_data = new_data;
 
-            break;
+            return new_data;
         }
-        case 2: { /* new size is big, old is small */
+        case 0b10: { /* new size is big, old is small */
             pointer new_data = this->big_alloc(req);
 
             umove(new_data, this->m_data, this->m_size);
             destroy(this->m_data, this->m_size);
-
             this->small_dealloc(this->m_data, this->m_capacity);
-            this->m_data = new_data;
 
-            break;
+            return new_data;
         }
-        case 3: { /* both are big sizes */
+        case 0b11: { /* both are big sizes */
             pointer new_data = (pointer)mremap(
                     this->m_data,
                     this->m_capacity * sizeof(T),
                     req * sizeof(T), 0);
 
-            // TODO: unlikely here (?)
             if (new_data == (pointer)-1) {
                 new_data = this->big_alloc(req);
-
                 umove(new_data, this->m_data, this->m_size);
                 destroy(this->m_data, this->m_size);
-
                 this->big_dealloc(this->m_data, this->m_capacity);
             }
 
-            this->m_data = new_data;
-
-            break;
+            return new_data;
         }
-        default: /* impossible */
+        default: { /* impossible */
             UWR_ASSERT(false);
+            return nullptr; // keep compiler happy
+        }
     }
 }
+#else
+template<class T>
+constexpr typename hybrid_allocator<T>::pointer
+hybrid_allocator<T>::do_realloc(size_type req, false_type) {
+    UWR_ASSERT(req > this->m_capacity);
+    UWR_ASSERT(req == this->fix_capacity(req));
+    
+    if (this->is_big(this->m_capacity)) {
+        pointer new_data = (pointer)mremap(
+                this->m_data,
+                this->m_capacity * sizeof(T),
+                req * sizeof(T), 0);
+        if (new_data != (pointer)-1)
+            return new_data;
+    }
+
+    pointer new_data = this->alloc(req);
+    umove(new_data, this->m_data, this->m_size);
+    destroy(this->m_data, this->m_size);
+    this->dealloc(this->m_data, this->m_capacity);
+
+    return new_data;
+}
+#endif
 
 // TODO: simplify
 template<class T>
@@ -296,25 +328,24 @@ hybrid_allocator<T>::do_expand_or_alloc_raw(size_type req, pointer& out_ptr, tru
     UWR_ASSERT(req > this->m_capacity);
     UWR_ASSERT(req == this->fix_capacity(req));
 
-    int cond = this->is_big(this->m_capacity) |
-               this->is_big(req) << 1;
+    uint8_t cond = this->is_big(this->m_capacity) |
+                   this->is_big(req) << 1;
 
     switch (cond) {
-        case 0: { /* both are small sizes */
+        case 0b00: { /* both are small sizes */
             out_ptr = this->small_alloc(req);
             return false;
         }
-        case 2: { /* new size is big, old is small */
+        case 0b10: { /* new size is big, old is small */
             out_ptr = this->big_alloc(req);
             return false;
         }
-        case 3: { /* both are big sizes */
+        case 0b11: { /* both are big sizes */
             out_ptr = (pointer)mremap(
                     this->m_data,
                     this->m_capacity * sizeof(T),
                     req * sizeof(T), 0);
 
-            // TODO: unlikely here (?)
             if (out_ptr == (pointer)-1) {
                 out_ptr = this->big_alloc(req);
                 return false;
@@ -336,32 +367,29 @@ hybrid_allocator<T>::do_expand_or_alloc_raw(size_type req, pointer& out_ptr, fal
     UWR_ASSERT(req > this->m_capacity);
     UWR_ASSERT(req == this->fix_capacity(req));
 
-    int cond = this->is_big(this->m_capacity) |
-               this->is_big(req) << 1;
+    uint8_t cond = this->is_big(this->m_capacity) |
+                   this->is_big(req) << 1;
 
     switch (cond) {
-        case 0: { /* both are small sizes */
+        case 0b00: { /* both are small sizes */
             out_ptr = this->small_alloc(req);
             return false;
         }
-        case 2: { /* new size is big, old is small */
+        case 0b10: { /* new size is big, old is small */
             out_ptr = this->big_alloc(req);
             return false;
         }
-        case 3: { /* both are big sizes */
+        case 0b11: { /* both are big sizes */
             out_ptr = (pointer)mremap(
                     this->m_data,
                     this->m_capacity * sizeof(T),
                     req * sizeof(T), 0);
 
-            ++opps;
-            // TODO: unlikely here (?)
             if (out_ptr == (pointer)-1) {
                 out_ptr = this->big_alloc(req);
                 return false;
             }
             else {
-                ++expands;
                 UWR_ASSERT(out_ptr == this->m_data);
                 return true;
             }
@@ -378,25 +406,24 @@ hybrid_allocator<T>::do_expand_or_dealloc_and_alloc_raw(size_type req, true_type
     UWR_ASSERT(req > this->m_capacity);
     UWR_ASSERT(req == this->fix_capacity(req));
 
-    int cond = this->is_big(this->m_capacity) |
-               this->is_big(req) << 1;
+    uint8_t cond = this->is_big(this->m_capacity) |
+                   this->is_big(req) << 1;
     destroy(this->m_data, this->m_size);
 
     switch (cond) {
-        case 0: { /* both are small sizes */
+        case 0b00: { /* both are small sizes */
             this->small_dealloc(this->m_data, this->m_capacity);
             this->m_data = this->small_alloc(req);
 
             break;
         }
-        case 2: { /* new size is big, old is small */
+        case 0b10: { /* new size is big, old is small */
             this->small_dealloc(this->m_data, this->m_capacity);
             this->m_data = this->big_alloc(req);
 
             break;
         }
-        case 3: { /* both are big sizes */
-            // TODO: check alternative
+        case 0b11: { /* both are big sizes */
             this->m_data = (pointer)mremap(
                     this->m_data,
                     this->m_capacity * sizeof(T),
@@ -425,40 +452,36 @@ hybrid_allocator<T>::do_expand_or_dealloc_and_alloc_raw(size_type req, false_typ
     UWR_ASSERT(req > this->m_capacity);
     UWR_ASSERT(req == this->fix_capacity(req));
 
-    int cond = this->is_big(this->m_capacity) |
-               this->is_big(req) << 1;
+    uint8_t cond = this->is_big(this->m_capacity) |
+                   this->is_big(req) << 1;
 
     switch (cond) {
-        case 0: { /* both are small */
+        case 0b00: { /* both are small */
             destroy(this->m_data, this->m_size);
             this->small_dealloc(this->m_data, this->m_capacity);
-
             this->m_data = this->small_alloc(req);
             this->m_capacity = req;
 
             return false;
         }
-        case 2: { /* new size is big, old is small */
+        case 0b10: { /* new size is big, old is small */
             destroy(this->m_data, this->m_size);
             this->small_dealloc(this->m_data, this->m_capacity);
-
             this->m_data = this->big_alloc(req);
             this->m_capacity = req;
 
             return false;
         }
-        case 3: { /* both are big sizes */
+        case 0b11: { /* both are big sizes */
             void* new_data = mremap(
                     this->m_data,
                     this->m_capacity * sizeof(T),
                     req * sizeof(T),
                     0);
 
-            // TODO: unlikely here (?)
             if (new_data == (void*)-1) {
                 destroy(this->m_data, this->m_size);
                 this->big_dealloc(this->m_data, this->m_capacity);
-
                 this->m_data = this->big_alloc(req);
                 this->m_capacity = req;
 
