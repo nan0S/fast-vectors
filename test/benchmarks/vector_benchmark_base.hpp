@@ -302,7 +302,6 @@ void BM_environment(State& s) {
     }
 
     // test_type::print_stats();
-    // std::cout << "reallocs: " << V<test_type>::reallocs << std::endl;
 
     int id = s.range(1);
     s.counters["t" + std::to_string(id)];

@@ -43,9 +43,18 @@ void f(const std::string& name) {
 int main() {
     using T = test_type;
     // using Vector = rvector<T>;
-    // using Vector = uwr::vector<T>;
+    using Vector = uwr::vector<T>;
     // using Vector = std::vector<T>;
     // using Vector = boost_vector<T>;
+    
+    Vector v;
+    int last_cap = 0;
+    for (int i = 0; i < 4096; ++i) {
+        v.emplace_back();
+        if (v.capacity() != last_cap) {
+            cout << v.size() << ": " << (last_cap = v.capacity()) << endl;
+        }
+    }
 
     // RUN(uwr::vector<T>);
     // RUN(std::vector<T>);

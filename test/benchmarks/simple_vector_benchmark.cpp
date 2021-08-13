@@ -162,9 +162,6 @@ void BM_insert(State& s) {
 
         ClobberMemory();
     }
-
-    auto stats = Vector::get_stats();
-    std::cout << stats[0] << ", " << stats[1] << std::endl;
     
     s.counters["t4"];
 }

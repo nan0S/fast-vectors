@@ -16,7 +16,7 @@ using namespace benchmark;
  */
 static  constexpr  int  INT_ARG               =  2000;
 static  constexpr  int  STRING_ARG            =  1000;
-static  constexpr  int  TEST_TYPE_ARG         =  400;
+static  constexpr  int  TEST_TYPE_ARG         =  1000;
 static  constexpr  int  ARRAY_ARG             =  1200;
 static  constexpr  int  INT_STRING_ARG        =  1000;
 static  constexpr  int  INT_STRING_ARRAY_ARG  =  1000;
