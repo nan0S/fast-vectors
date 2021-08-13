@@ -4,7 +4,6 @@
 #include <algorithm>
 #include <memory>
 #include <linux/mman.h>
-#include <iostream>
 
 #define LIKELY(x)       __builtin_expect((x),1)
 #define UNLIKELY(x)     __builtin_expect((x),0)
@@ -15,8 +14,7 @@ class rvector;
 namespace mm
 {
 	// int mremap_skips = 0;
-    int expands = 0;
-    int opps = 0;
+    // int expands = 0;
 	// Policies
 	template<typename T>
 	using Trivial = std::enable_if_t<std::is_trivial<T>::value>;
@@ -148,11 +146,8 @@ namespace mm
         {
             void* new_data = mremap(data, capacity*sizeof(T), 
                         		n*sizeof(T), 0);
-            ++opps;
-            if(new_data != (void*)-1) {
-                ++expands;
+            if(new_data != (void*)-1)
                 return (T*) new_data;
-            }
         }
 	    T* new_data = allocate<T>(n);
 	    std::uninitialized_move_n(data, length, new_data);
@@ -183,7 +178,6 @@ namespace mm
 	void grow(T*& data, size_type length, size_type& capacity)
 	{
 		if(LIKELY(length < capacity)) return;
-        ++rvector<T>::reallocs;
 		change_capacity(data, length, capacity, capacity*2 + 1);
 	}
 
