@@ -8,7 +8,7 @@ OFLAGS := -O3 -march=native -DNDEBUG
 TFLAGS := -O0 -march=native
 WFLAGS := -Wall -Wextra
 IFLAGS := -I include -I src -I include/container
-DFLAGS := -ggdb -fno-omit-frame-pointer
+DFLAGS := -g -fno-omit-frame-pointer
 CXXFLAGS := $(VERSION) $(WFLAGS) $(IFLAGS) $(DFLAGS)
 
 SRC_DIR := src
