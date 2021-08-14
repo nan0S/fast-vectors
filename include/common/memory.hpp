@@ -164,10 +164,10 @@ T create();
  */
 template<class T>
 UWR_FORCEINLINE constexpr
-T_Move<T> shiftr(T* dest, const T* begin, T* end);
+T_Move<T> shiftr(T* dest, T* begin, T* end);
 template<class T>
 UWR_FORCEINLINE constexpr
-NT_Move<T> shiftr(T* dest, const T* begin, T* end);
+NT_Move<T> shiftr(T* dest, T* begin, T* end);
 
 /*
  * shifts data to the left,
@@ -332,15 +332,15 @@ void destroy_at(T* addr) {
 
 template<class T>
 constexpr
-T_Move<T> shiftr(T* dest, const T* begin, T* end) {
+T_Move<T> shiftr(T* dest, T* begin, T* end) {
     std::memmove(dest, begin, (end - begin) * sizeof(T));
 }
 
 template<class T>
 constexpr
-NT_Move<T> shiftr(T* dest, const T* begin, T* end) {
-    const T* seg = end - (dest - begin);
-    umove<T, const T*>(end, seg, end);
+NT_Move<T> shiftr(T* dest, T* begin, T* end) {
+    T* seg = end - (dest - begin);
+    umove(end, seg, end);
     std::move_backward(begin, seg, end);
 }
 
