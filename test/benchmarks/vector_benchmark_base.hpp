@@ -246,7 +246,7 @@ private:
 
 private:
     template<class Vec>
-    using env_container = std::vector<Vec>;
+    using env_container = V<Vec>;
 
     template<class T>
     using env_type = env_container<V<T>>;

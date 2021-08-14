@@ -15,7 +15,7 @@ using namespace benchmark;
  * configurable parameters
  */
 static  constexpr  int  INT_ARG               =  2000;
-static  constexpr  int  STRING_ARG            =  500;
+static  constexpr  int  STRING_ARG            =  1000;
 static  constexpr  int  TEST_TYPE_ARG         =  1000;
 static  constexpr  int  ARRAY_ARG             =  1200;
 static  constexpr  int  INT_STRING_ARG        =  1000;
@@ -45,9 +45,11 @@ static constexpr int N = 10; // used in std::array<int, N>
  * tested vectors
  */
 template<class T>
-using boost_vector = boost::container::vector<T>;
-template<class T>
 using std_vector = std::vector<T>;
+using boost_gf = boost::container::growth_factor_100;
+using boost_options = boost::container::vector_options_t<boost::container::growth_factor<boost_gf>>;
+template<class T>
+using boost_vector = boost::container::vector<T, boost::container::new_allocator<T>, boost_options>; 
 template<class T>
 using uwr_vector = uwr::vector<T>;
 template<class T>
@@ -119,8 +121,8 @@ using uwr_big_vector = uwr::big_vector<T>;
 #endif
 
 #define REGISTER_BENCHMARK(unit, varname, counter, ...) \
-    REGISTER_BENCHMARK_FOR_BOOST_VECTOR(unit, varname, counter, __VA_ARGS__); \
     REGISTER_BENCHMARK_FOR_STD_VECTOR(unit, varname, counter, __VA_ARGS__); \
+    REGISTER_BENCHMARK_FOR_BOOST_VECTOR(unit, varname, counter, __VA_ARGS__); \
     REGISTER_BENCHMARK_FOR_RVECTOR(unit, varname, counter, __VA_ARGS__); \
     REGISTER_BENCHMARK_FOR_UWR_VECTOR(unit, varname, counter, __VA_ARGS__); \
     REGISTER_BENCHMARK_FOR_UWR_STD_VECTOR(unit, varname, counter, __VA_ARGS__); \
@@ -137,4 +139,17 @@ REGISTER_BENCHMARK(kMillisecond,  ARRAY,             4,  std::array<int, N>);
 REGISTER_BENCHMARK(kMillisecond,  INT_STRING,        5,  int, std::string);                   
 REGISTER_BENCHMARK(kMillisecond,  INT_STRING_ARRAY,  6,  int, std::string, std::array<int, N>);
 
-BENCHMARK_MAIN();
+int main(int argc, char** argv) {
+    Initialize(&argc, argv);
+    if (ReportUnrecognizedArguments(argc, argv))
+        return 1;
+    RunSpecifiedBenchmarks();
+    Shutdown();
+    
+    std::cout << "uwr::success: " << uwr::mem::counters::success << std::endl;
+    std::cout << "uwr::mremaps: " << uwr::mem::counters::mremaps << std::endl;
+    std::cout << "rve::success: " << mm::success << std::endl;
+    std::cout << "rve::mremaps: " << mm::mremaps << std::endl;
+
+    return 0;
+}

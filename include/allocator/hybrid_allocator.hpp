@@ -10,6 +10,14 @@ namespace uwr::mem {
 using std::true_type;
 using std::false_type;
 
+struct counters {
+    static int mremaps;
+    static int success;
+};
+
+int counters::mremaps = 0;
+int counters::success = 0;
+
 template<class T>
 class hybrid_allocator : public allocator_base<hybrid_allocator<T>, T> {
 public:
@@ -47,15 +55,8 @@ private:
     constexpr bool do_expand_or_dealloc_and_alloc_raw(size_type req, false_type);
 
 public:
-    static int mremaps;
-    static int success;
     UWR_FORCEINLINE constexpr size_type npages(size_type x) { return x * sizeof(T) / page_size; }
 };
-
-template<class T>
-int hybrid_allocator<T>::mremaps = 0;
-template<class T>
-int hybrid_allocator<T>::success = 0;
 
 template<class T>
 constexpr
@@ -303,7 +304,7 @@ hybrid_allocator<T>::do_realloc(size_type req, false_type) {
 
             // }
 
-            ++mremaps;
+            ++counters::mremaps;
             if (new_data == (pointer)-1) {
                 new_data = this->big_alloc(req);
                 umove(new_data, this->m_data, this->m_size);
@@ -311,7 +312,7 @@ hybrid_allocator<T>::do_realloc(size_type req, false_type) {
                 this->big_dealloc(this->m_data, this->m_capacity);
             }
             else
-                ++success;
+                ++counters::success;
 
             return new_data;
         }
