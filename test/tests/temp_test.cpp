@@ -40,27 +40,37 @@ void f(const std::string& name) {
 
 #define RUN(v) f<v>(#v)
 
-int main() {
-    using T = test_type;
-    // using Vector = rvector<T>;
-    using Vector = uwr::vector<T>;
-    // using Vector = std::vector<T>;
-    // using Vector = boost_vector<T>;
-    
-    Vector v;
-    int last_cap = 0;
-    for (int i = 0; i < 4096; ++i) {
+using T = std::string;
+// using Vector = rvector<T>;
+using Vector = uwr::vector<T>;
+// using Vector = std::vector<T>;
+// using Vector = boost_vector<T>;
+using uwr_vector = uwr::vector<T>;
+using rvector_t = rvector<T>;
+
+constexpr long ps = 4096;
+
+long npages(long x) {
+    return x * sizeof(T) / ps;
+}
+
+template<class V>
+void show_capacity() {
+    int last_cap = -1;
+    V v;
+    for (int i = 300; i < 2048; ++i) {
         v.emplace_back();
-        if (v.capacity() != last_cap) {
-            cout << v.size() << ": " << (last_cap = v.capacity()) << endl;
+        if (last_cap != v.capacity()) {
+            cout << v.capacity() << " ";
+            last_cap = v.capacity();
         }
     }
+    cout << endl;
+}
 
-    // RUN(uwr::vector<T>);
-    // RUN(std::vector<T>);
-    // RUN(rvector<T>);
-    // RUN(boost_vector<T>);
-    
+int main() {
+    show_capacity<uwr_vector>();
+    show_capacity<rvector_t>();
 
     return 0;
 }

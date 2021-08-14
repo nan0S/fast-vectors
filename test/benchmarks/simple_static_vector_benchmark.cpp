@@ -58,8 +58,8 @@ void BM_push_back(State& s) {
         
         for (int j = 0; j < times; ++j) {
             v.push_back(get_value<T>(j));
-            ClobberMemory();
         }
+        ClobberMemory();
     }
 
     s.counters["t1"];

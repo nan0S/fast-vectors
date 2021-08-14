@@ -18,7 +18,7 @@ static  constexpr  int  INT_STRING_ARG        =  200;
 static  constexpr  int  INT_STRING_ARRAY_ARG  =  100;
 
 /* use the same number of iterations in all benchmarks */
-#define COMMON_ITERS 100
+#define COMMON_ITERS 0
 
 #define  INT_ITERS               (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 #define  STRING_ITERS            (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)

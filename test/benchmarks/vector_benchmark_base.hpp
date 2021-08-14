@@ -52,10 +52,10 @@ private:
             case 1: construct_action<T>(i); break;
             case 2: destroy_action<T>(i); break;
             case 3: push_back_action<T>(i); break;
-            case 4: insert_action<T>(i); break;
+            case 4: pop_back_action<T>(i); break;
             case 5: copy_action<T>(i); break;
-            case 6: erase_action<T>(i); break;
-            case 7: pop_back_action<T>(i); break;
+            case 6: insert_action<T>(i); break;
+            case 7: erase_action<T>(i); break;
         }
     }
 
@@ -122,8 +122,8 @@ private:
 
             while (put_in--) {
                 picked.emplace_back();
-                ClobberMemory();
             }
+            ClobberMemory();
         }
     }
 

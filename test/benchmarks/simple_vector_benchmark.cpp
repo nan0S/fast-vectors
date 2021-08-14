@@ -18,13 +18,13 @@ using args_t = std::vector<int64_t>;
 using value_type = std::string;
 
 // number of consecutive push backs in one iteration
-static const args_t PUSH_BACK_ARG = { 100000 };
+static const args_t PUSH_BACK_ARG = { 50000 };
 // number of push_back/pop_back rounds in iteration and maximum vector size
 static const args_t PUSH_BACK_POP_BACK_ARG = { 10, 50000 };
 // number of resize rounds and maximum resize size
 static const args_t RESIZE_ARG = { 10, 50000 };
 // maximum size of created vector
-static const args_t INSERT_ARG = { 50000 };
+static const args_t INSERT_ARG = { 1000 };
 // maximum size of created vector
 static const args_t CREATE_ARG = { 50000 };
 
@@ -64,8 +64,8 @@ void BM_push_back(State& s) {
         
         for (int j = 0; j < times; ++j) {
             v.push_back(get_value<T>(j));
-            ClobberMemory();
         }
+        ClobberMemory();
     }
 
     s.counters["t1"];
@@ -153,14 +153,15 @@ void BM_insert(State& s) {
         Vector v(size, get_value<T>(size + 10));
 
         DoNotOptimize(v.data());
-        ClobberMemory();
         
-        size_type pos = Random::rand(size + 1);
-        size_type count = Random::rand(size + 1);
+        for (int i = 0; i < 100; ++i) {
+            size_type pos = Random::rand(size + 1);
+            size_type count = Random::rand(size / 10 + 1);
 
-        v.insert(v.begin() + pos, count, get_value<T>(size));
+            v.insert(v.begin() + pos, count, get_value<T>(size));
+            ClobberMemory();
+        }
 
-        ClobberMemory();
     }
     
     s.counters["t4"];
@@ -242,4 +243,17 @@ REGISTER_BENCHMARK(BM_resize,              kMicrosecond,  RESIZE);
 REGISTER_BENCHMARK(BM_insert,              kMicrosecond,  INSERT);
 REGISTER_BENCHMARK(BM_create,              kMicrosecond,  CREATE);
 
-BENCHMARK_MAIN();
+int main(int argc, char** argv) {
+    Initialize(&argc, argv);
+    if (ReportUnrecognizedArguments(argc, argv))
+        return 1;
+    RunSpecifiedBenchmarks();
+    Shutdown();
+    
+    // std::cout << "uwr::success: " << uwr::mem::hybrid_allocator<value_type>::success << std::endl;
+    // std::cout << "uwr::mremaps: " << uwr::mem::hybrid_allocator<value_type>::mremaps << std::endl;
+    // std::cout << "rve::success: " << mm::success << std::endl;
+    // std::cout << "rve::mremaps: " << mm::mremaps << std::endl;
+
+    return 0;
+}
