@@ -10,3 +10,5 @@ do-tests
 
 perf.data
 perf.data.old
+
+gmon.out
