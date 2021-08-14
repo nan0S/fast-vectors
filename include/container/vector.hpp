@@ -466,11 +466,83 @@ vector<T, A>::insert(const_iterator pos, T&& value) {
     return this->emplace(pos, std::move(value));
 }
 
+#if 1
 template<class T, class A>
 constexpr typename vector<T, A>::iterator
 vector<T, A>::insert(const_iterator pos, size_type count, const T& value) {
     return this->priv_insert(pos, insert_fill_proxy(count, value));
 }
+#else
+template<class T, class A>
+constexpr typename vector<T, A>::iterator
+vector<T, A>::insert(const_iterator pos, size_type count, const T& value) {
+    T* m_pos= const_cast<T*>(pos);
+    if (!count)
+        return m_pos;
+
+    size_type new_size = m_alloc.m_size + count;
+    if (new_size > m_alloc.m_capacity) {
+        auto m = std::distance(begin(), m_pos);
+        size_type new_cap = std::max(new_size, m_alloc.m_capacity * 2 + 1);
+        m_alloc.realloc(new_cap);
+        // mm::change_capacity(m_alloc.m_data, m_alloc.m_size, m_alloc.m_capacity, new_cap);
+        m_pos = begin() + m;
+    }
+
+    T* const m_end = end();
+    T* const spill = m_pos + count;
+    // size_type rest = std::distance(m_pos, m_end);
+
+    if (m_end > spill) {
+        // std::uninitialized_move(m_end - count, m_end, m_end);
+        // std::move_backward(m_pos, m_end - count, m_end);
+        // mem::umove<T, const T*>(m_end, seg, m_end);
+        mem::shiftr(spill, m_pos, m_end);
+        mem::fill(m_pos, spill, value);
+        // std::fill(m_pos, m_pos + count, value);
+    }
+    else {
+        mem::umove(spill, m_pos, m_end);
+        mem::fill(m_pos, m_end, value);
+        mem::ufill(m_end, spill, value);
+        // std::uninitialized_move(m_pos, m_end, m_pos + count);
+        // std::fill(m_pos, m_end, value);
+        // std::uninitialized_fill(m_end, m_pos + count, value);
+    }
+
+    m_alloc.m_size = new_size;
+
+    return m_pos;
+    // T* m_pos = const_cast<T*>(pos);
+    // if (count == 0)
+    //     return m_pos;
+
+    // size_type new_size = this->size() + count;
+    // if (new_size > this->capacity()) {
+    //     size_type m = m_pos - this->data();
+    //     size_type new_capacity = this->next_capacity(new_size);
+    //     this->m_alloc.realloc(new_capacity);
+    //     m_pos = this->data() + m;
+    // }
+
+    // T* const m_end = this->end();
+    // T* const spill = m_pos + count;
+
+    // if (spill < m_end) {
+    //     mem::shiftr(spill, m_pos, m_end);
+    //     mem::fill(m_pos, spill, value);
+    // }
+    // else {
+    //     mem::umove(spill, m_pos, m_end);
+    //     mem::fill(m_pos, m_end, value);
+    //     mem::ufill(m_end, spill, value);
+    // }
+
+    // this->m_alloc.m_size += count;
+
+    // return m_pos;
+}
+#endif
 
 template<class T, class A>
 template<class InputIterator, class>
@@ -666,12 +738,12 @@ vector<T, A>::priv_resize(ResizeProxy&& proxy) {
     this->m_alloc.m_size = proxy.n;
 }
 
-#include <iostream>
+#if 0
 template<class T, class A>
 template<class InsertProxy>
 constexpr typename vector<T, A>::iterator
 vector<T, A>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
-    T* m_pos = const_cast<T*>(pos);
+    T* const m_pos = const_cast<T* const>(pos);
 
     if (UWR_UNLIKELY(!proxy.count))
         return m_pos;
@@ -680,12 +752,9 @@ vector<T, A>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
     size_type new_size = this->size() + proxy.count;
 
     if (new_size > this->capacity()) {
-        // size_type m = m_pos - this->data();
-        // this->m_alloc.realloc(new_size);
-        // m_pos = this->data() + m;
         size_type new_capacity = this->m_alloc.fix_capacity(
                 this->next_capacity(new_size));
-        T* new_data = nullptr;
+        T* new_data;
 
         if (this->m_alloc.expand_or_alloc_raw(
                     new_capacity, new_data)) {
@@ -723,18 +792,16 @@ vector<T, A>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
             return i_begin;
         }
     }
-
-    // T* const m_end = this->end();
     else {
         T* const spill = m_pos + proxy.count;
 
-        if (spill < m_end) {
-            mem::shiftr(spill, m_pos, m_end);
-            proxy.insert_without_spill(m_pos, spill);
-        }
-        else {
+        if (spill > m_end) {
             mem::umove(spill, m_pos, m_end);
             proxy.insert_with_spill(m_pos, m_end, spill);
+        }
+        else {
+            mem::shiftr(spill, m_pos, m_end);
+            proxy.insert_without_spill(m_pos, spill);
         }
 
         this->m_alloc.m_size = new_size;
@@ -742,6 +809,42 @@ vector<T, A>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
         return m_pos;
     }
 }
+#else
+template<class T, class A>
+template<class InsertProxy>
+constexpr typename vector<T, A>::iterator
+vector<T, A>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
+    T* m_pos = const_cast<T*>(pos);
+
+    if (UWR_UNLIKELY(!proxy.count))
+        return m_pos;
+
+    size_type new_size = this->size() + proxy.count;
+
+    if (new_size > this->capacity()) {
+        size_type m = m_pos - this->data();
+        size_type new_capacity = this->next_capacity(new_size);
+        this->m_alloc.realloc(new_capacity);
+        m_pos = this->data() + m;
+    }
+
+    T* const m_end = this->end();
+    T* const spill = m_pos + proxy.count;
+
+    if (spill < m_end) {
+        mem::shiftr(spill, m_pos, m_end);
+        proxy.insert_without_spill(m_pos, spill);
+    }
+    else {
+        mem::umove(spill, m_pos, m_end);
+        proxy.insert_with_spill(m_pos, m_end, spill);
+    }
+
+    this->m_alloc.m_size = new_size;
+
+    return m_pos;
+}
+#endif
 
 
 /*
