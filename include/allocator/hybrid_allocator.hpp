@@ -251,7 +251,7 @@ hybrid_allocator<T>::small_dealloc(pointer data, UWR_UNUSED size_type n) const {
     free(data);
 }
 
-#if 1
+#if 0
 template<class T>
 constexpr typename hybrid_allocator<T>::pointer
 hybrid_allocator<T>::do_realloc(size_type req, true_type) {
@@ -612,7 +612,7 @@ hybrid_allocator<T>::do_expand_or_dealloc_and_alloc_raw(size_type req, true_type
     return false;
 }
 
-#if 0
+#if 1
 template<class T>
 constexpr bool
 hybrid_allocator<T>::do_expand_or_dealloc_and_alloc_raw(size_type req, false_type) {
@@ -640,22 +640,27 @@ hybrid_allocator<T>::do_expand_or_dealloc_and_alloc_raw(size_type req, false_typ
             return false;
         }
         case 0b11: { /* both are big sizes */
-            void* new_data = mremap(
+            pointer new_data = (pointer)mremap(
                     this->m_data,
                     this->m_capacity * sizeof(T),
-                    req * sizeof(T),
-                    0);
+                    req * sizeof(T), 0);
 
             // TODO: remove
             #ifdef UWR_TRACK
             counters::mremaps(this->m_data == (pointer)new_data);
             #endif
 
-            if (new_data == (void*)-1) {
+            if (new_data == (pointer)-1) {
+                // first alloc, then dealloc - why?
+                // mremap seems to behave strange
+                // if you do the other way around
+                // and dramatically reduces in-place
+                // reallocations in the future
+                new_data = this->big_alloc(req);
                 destroy(this->m_data, this->m_size);
                 this->big_dealloc(this->m_data, this->m_capacity);
-                this->m_data = this->big_alloc(req);
-                this->m_capacity = req;
+                this->m_data = new_data;
+                this->m_capacity = req;                
 
                 return false;
             }

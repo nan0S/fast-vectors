@@ -291,11 +291,25 @@ vector<T, A>::max_size() const noexcept {
     return std::numeric_limits<size_type>::max() / sizeof(T);
 }
 
+#if 1
 template<class T, class A>
 constexpr void
 vector<T, A>::resize(size_type n) {
     this->priv_resize(default_construct_proxy<T>(n));
 }
+#else
+template<class T, class A>
+constexpr void
+vector<T, A>::resize(size_type n) {
+    if (n > this->capacity())
+        this->m_alloc.realloc(n);
+    if (n < this->size())
+        mem::destroy(this->data() + n, this->end());
+    else if (n > this->size())
+        mem::construct(this->end(), this->data() + n);
+    this->m_alloc.m_size = n;
+}
+#endif
 
 template<class T, class A>
 constexpr void
@@ -596,6 +610,7 @@ vector<T, A>::clear() noexcept {
     this->m_alloc.m_size = 0;
 }
 
+#if 1
 template<class T, class A>
 template<class... Args>
 constexpr typename vector<T, A>::iterator
@@ -655,6 +670,34 @@ vector<T, A>::emplace(const_iterator pos, Args&&... args) {
         return m_pos;
     }
 }
+#else
+template<class T, class A>
+template<class... Args>
+constexpr typename vector<T, A>::iterator
+vector<T, A>::emplace(const_iterator pos, Args&&... args) {
+    T* m_pos = const_cast<T*>(pos);
+
+    if (this->size() == this->capacity()) {
+        size_type m = m_pos - this->data();
+        size_type new_capacity = this->next_capacity(this->size() + 1);
+        this->m_alloc.realloc(new_capacity);
+        m_pos = this->data() + m;
+    }
+
+    T* const m_end = this->end();
+
+    if (m_pos != m_end) {
+        mem::shiftr(m_pos + 1, m_pos, m_end);
+        *m_pos = mem::create<T>(std::forward<Args>(args)...);
+    }
+    else
+        new (m_pos) T(std::forward<Args>(args)...);
+
+    ++this->m_alloc.m_size;
+
+    return m_pos;
+}
+#endif
 
 template<class T, class A>
 template<class... Args>
@@ -695,12 +738,28 @@ vector<T, A>::priv_copy_insert(const_iterator pos, InputIterator first, InputIte
     return this->priv_insert(pos, insert_copy_range_proxy<T, InputIterator>(first, last, n));
 }
 
+#if 1 // seems to work fast in simple_benchmark - probably to restore
 template<class T, class A>
 template<class AssignProxy>
 constexpr void
 vector<T, A>::priv_assign(AssignProxy&& proxy) {
-    if (proxy.n > this->capacity()) {
-        // this->m_alloc.expand_or_dealloc_and_alloc_raw(proxy.n);
+    if (UWR_UNLIKELY(proxy.n > this->capacity())) {
+        if (this->m_alloc.expand_or_dealloc_and_alloc_raw(proxy.n))
+            proxy.assign_to_short(this->data(), this->size());
+        else
+            proxy.assign_to_short(this->data(), 0);
+    }
+    else
+        proxy.assign_to_short(this->data(), 0);
+
+    this->m_alloc.m_size = proxy.n;
+}
+#else
+template<class T, class A>
+template<class AssignProxy>
+constexpr void
+vector<T, A>::priv_assign(AssignProxy&& proxy) {
+    if (UWR_UNLIKELY(proxy.n > this->capacity())) {
         if (this->m_alloc.expand_or_dealloc_and_alloc_raw(proxy.n))
             proxy.assign_to_short(this->data(), this->size());
         else
@@ -713,12 +772,15 @@ vector<T, A>::priv_assign(AssignProxy&& proxy) {
 
     this->m_alloc.m_size = proxy.n;
 }
+#endif
 
+#if 1
 template<class T, class A>
 template<class ResizeProxy>
 constexpr void
 vector<T, A>::priv_resize(ResizeProxy&& proxy) {
     if (proxy.n > this->capacity()) {
+        // TODO: restore
         this->m_alloc.realloc(proxy.n);
         // this->m_alloc.realloc(this->next_capacity(proxy.n));
         proxy.construct(this->end(), this->data() + proxy.n);
@@ -735,6 +797,26 @@ vector<T, A>::priv_resize(ResizeProxy&& proxy) {
 
     this->m_alloc.m_size = proxy.n;
 }
+#else
+template<class T, class A>
+template<class ResizeProxy>
+constexpr void
+vector<T, A>::priv_resize(ResizeProxy&& proxy) {
+    if (proxy.n > this->capacity()) {
+        this->m_alloc.realloc(proxy.n);
+        // this->m_alloc.realloc(this->next_capacity(proxy.n));
+    }
+
+    T* const m_end = this->end();
+    T* const new_end = this->data() + proxy.n;
+    if (proxy.n > this->size())
+        proxy.construct(m_end, new_end);
+    else
+        mem::destroy(new_end, m_end);
+
+    this->m_alloc.m_size = proxy.n;
+}
+#endif
 
 #if 1
 template<class T, class A>
