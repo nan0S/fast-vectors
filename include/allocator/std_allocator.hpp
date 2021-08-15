@@ -37,17 +37,27 @@ std_allocator<T>::std_allocator(size_type n)
     : base_t(n) {}
 
 template<class T>
+constexpr typename std_allocator<T>::size_type
+std_allocator<T>::fix_capacity(size_type n) const {
+#ifndef NDEBUG
+    if (!n) return 0;
+#endif
+    return n;
+    // return std::max((64 + sizeof(T) - 1) / sizeof(T), n);
+}
+
+template<class T>
 constexpr typename std_allocator<T>::pointer
 std_allocator<T>::alloc(size_type n) const {
     UWR_ASSERT(n == this->fix_capacity(n));
-    return new T[n];
+    return static_cast<T*>(operator new(n * sizeof(T)));
 }
 
 template<class T>
 constexpr void
 std_allocator<T>::dealloc(pointer data, UWR_UNUSED size_type n) const {
     UWR_ASSERT(n == this->fix_capacity(n));
-    delete[] data;
+    operator delete(data);
 }
 
 template<class T>
@@ -87,12 +97,6 @@ std_allocator<T>::expand_or_dealloc_and_alloc_raw(size_type req) {
     this->m_data = this->alloc(this->m_capacity);
 
     return false;
-}
-
-template<class T>
-constexpr typename std_allocator<T>::size_type
-std_allocator<T>::fix_capacity(size_type n) const {
-    return std::max((64 + sizeof(T) - 1) / sizeof(T), n);
 }
 
 } // namespace uwr::mem
