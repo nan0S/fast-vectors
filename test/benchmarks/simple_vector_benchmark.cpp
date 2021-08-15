@@ -18,7 +18,8 @@ using args_t = std::vector<int64_t>;
  */
 // using value_type = std::string;
 // using value_type = int;
-using value_type = test_type;
+// using value_type = test_type;
+using value_type = std::array<int, 10>;
 
 // number of consecutive push backs in one iteration
 static const args_t PUSH_BACK_ARG = { 50000 };
@@ -36,7 +37,7 @@ static const args_t ASSIGN_ARG = { 50000, 20 };
 static const args_t EMPLACE_ARG = { 50000, 10 };
 
 /* use the same number of iterations in all benchmarks */
-#define COMMON_ITERS 1200
+#define COMMON_ITERS 0
 
 #define  PUSH_BACK_ITERS           (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 #define  PUSH_BACK_POP_BACK_ITERS  (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
@@ -46,14 +47,14 @@ static const args_t EMPLACE_ARG = { 50000, 10 };
 #define  ASSIGN_ITERS              (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 #define  EMPLACE_ITERS             (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 
-// #define DO_STD_VECTOR_BENCH
-// #define DO_BOOST_VECTOR_BENCH
+#define DO_STD_VECTOR_BENCH
+#define DO_BOOST_VECTOR_BENCH
 #define DO_UWR_VECTOR_BENCH
 #define DO_RVECTOR_BENCH
-// #define DO_UWR_STD_VECTOR_BENCH
+#define DO_UWR_STD_VECTOR_BENCH
 
 // turn on verbose printing for test_type type
-#define VERBOSE_FOR_TEST_TYPE
+// #define VERBOSE_FOR_TEST_TYPE
 
 /*
  * tested vectors
@@ -262,7 +263,6 @@ void BM_assign(State& s) {
     for (auto _ : s) {
         size_type size = Random::rand(max_size + 1);
         Vector v(size);
-
         DoNotOptimize(v);
         ClobberMemory();
 
@@ -299,7 +299,6 @@ void BM_emplace(State& s) {
     for (auto _ : s) {
         size_type size = Random::rand(max_size + 1);
         Vector v(size);
-
         DoNotOptimize(v);
         ClobberMemory();
 

@@ -248,6 +248,7 @@ namespace mm
 	    capacity = new_capacity;
 	}
 
+#include <iostream>
 // grow
 	template<typename T>
 	void grow(T*& data, size_type length, size_type& capacity)

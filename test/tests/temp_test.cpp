@@ -43,8 +43,8 @@ void f(const std::string& name) {
 #define RUN(v) f<v>(#v)
 
 // using T = std::string;
-// using T = int;
-using T = std::array<int, 10>;
+using T = int;
+// using T = std::array<int, 10>;
 // using Vector = rvector<T>;
 using std_vector = std::vector<T>;
 using boost_vector_t = boost_vector<T>;
