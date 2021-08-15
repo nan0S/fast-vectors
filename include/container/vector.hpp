@@ -700,6 +700,7 @@ template<class AssignProxy>
 constexpr void
 vector<T, A>::priv_assign(AssignProxy&& proxy) {
     if (proxy.n > this->capacity()) {
+        // this->m_alloc.expand_or_dealloc_and_alloc_raw(proxy.n);
         if (this->m_alloc.expand_or_dealloc_and_alloc_raw(proxy.n))
             proxy.assign_to_short(this->data(), this->size());
         else
@@ -718,7 +719,8 @@ template<class ResizeProxy>
 constexpr void
 vector<T, A>::priv_resize(ResizeProxy&& proxy) {
     if (proxy.n > this->capacity()) {
-        this->m_alloc.realloc(this->next_capacity(proxy.n));
+        this->m_alloc.realloc(proxy.n);
+        // this->m_alloc.realloc(this->next_capacity(proxy.n));
         proxy.construct(this->end(), this->data() + proxy.n);
     }
     else {

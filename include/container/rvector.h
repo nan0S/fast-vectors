@@ -653,7 +653,7 @@ rvector<T>::insert(rvector<T>::const_iterator position, size_type n, const T& x)
     if(length_ + n > capacity_)
     {
         auto m = std::distance(begin(), position_);
-        size_type new_cap = std::max(length_ + n, capacity_ * 2 + 1);
+        size_type new_cap = std::max(length_ + n, capacity_ * 2);
         mm::change_capacity(data_, length_, capacity_, new_cap);
         position_ = begin() + m;
     }

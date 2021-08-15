@@ -11,10 +11,49 @@
 template<class T>
 class rvector;
 
+// TODO: remove
+#define RVECTOR_TRACK
+// #define RVECTOR_VERBOSE_PRINTING
+
+#ifdef RVECTOR_TRACK
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics.hpp>
+#include <iostream>
+using namespace boost::accumulators;
+#endif
+
 namespace mm
 {
-    int mremaps = 0;
-    int success = 0;
+	// TODO: remove
+	#ifdef RVECTOR_TRACK
+
+	struct counters {
+	    static accumulator_set<int,
+	        features<tag::count,
+	                 tag::sum,
+	                 tag::mean>> mremaps;
+	    static accumulator_set<double,
+	        features<tag::mean>> grows;
+
+	    static void print() {
+	    	std::cout << "\n==== rvector::allocator::print() ====\n"
+	        		  << "total mremaps   = " << count(mremaps) << "\n"
+	                  << "success mremaps = " << sum(mremaps) << "\n"
+	                  << "mean success    = " << mean(mremaps) << "\n"
+	                  << "mean grow       = " << mean(grows) << "\n"
+	                  << std::endl;
+	    }
+	};
+
+	accumulator_set<int,
+	    features<tag::count,
+	             tag::sum,
+	             tag::mean>> counters::mremaps;
+	accumulator_set<double,
+	    features<tag::mean>> counters::grows;
+
+	#endif // RVECTOR_TRACK
+
 	// Policies
 	template<typename T>
 	using Trivial = std::enable_if_t<std::is_trivial<T>::value>;
@@ -108,8 +147,11 @@ namespace mm
 	size_type fix_capacity(size_type n)
 	{
 		if(n < map_threshold<T>)
-	        return std::max(64/sizeof(T), n);
-	    return map_threshold<T> * (n/map_threshold<T> + 1);
+			return n;
+	        // return std::max(64/sizeof(T), n);
+	    // return map_threshold<T> * (n/map_threshold<T> + 1);
+	    // return map_threshold<T> * ((n + map_threshold<T> - 1) / map_threshold<T>);
+	    return ((n * sizeof(T) + 4096 - 1) / 4096) * 4096 / sizeof(T);
 	}
 
 // realloc
@@ -128,9 +170,18 @@ namespace mm
 	    }
         else
 	    {
-	        if(capacity > map_threshold<T>)
+	        if(capacity > map_threshold<T>) {
+	        	// TODO: remove
+	        	#ifdef RVECTOR_TRACK
+	        	T* ret = (T*) mremap(data, capacity*sizeof(T), 
+                        		n*sizeof(T), MREMAP_MAYMOVE);
+	        	counters::mremaps(ret == data);
+	        	return ret;
+	        	#else
             	return (T*) mremap(data, capacity*sizeof(T), 
                         		n*sizeof(T), MREMAP_MAYMOVE);
+            	#endif
+	        }
 	        else
 	        	return (T*) realloc(data, n*sizeof(T));
 	    }
@@ -146,9 +197,23 @@ namespace mm
         {
             void* new_data = mremap(data, capacity*sizeof(T), 
                         		n*sizeof(T), 0);
-            ++mremaps;
+
+            // TODO: remove
+            #ifdef RVECTOR_TRACK
+            counters::mremaps(data == (T*)new_data);
+            #endif
+
+            #ifdef RVECTOR_VERBOSE_PRINTING
+            if (data == (T*)new_data) {
+                std::cout << "rv: "
+                	<< (capacity * sizeof(T) / 4096)
+                	<< " -> "
+                	<< (n * sizeof(T) / 4096)
+                	<< std::endl;
+            }
+            #endif
+
             if(new_data != (void*)-1) {
-                ++success;
                 return (T*) new_data;
             }
         }
@@ -169,6 +234,13 @@ namespace mm
 		size_type new_capacity = fix_capacity<T>(n);
 		if(UNLIKELY(new_capacity < map_threshold<T> and capacity > map_threshold<T>))
 			return;
+
+		// TODO: remove
+		#ifdef RVECTOR_TRACK
+		if (capacity)
+			counters::grows(double(new_capacity) / capacity);
+		#endif
+
 	    if(data)
 	        data = realloc_(data, length, capacity, new_capacity);
 	    else
@@ -181,7 +253,7 @@ namespace mm
 	void grow(T*& data, size_type length, size_type& capacity)
 	{
 		if(LIKELY(length < capacity)) return;
-		change_capacity(data, length, capacity, capacity*2 + 1);
+		change_capacity(data, length, capacity, capacity*2 + !capacity);
 	}
 
 // TODO: check if policies are sufficient

@@ -16,9 +16,9 @@ using args_t = std::vector<int64_t>;
 /*
  * configurable parameters
  */
-using value_type = std::string;
+// using value_type = std::string;
 // using value_type = int;
-// using value_type = test_type;
+using value_type = test_type;
 
 // number of consecutive push backs in one iteration
 static const args_t PUSH_BACK_ARG = { 50000 };
@@ -36,7 +36,7 @@ static const args_t ASSIGN_ARG = { 50000, 20 };
 static const args_t EMPLACE_ARG = { 50000, 10 };
 
 /* use the same number of iterations in all benchmarks */
-#define COMMON_ITERS 0
+#define COMMON_ITERS 1200
 
 #define  PUSH_BACK_ITERS           (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 #define  PUSH_BACK_POP_BACK_ITERS  (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
@@ -47,13 +47,13 @@ static const args_t EMPLACE_ARG = { 50000, 10 };
 #define  EMPLACE_ITERS             (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 
 // #define DO_STD_VECTOR_BENCH
-#define DO_BOOST_VECTOR_BENCH
-// #define DO_UWR_VECTOR_BENCH
-// #define DO_RVECTOR_BENCH
-#define DO_UWR_STD_VECTOR_BENCH
+// #define DO_BOOST_VECTOR_BENCH
+#define DO_UWR_VECTOR_BENCH
+#define DO_RVECTOR_BENCH
+// #define DO_UWR_STD_VECTOR_BENCH
 
 // turn on verbose printing for test_type type
-// #define VERBOSE_FOR_TEST_TYPE
+#define VERBOSE_FOR_TEST_TYPE
 
 /*
  * tested vectors
@@ -271,7 +271,6 @@ void BM_assign(State& s) {
             v.assign(new_size, get_value<T>(new_size));
             ClobberMemory();
         }
-
     }
 
     #ifdef VERBOSE_FOR_TEST_TYPE
@@ -384,16 +383,21 @@ REGISTER_BENCHMARK(BM_assign,              kMicrosecond,  ASSIGN);
 REGISTER_BENCHMARK(BM_emplace,             kMicrosecond,  EMPLACE);
 
 int main(int argc, char** argv) {
+    // turn on thounsand commas when printing
+    std::cout.imbue(std::locale(""));
+
     Initialize(&argc, argv);
     if (ReportUnrecognizedArguments(argc, argv))
         return 1;
     RunSpecifiedBenchmarks();
     Shutdown();
-    
-    std::cout << "uwr::success: " << uwr::mem::counters::success << std::endl;
-    std::cout << "uwr::mremaps: " << uwr::mem::counters::mremaps << std::endl;
-    std::cout << "rve::success: " << mm::success << std::endl;
-    std::cout << "rve::mremaps: " << mm::mremaps << std::endl;
+
+    #ifdef UWR_TRACK
+    uwr::mem::counters::print();
+    #endif
+    #ifdef RVECTOR_TRACK
+    mm::counters::print();
+    #endif
 
     return 0;
 }

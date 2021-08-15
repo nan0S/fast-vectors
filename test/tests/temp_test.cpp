@@ -43,7 +43,8 @@ void f(const std::string& name) {
 #define RUN(v) f<v>(#v)
 
 // using T = std::string;
-using T = int;
+// using T = int;
+using T = std::array<int, 10>;
 // using Vector = rvector<T>;
 using std_vector = std::vector<T>;
 using boost_vector_t = boost_vector<T>;
@@ -81,8 +82,8 @@ int main() {
     // using Vector = uwr_std_vector;
     // using Vector = boost_vector_t;
 
-    std_vector v(5);
-    cout << v.capacity() << endl;
+    // std_vector v(5);
+    // cout << v.capacity() << endl;
     // v.assign(12, 1);
     // v.resize(12, 1);
     // v.reserve(12);
@@ -91,8 +92,12 @@ int main() {
     // v.emplace(v.begin(), 1);
     // v.erase(v.begin(), v.end());
     // v.clear();
-    cout << v.capacity() << endl;
+    // cout << v.capacity() << endl;
 
+    Random::seed(1231);
+    cout << Random::rand(10) << Random::rand(200) << endl;
+    Random::seed(1231);
+    cout << Random::rand(10) << Random::rand(200) << endl;
 
     return 0;
 }

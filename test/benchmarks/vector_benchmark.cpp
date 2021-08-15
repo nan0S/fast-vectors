@@ -140,16 +140,21 @@ REGISTER_BENCHMARK(kMillisecond,  INT_STRING,        5,  int, std::string);
 REGISTER_BENCHMARK(kMillisecond,  INT_STRING_ARRAY,  6,  int, std::string, std::array<int, N>);
 
 int main(int argc, char** argv) {
+    // turn on thounsand commas when printing
+    std::cout.imbue(std::locale(""));
+    
     Initialize(&argc, argv);
     if (ReportUnrecognizedArguments(argc, argv))
         return 1;
     RunSpecifiedBenchmarks();
     Shutdown();
     
-    std::cout << "uwr::success: " << uwr::mem::counters::success << std::endl;
-    std::cout << "uwr::mremaps: " << uwr::mem::counters::mremaps << std::endl;
-    std::cout << "rve::success: " << mm::success << std::endl;
-    std::cout << "rve::mremaps: " << mm::mremaps << std::endl;
+    #ifdef UWR_TRACK
+    uwr::mem::counters::print();
+    #endif
+    #ifdef RVECTOR_TRACK
+    mm::counters::print();
+    #endif
 
     return 0;
 }

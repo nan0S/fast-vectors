@@ -148,19 +148,23 @@ bool test_type::is_current_not_better() {
 }
 
 void test_type::print_stats() {
-    std::cout << "()          = " << record.def_cons << std::endl;
-    std::cout << "(int)       = " << record.val_cons << std::endl;
-    std::cout << "(const&)    = " << record.copy_cons << std::endl;
-    std::cout << "(&&)        = " << record.move_cons << std::endl;
-    std::cout << "op=(const&) = " << record.copy_op << std::endl;
-    std::cout << "op=(&&)     = " << record.move_op << std::endl;
-    std::cout << "Total ~()   = " << record.dest << std::endl;
+    std::cout << "\n==== test_type::print_stats() ====\n";
+
+    std::cout << "()          = " << record.def_cons << "\n";
+    std::cout << "(int)       = " << record.val_cons << "\n";
+    std::cout << "(const&)    = " << record.copy_cons << "\n";
+    std::cout << "(&&)        = " << record.move_cons << "\n";
+    std::cout << "op=(const&) = " << record.copy_op << "\n";
+    std::cout << "op=(&&)     = " << record.move_op << "\n";
+    std::cout << "Total ~()   = " << record.dest << "\n";
 
     long total_cons = record.def_cons + record.val_cons +
         record.copy_cons + record.move_cons;
     long total_op = record.copy_op + record.move_op;
 
-    std::cout << "Total ()    = " << total_cons << std::endl;
-    std::cout << "Total op    = " << total_op << std::endl;
-    std::cout << "Total calls = " << total_cons + total_op + record.dest << std::endl;
+    std::cout << "Total ()    = " << total_cons << "\n";
+    std::cout << "Total op    = " << total_op << "\n";
+    std::cout << "Total calls = " << total_cons + total_op + record.dest << "\n";
+
+    std::cout << std::endl;
 }
