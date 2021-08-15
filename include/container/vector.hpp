@@ -113,10 +113,6 @@ public:
     template<class... Args>
     UWR_FORCEINLINE constexpr reference fast_emplace_back(Args&&... args) noexcept;
 
-    UWR_FORCEINLINE static std::vector<int> get_stats() {
-        return { allocator_type::expands, allocator_type::opps };
-    }
-
 private:
     UWR_FORCEINLINE constexpr size_type next_capacity(size_type new_size) const noexcept;
     template<class InputIterator>
@@ -609,7 +605,7 @@ vector<T, A>::emplace(const_iterator pos, Args&&... args) {
     if (this->size() == this->capacity()) {
         size_type new_capacity = this->m_alloc.fix_capacity(
                 this->next_capacity(this->size() + 1));
-        T* new_data = nullptr;
+        T* new_data;
 
         if (this->m_alloc.expand_or_alloc_raw(
                     new_capacity, new_data)) {
@@ -682,7 +678,7 @@ vector<T, A>::fast_emplace_back(Args&&... args) noexcept {
 template<class T, class A>
 constexpr typename vector<T, A>::size_type
 vector<T, A>::next_capacity(size_type new_size) const noexcept {
-    return std::max(2 * this->capacity() + 1, new_size);
+    return std::max(2 * this->capacity(), new_size);
 }
 
 template<class T, class A>
@@ -722,7 +718,7 @@ template<class ResizeProxy>
 constexpr void
 vector<T, A>::priv_resize(ResizeProxy&& proxy) {
     if (proxy.n > this->capacity()) {
-        this->m_alloc.realloc(proxy.n);
+        this->m_alloc.realloc(this->next_capacity(proxy.n));
         proxy.construct(this->end(), this->data() + proxy.n);
     }
     else {
@@ -738,7 +734,7 @@ vector<T, A>::priv_resize(ResizeProxy&& proxy) {
     this->m_alloc.m_size = proxy.n;
 }
 
-#if 0
+#if 1
 template<class T, class A>
 template<class InsertProxy>
 constexpr typename vector<T, A>::iterator
