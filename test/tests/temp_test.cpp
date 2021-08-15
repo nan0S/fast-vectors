@@ -1,10 +1,11 @@
 #include <bits/stdc++.h>
 #include <static_vector.hpp>
-#include <boost/container/static_vector.hpp>
+#include <boost/container/vector.hpp>
 #include <vector.hpp>
 #include <test_type/test_type.hpp>
 #include <utils/utils.hpp>
 #include <rvector.h>
+#include <std_vector.hpp>
 
 using namespace std;
 
@@ -13,7 +14,8 @@ constexpr static int C = 10;
 using boost_gf = boost::container::growth_factor_100;
 using boost_options = boost::container::vector_options_t<boost::container::growth_factor<boost_gf>>;
 template<class T>
-using boost_vector = boost::container::vector<T, boost::container::new_allocator<T>, boost_options>; 
+using boost_vector = boost::container::vector<T, boost::container::new_allocator<T>, boost_options>;
+// using boost_vector = boost::container::vector<T>;
 
 template<class Container>
 void print(const Container& c) {
@@ -40,13 +42,14 @@ void f(const std::string& name) {
 
 #define RUN(v) f<v>(#v)
 
-using T = std::string;
+// using T = std::string;
+using T = int;
 // using Vector = rvector<T>;
-using Vector = uwr::vector<T>;
-// using Vector = std::vector<T>;
-// using Vector = boost_vector<T>;
+using std_vector = std::vector<T>;
+using boost_vector_t = boost_vector<T>;
 using uwr_vector = uwr::vector<T>;
 using rvector_t = rvector<T>;
+using uwr_std_vector = uwr::std_vector<T>;
 
 constexpr long ps = 4096;
 
@@ -71,6 +74,25 @@ void show_capacity() {
 int main() {
     show_capacity<uwr_vector>();
     show_capacity<rvector_t>();
+    show_capacity<boost_vector_t>();
+    show_capacity<uwr_std_vector>();
+
+    using Vector = std_vector;
+    // using Vector = uwr_std_vector;
+    // using Vector = boost_vector_t;
+
+    std_vector v(5);
+    cout << v.capacity() << endl;
+    // v.assign(12, 1);
+    // v.resize(12, 1);
+    // v.reserve(12);
+    // v.assign({1, 2, 3, 4, 5, 6});
+    // v.insert(v.begin(), 3, 5);
+    // v.emplace(v.begin(), 1);
+    // v.erase(v.begin(), v.end());
+    // v.clear();
+    cout << v.capacity() << endl;
+
 
     return 0;
 }

@@ -39,7 +39,7 @@ if [ $# -gt 0 ]; then
 else
     run_test \
         "simple_vector_benchmark" \
-        "--benchmark_repetitions=1 --benchmark_filter=BM_insert"
+        "--benchmark_repetitions=1 --benchmark_filter=BM_push_back<"
     # run_test \
         # "simple_vector_benchmark" \
         # "--benchmark_repetitions=100 --benchmark_filter=BM_create"

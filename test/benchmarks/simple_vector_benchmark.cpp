@@ -17,17 +17,23 @@ using args_t = std::vector<int64_t>;
  * configurable parameters
  */
 using value_type = std::string;
+// using value_type = int;
+// using value_type = test_type;
 
 // number of consecutive push backs in one iteration
 static const args_t PUSH_BACK_ARG = { 50000 };
-// number of push_back/pop_back rounds in iteration and maximum vector size
-static const args_t PUSH_BACK_POP_BACK_ARG = { 10, 50000 };
-// number of resize rounds and maximum resize size
-static const args_t RESIZE_ARG = { 10, 50000 };
-// maximum size of created vector
-static const args_t INSERT_ARG = { 1000 };
+// maximum vector size and number of push_back/pop_back rounds in iteration 
+static const args_t PUSH_BACK_POP_BACK_ARG = { 50000, 10 };
+// aximum resize size and resize count
+static const args_t RESIZE_ARG = { 50000, 10 };
+// maximum size of created vector and insert count
+static const args_t INSERT_ARG = { 1000, 100 };
 // maximum size of created vector
 static const args_t CREATE_ARG = { 50000 };
+// maximum size of created and assigned vector and assign count
+static const args_t ASSIGN_ARG = { 50000, 20 };
+// maximum size of created vector and emplace count
+static const args_t EMPLACE_ARG = { 50000, 10 };
 
 /* use the same number of iterations in all benchmarks */
 #define COMMON_ITERS 0
@@ -37,12 +43,17 @@ static const args_t CREATE_ARG = { 50000 };
 #define  RESIZE_ITERS              (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 #define  INSERT_ITERS              (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 #define  CREATE_ITERS              (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
+#define  ASSIGN_ITERS              (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
+#define  EMPLACE_ITERS             (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 
-#define DO_STD_VECTOR_BENCH
+// #define DO_STD_VECTOR_BENCH
 #define DO_BOOST_VECTOR_BENCH
-#define DO_UWR_VECTOR_BENCH
-#define DO_RVECTOR_BENCH
+// #define DO_UWR_VECTOR_BENCH
+// #define DO_RVECTOR_BENCH
 #define DO_UWR_STD_VECTOR_BENCH
+
+// turn on verbose printing for test_type type
+// #define VERBOSE_FOR_TEST_TYPE
 
 /*
  * tested vectors
@@ -61,18 +72,28 @@ using uwr_std_vector = uwr::std_vector<value_type>;
  */
 template<class Vector>
 void BM_push_back(State& s) {
+    using size_type = typename Vector::size_type;
     using T = typename Vector::value_type;
-    int times = s.range(0);
+
+    #ifdef VERBOSE_FOR_TEST_TYPE
+    test_type::start_recording();
+    #endif
+
+    size_type times = s.range(0);
 
     for (auto _ : s) {
         Vector v;
-        DoNotOptimize(v.data());
-        
-        for (int j = 0; j < times; ++j) {
+        DoNotOptimize(v);
+
+        for (size_type j = 0; j < times; ++j) {
             v.push_back(get_value<T>(j));
-        ClobberMemory();
         }
+        ClobberMemory();
     }
+
+    #ifdef VERBOSE_FOR_TEST_TYPE
+    test_type::print_stats();
+    #endif
 
     s.counters["t1"];
 }
@@ -86,34 +107,39 @@ void BM_push_back_pop_back(State& s) {
     using size_type = typename Vector::size_type;
     Random::seed(12321);
 
-    int times = s.range(0);
-    int max_size = s.range(1);
+    #ifdef VERBOSE_FOR_TEST_TYPE
+    test_type::start_recording();
+    #endif
+
+    size_type max_size = s.range(0);
+    size_type times = s.range(1);
 
     for (auto _ : s) {
         Vector v;
+        DoNotOptimize(v);
 
-        DoNotOptimize(v.data());
-
-        for (int i = 0; i < times; ++i) {
+        for (size_type i = 0; i < times; ++i) {
             if (Random::rand(2)) {
                 size_type rest = max_size - v.size();
                 size_type c = Random::rand<size_type>(rest + 1);
-
                 while (c--) {
                     v.push_back(get_value<T>(c));
-                    ClobberMemory();
                 }
+                ClobberMemory();
             }
             else {
                 size_type c = Random::rand<size_type>(0, v.size() + 1);
-                
                 while (c--) {
                     v.pop_back();
-                    ClobberMemory();
                 }
+                ClobberMemory();
             }
         }
     }
+
+    #ifdef VERBOSE_FOR_TEST_TYPE
+    test_type::print_stats();
+    #endif
 
     s.counters["t2"];
 }
@@ -123,22 +149,30 @@ void BM_push_back_pop_back(State& s) {
  */
 template<class Vector>
 void BM_resize(State& s) {
+    using size_type = typename Vector::size_type;
     Random::seed(31231);
 
-    int times = s.range(0);
-    int max_size = s.range(1);
+    #ifdef VERBOSE_FOR_TEST_TYPE
+    test_type::start_recording();
+    #endif
+
+    size_type max_size = s.range(0);
+    size_type times = s.range(1);
 
     for (auto _ : s) {
         Vector v;
+        DoNotOptimize(v);
 
-        DoNotOptimize(v.data());
-
-        for (int i = 0; i < times; ++i) {
-            int new_size = Random::rand(max_size + 1);
+        for (size_type i = 0; i < times; ++i) {
+            size_type new_size = Random::rand(max_size + 1);
             v.resize(new_size);
             ClobberMemory();
         }
     }
+
+    #ifdef VERBOSE_FOR_TEST_TYPE
+    test_type::print_stats();
+    #endif
 
     s.counters["t3"];
 }
@@ -152,24 +186,32 @@ void BM_insert(State& s) {
     using T = typename Vector::value_type;
     Random::seed(123);
 
+    #ifdef VERBOSE_FOR_TEST_TYPE
+    test_type::start_recording();
+    #endif
+
     size_type max_size = s.range(0);
+    size_type times = s.range(1);
 
     for (auto _ : s) {
         size_type size = Random::rand(max_size + 1);
         Vector v(size, get_value<T>(size + 10));
-
-        DoNotOptimize(v.data());
+        DoNotOptimize(v);
+        ClobberMemory();
         
-        for (int i = 0; i < 100; ++i) {
+        for (size_type i = 0; i < times; ++i) {
             size_type pos = Random::rand(size + 1);
-            size_type count = Random::rand(size / 10 + 1);
-
+            size_type count = Random::rand(size / 5 + 1);
             v.insert(v.begin() + pos, count, get_value<T>(size));
             ClobberMemory();
         }
 
     }
-    
+
+    #ifdef VERBOSE_FOR_TEST_TYPE
+    test_type::print_stats();
+    #endif
+
     s.counters["t4"];
 }
 
@@ -181,17 +223,99 @@ void BM_create(State& s) {
     using size_type = typename Vector::size_type;
     Random::seed(123);
 
+    #ifdef VERBOSE_FOR_TEST_TYPE
+    test_type::start_recording();
+    #endif
+
     size_type max_size = s.range(0);
 
     for (auto _ : s) {
         size_type size = Random::rand(max_size + 1);
         Vector v(size);
-
-        DoNotOptimize(v.data());
+        DoNotOptimize(v);
         ClobberMemory();
     }
     
+    #ifdef VERBOSE_FOR_TEST_TYPE
+    test_type::print_stats();
+    #endif
+
     s.counters["t5"];
+}
+
+/*
+* benchmark assigning to vector
+*/
+template<class Vector>
+void BM_assign(State& s) {
+    using size_type = typename Vector::size_type;
+    using T = typename Vector::value_type;
+    Random::seed(123);
+
+    #ifdef VERBOSE_FOR_TEST_TYPE
+    test_type::start_recording();
+    #endif
+
+    size_type max_size = s.range(0);
+    size_type times = s.range(1);
+
+    for (auto _ : s) {
+        size_type size = Random::rand(max_size + 1);
+        Vector v(size);
+
+        DoNotOptimize(v);
+        ClobberMemory();
+
+        for (size_type i = 0; i < times; ++i) {
+            size_type new_size = Random::rand(max_size + 1);
+            v.assign(new_size, get_value<T>(new_size));
+            ClobberMemory();
+        }
+
+    }
+
+    #ifdef VERBOSE_FOR_TEST_TYPE
+    test_type::print_stats();
+    #endif
+    
+    s.counters["t6"];
+}
+
+/*
+* benchmark emplacing to vector
+*/
+template<class Vector>
+void BM_emplace(State& s) {
+    using size_type = typename Vector::size_type;
+    using T = typename Vector::value_type;
+    Random::seed(123);
+
+    #ifdef VERBOSE_FOR_TEST_TYPE
+    test_type::start_recording();
+    #endif
+
+    size_type max_size = s.range(0);
+    size_type times = s.range(1);
+
+    for (auto _ : s) {
+        size_type size = Random::rand(max_size + 1);
+        Vector v(size);
+
+        DoNotOptimize(v);
+        ClobberMemory();
+
+        for (size_type i = 0; i < times; ++i) {
+            size_type pos = Random::rand(size + 1);
+            v.emplace(v.begin() + pos, get_value<T>(pos));
+            ClobberMemory();
+        }
+    }
+
+    #ifdef VERBOSE_FOR_TEST_TYPE
+    test_type::print_stats();
+    #endif
+    
+    s.counters["t7"];
 }
 
 /*
@@ -247,6 +371,7 @@ void BM_create(State& s) {
     REGISTER_BENCHMARK_FOR_RVECTOR(func, unit, varname); \
     REGISTER_BENCHMARK_FOR_UWR_VECTOR(func, unit, varname); \
     REGISTER_BENCHMARK_FOR_UWR_STD_VECTOR(func, unit, varname)
+
 /*
  * register all benchmarks
  */
@@ -255,6 +380,8 @@ REGISTER_BENCHMARK(BM_push_back_pop_back,  kMicrosecond,  PUSH_BACK_POP_BACK);
 REGISTER_BENCHMARK(BM_resize,              kMicrosecond,  RESIZE);
 REGISTER_BENCHMARK(BM_insert,              kMicrosecond,  INSERT);
 REGISTER_BENCHMARK(BM_create,              kMicrosecond,  CREATE);
+REGISTER_BENCHMARK(BM_assign,              kMicrosecond,  ASSIGN);
+REGISTER_BENCHMARK(BM_emplace,             kMicrosecond,  EMPLACE);
 
 int main(int argc, char** argv) {
     Initialize(&argc, argv);
