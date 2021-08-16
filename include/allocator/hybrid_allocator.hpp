@@ -251,7 +251,7 @@ hybrid_allocator<T>::small_dealloc(pointer data, UWR_UNUSED size_type n) const {
     free(data);
 }
 
-#if 0
+#if 1
 template<class T>
 constexpr typename hybrid_allocator<T>::pointer
 hybrid_allocator<T>::do_realloc(size_type req, true_type) {

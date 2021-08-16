@@ -50,14 +50,14 @@ template<class T>
 constexpr typename std_allocator<T>::pointer
 std_allocator<T>::alloc(size_type n) const {
     UWR_ASSERT(n == this->fix_capacity(n));
-    return static_cast<T*>(operator new(n * sizeof(T)));
+    return static_cast<T*>(operator new (n * sizeof(T)));
 }
 
 template<class T>
 constexpr void
 std_allocator<T>::dealloc(pointer data, UWR_UNUSED size_type n) const {
     UWR_ASSERT(n == this->fix_capacity(n));
-    operator delete(data);
+    operator delete (data);
 }
 
 template<class T>
