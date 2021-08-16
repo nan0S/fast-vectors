@@ -126,6 +126,10 @@ private:
     template<class InsertProxy>
     constexpr iterator priv_insert(const_iterator pos, InsertProxy&& proxy);
 
+    UWR_FORCEINLINE constexpr T* alloc(size_type n);
+    UWR_FORCEINLINE constexpr void dealloc(T* data);
+    constexpr void realloc(size_type n);
+
 private:
     size_type m_size;
     size_type m_capacity;
@@ -150,8 +154,8 @@ constexpr
 simple_vector<T>::simple_vector(size_type n)
     : m_size(n),
       m_capacity(this->m_size),
-      m_data(new T[this->m_capacity]) {
-    mem::construct(this->m_data, n);
+      m_data(this->alloc(this->m_capacity)) {
+    mem::construct(this->m_data, this->m_size);
 }
 
 template<class T>
@@ -159,7 +163,7 @@ constexpr
 simple_vector<T>::simple_vector(size_type n, const T& val)
     : m_size(n),
       m_capacity(this->m_size),
-      m_data(new T[this->m_capacity]) {
+      m_data(this->alloc(this->m_capacity)) {
     mem::ufill(this->m_data, n, val);
 }
 
@@ -169,7 +173,7 @@ constexpr
 simple_vector<T>::simple_vector(InputIterator first, InputIterator last)
     : m_size(std::distance(first, last)),
       m_capacity(this->m_size),
-      m_data(new T[this->m_capacity]) {
+      m_data(this->alloc(this->m_capacity)) {
     mem::ucopy(this->m_data, first, last);
 }
 
@@ -178,7 +182,7 @@ constexpr
 simple_vector<T>::simple_vector(const simple_vector& x)
     : m_size(x.size()),
       m_capacity(this->m_size),
-      m_data(new T[this->m_capacity]) {
+      m_data(this->alloc(this->m_capacity)) {
     mem::ucopy(this->m_data, x.begin(), x.size());
 }
 
@@ -198,7 +202,7 @@ constexpr
 simple_vector<T>::simple_vector(std::initializer_list<T> ilist)
     : m_size(ilist.size()),
       m_capacity(this->m_size),
-      m_data(new T[this->m_capacity]) {
+      m_data(this->alloc(this->m_capacity)) {
     mem::ucopy(this->m_data, ilist.begin(), ilist.size());
 }
 
@@ -208,7 +212,7 @@ constexpr
 #endif
 simple_vector<T>::~simple_vector() {
     mem::destroy(this->m_data, this->m_size);
-    delete[] this->m_data;
+    this->dealloc(this->m_data);
 }
 
 template<class T>
@@ -346,16 +350,8 @@ template<class T>
 constexpr void
 simple_vector<T>::reserve(size_type n) noexcept {
     // TODO: likely here (?)
-    if (UWR_LIKELY(n > this->m_capacity)) {
-        T* const new_data = new T[n];
-        mem::umove(new_data, this->m_data, this->m_size);
-
-        mem::destroy(this->m_data, this->m_size);
-        delete[] this->m_data;
-
-        this->m_data = new_data;
-        this->m_capacity = n;
-    }
+    if (UWR_LIKELY(n > this->m_capacity))
+        this->realloc(n);
 }
 
 template<class T>
@@ -570,11 +566,11 @@ simple_vector<T>::emplace(const_iterator pos, Args&&... args) {
     if (this->m_size == this->m_capacity) {
         size_type new_capacity = this->next_capacity(this->m_size + 1);
 
-        T* const new_data = new T[new_capacity];
+        T* const new_data = this->alloc(new_capacity);
         T* const e_begin = mem::umove(new_data, this->cbegin(), pos);
         mem::umove<T, const T*>(e_begin + 1, pos, m_end);
         mem::destroy(this->m_data, this->m_size);
-        delete[] this->m_data;
+        this->dealloc(this->m_data);
 
         new (e_begin) T(std::forward<Args>(args)...);
 
@@ -607,14 +603,7 @@ simple_vector<T>::emplace_back(Args&&... args) {
     // TODO: add unlikely (?)
     if (UWR_UNLIKELY(this->m_size == this->m_capacity)) {
         size_type new_capacity = this->next_capacity(this->m_size + 1);
-
-        T* const new_data = new T[new_capacity];
-        mem::umove(new_data, this->m_data, this->m_size);
-        mem::destroy(this->m_data, this->m_size);
-        delete[] this->m_data;
-
-        this->m_capacity = new_capacity;
-        this->m_data = new_data;
+        this->realloc(new_capacity);
     }
     return this->fast_emplace_back(std::forward<Args>(args)...);
 }
@@ -654,9 +643,9 @@ constexpr void
 simple_vector<T>::priv_assign(AssignProxy&& proxy) {
     if (proxy.n > this->m_capacity) {
         mem::destroy(this->m_data, this->m_size);
-        delete[] this->m_data;
+        this->dealloc(this->m_data);
 
-        this->m_data = new T[proxy.n];
+        this->m_data = this->alloc(proxy.n);
         this->m_capacity = proxy.n;
 
         proxy.assign_to_short(this->m_data, 0);
@@ -674,11 +663,11 @@ template<class ResizeProxy>
 constexpr void
 simple_vector<T>::priv_resize(ResizeProxy&& proxy) {
     if (proxy.n > this->m_capacity) {
-        T* const new_data = new T[proxy.n];
+        T* const new_data = this->alloc(proxy.n);
         T* const m_end = mem::umove(new_data, this->m_data, this->m_size);
 
         mem::destroy(this->m_data, this->m_size);
-        delete[] this->m_data;
+        this->dealloc(this->m_data);
 
         this->m_data = new_data;
         this->m_capacity = proxy.n;
@@ -712,14 +701,14 @@ simple_vector<T>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
 
     if (new_size > this->m_capacity) {
         size_type new_capacity = this->next_capacity(new_size);
-        T* new_data = new T[new_capacity];
+        T* new_data = this->alloc(new_capacity);
 
         T* const i_begin = mem::umove(new_data, this->m_data, m_pos);
         T* const i_end = i_begin + proxy.count;
         mem::umove(i_end, m_pos, m_end);
 
         mem::destroy(this->m_data, this->m_size);
-        delete[] this->m_data;
+        this->dealloc(this->m_data);
 
         this->m_data = new_data;
         this->m_capacity = new_capacity;
@@ -745,6 +734,30 @@ simple_vector<T>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
 
         return m_pos;
     }
+}
+
+template<class T>
+constexpr T*
+simple_vector<T>::alloc(size_type n) {
+    return static_cast<T*>(operator new (n * sizeof(T)));
+}
+
+template<class T>
+constexpr void
+simple_vector<T>::dealloc(T* data) {
+    operator delete (data);
+}
+
+template<class T>
+constexpr void
+simple_vector<T>::realloc(size_type n) {
+    T* new_data = this->alloc(n);
+    mem::umove(new_data, this->m_data, this->m_size);
+    mem::destroy(this->m_data, this->m_size);
+    this->dealloc(this->m_data);
+
+    this->m_data = new_data;
+    this->m_capacity = n;
 }
 
 
