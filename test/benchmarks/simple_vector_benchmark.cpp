@@ -9,6 +9,7 @@
 #include <vector.hpp>
 #include <rvector.h>
 #include <std_vector.hpp>
+#include <simple_vector.hpp>
 
 using namespace benchmark; 
 using args_t = std::vector<int64_t>;
@@ -16,10 +17,10 @@ using args_t = std::vector<int64_t>;
 /*
  * configurable parameters
  */
-// using value_type = std::string;
+using value_type = std::string;
 // using value_type = int;
 // using value_type = test_type;
-using value_type = std::array<int, 10>;
+// using value_type = std::array<int, 10>;
 
 // number of consecutive push backs in one iteration
 static const args_t PUSH_BACK_ARG = { 50000 };
@@ -52,6 +53,7 @@ static const args_t EMPLACE_ARG = { 50000, 10 };
 #define DO_UWR_VECTOR_BENCH
 #define DO_RVECTOR_BENCH
 #define DO_UWR_STD_VECTOR_BENCH
+#define DO_SIMPLE_VECTOR_BENCH
 
 // turn on verbose printing for test_type type
 // #define VERBOSE_FOR_TEST_TYPE
@@ -67,6 +69,7 @@ using boost_vector = boost::container::vector<value_type, boost::container::new_
 using uwr_vector = uwr::vector<value_type>;
 using rvector_t = rvector<value_type>;
 using uwr_std_vector = uwr::std_vector<value_type>;
+using simple_vector = uwr::simple_vector<value_type>;
 
 /*
  * benchmark push_back
@@ -363,12 +366,20 @@ void BM_emplace(State& s) {
 #define REGISTER_BENCHMARK_FOR_UWR_STD_VECTOR(func, unit, varname)
 #endif
 
+#ifdef DO_SIMPLE_VECTOR_BENCH
+#define REGISTER_BENCHMARK_FOR_SIMPLE_VECTOR(func, unit, varname) \
+    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, simple_vector)
+#else
+#define REGISTER_BENCHMARK_FOR_SIMPLE_VECTOR(func, unit, varname)
+#endif
+
 #define REGISTER_BENCHMARK(func, unit, varname) \
     REGISTER_BENCHMARK_FOR_STD_VECTOR(func, unit, varname); \
     REGISTER_BENCHMARK_FOR_BOOST_VECTOR(func, unit, varname); \
     REGISTER_BENCHMARK_FOR_RVECTOR(func, unit, varname); \
     REGISTER_BENCHMARK_FOR_UWR_VECTOR(func, unit, varname); \
-    REGISTER_BENCHMARK_FOR_UWR_STD_VECTOR(func, unit, varname)
+    REGISTER_BENCHMARK_FOR_UWR_STD_VECTOR(func, unit, varname); \
+    REGISTER_BENCHMARK_FOR_SIMPLE_VECTOR(func, unit, varname)
 
 /*
  * register all benchmarks
