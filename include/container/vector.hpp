@@ -666,7 +666,7 @@ vector<T, A>::priv_copy_insert(const_iterator pos, InputIterator first, InputIte
     return this->priv_insert(pos, insert_copy_range_proxy<T, InputIterator>(first, last, n));
 }
 
-#if 1 // seems to work fast in simple_benchmark - probably to restore
+#if 0 // seems to work fast in simple_benchmark - probably to restore
 template<class T, class A>
 template<class AssignProxy>
 constexpr void
@@ -709,8 +709,8 @@ constexpr void
 vector<T, A>::priv_resize(ResizeProxy&& proxy) {
     if (proxy.n > this->capacity()) {
         // TODO: restore
-        this->m_alloc.realloc(proxy.n);
-        // this->m_alloc.realloc(this->next_capacity(proxy.n));
+        // this->m_alloc.realloc(proxy.n);
+        this->m_alloc.realloc(this->next_capacity(proxy.n));
         proxy.construct(this->end(), this->data() + proxy.n);
     }
     else {
