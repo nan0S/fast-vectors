@@ -57,11 +57,11 @@ run-%: $(BIN_DIR)/tests/%
 
 $(BIN_DIR)/tests/%: $(BUILD_DIR)/$(TEST_DIR)/tests/%.o $(OBJECTS)
 	@mkdir -p $(shell dirname $@)
-	$(CXX) $(CXXFLAGS) $(TFLAGS) -lgtest -MMD -MP $< $(OBJECTS) -o $@
+	$(CXX) $(CXXFLAGS) $(TFLAGS) -MMD -MP $< $(OBJECTS) -o $@ -lgtest
 
 $(BIN_DIR)/benchmarks/%: $(BUILD_DIR)/$(TEST_DIR)/benchmarks/%.o $(OBJECTS)
 	@mkdir -p $(shell dirname $@)
-	$(CXX) $(CXXFLAGS) $(OFLAGS) -lbenchmark -MMD -MP $< $(OBJECTS) -o $@
+	$(CXX) $(CXXFLAGS) $(OFLAGS) -MMD -MP $< $(OBJECTS) -o $@ -lbenchmark -pthread
 
 $(BUILD_DIR)/%.o: %.cpp
 	@mkdir -p $(shell dirname $@)
