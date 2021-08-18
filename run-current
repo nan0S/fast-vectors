@@ -37,15 +37,15 @@ if [ $# -gt 0 ]; then
     shift
     run_test "$test_name" "$@"
 else
-    run_test \
-        "simple_vector_benchmark" \
-        "--benchmark_repetitions=1 --benchmark_filter=BM_emplace<"
+    # run_test \
+        # "simple_vector_benchmark" \
+        # "--benchmark_repetitions=1 --benchmark_filter=BM_emplace<"
     # run_test \
         # "simple_vector_benchmark" \
         # "--benchmark_repetitions=100 --benchmark_filter=BM_create"
-    # run_test \
-        # "vector_benchmark" \
-        # "--benchmark_filter=vector,.std::string>"
+    run_test \
+        "vector_benchmark" \
+        "--benchmark_filter=<uwr_vector,.std::string>"
     # run_test \
         # "vector_benchmark" \
         # "--benchmark_filter=vector,.test_type>"
