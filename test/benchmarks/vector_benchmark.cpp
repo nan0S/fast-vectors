@@ -36,7 +36,7 @@ static  constexpr  int  INT_STRING_ARRAY_ARG  =  1000;
 #define DO_RVECTOR_BENCH
 #define DO_UWR_VECTOR_BENCH
 #define DO_UWR_STD_VECTOR_BENCH
-// #define DO_SIMPLE_VECTOR_BENCH
+#define DO_SIMPLE_VECTOR_BENCH
 // #define DO_UWR_BIG_VECTOR_BENCH
 
 static constexpr int N = 10; // used in std::array<int, N>
