@@ -41,13 +41,13 @@ public:
     size_type n;
 };
 
-template<class T, class InputIterator>
+template<class T, class InIt>
 class copy_assign_range_proxy {
 private:
     using size_type = mem::len_t;
 
 public:
-    UWR_FORCEINLINE copy_assign_range_proxy(InputIterator first, InputIterator last, size_type n)
+    UWR_FORCEINLINE copy_assign_range_proxy(InIt first, InIt last, size_type n)
         : first(first), last(last), n(n) {
         UWR_ASSERT(this->n == static_cast<size_type>(
                     std::distance(this->first, this->last)));
@@ -56,10 +56,10 @@ public:
     UWR_FORCEINLINE void assign_to_short(T* begin, size_type len) {
         UWR_ASSERT(len < this->n);
 
-        InputIterator split = std::next(this->first, len);
-
-        T* end = mem::copy(begin, this->first, split);
-        mem::ucopy(end, split, this->last);
+        InIt split = std::next(this->first, len);
+        mem::ucopy(
+            mem::copy(begin, this->first, split),
+            split, this->last);
     }
 
     UWR_FORCEINLINE void assign_to_long(T* begin, size_type len) {
@@ -69,20 +69,20 @@ public:
     }
 
 private:
-    InputIterator first;
-    InputIterator last;
+    InIt first;
+    InIt last;
 
 public:
     size_type n;
 };
 
-template<class T, class InputIterator>
+template<class T, class InIt>
 class move_assign_range_proxy {
 private:
     using size_type = mem::len_t;
 
 public:
-    UWR_FORCEINLINE move_assign_range_proxy(InputIterator first, InputIterator last, size_type n)
+    UWR_FORCEINLINE move_assign_range_proxy(InIt first, InIt last, size_type n)
         : first(first), last(last), n(n) {
         UWR_ASSERT(this->n == static_cast<size_type>(
                     std::distance(this->first, this->last)));
@@ -91,10 +91,10 @@ public:
     UWR_FORCEINLINE void assign_to_short(T* begin, size_type len) {
         UWR_ASSERT(len < this->n);
 
-        InputIterator split = std::next(this->first, len);
-
-        T* end = mem::move(begin, this->first, split);
-        mem::umove(end, split, this->last);
+        InIt split = std::next(this->first, len);
+        mem::umove(
+            mem::move(begin, this->first, split),
+            split, this->last);
     }
 
     UWR_FORCEINLINE void assign_to_long(T* begin, size_type len) {
@@ -104,8 +104,8 @@ public:
     }
 
 private:
-    InputIterator first;
-    InputIterator last;
+    InIt first;
+    InIt last;
 
 public:
     size_type n;
@@ -123,8 +123,9 @@ public:
     UWR_FORCEINLINE void assign_to_short(T* begin, size_type len) {
         UWR_ASSERT(len < n);
 
-        T* end = mem::fill(begin, len, this->value);
-        mem::ufill(end, begin + this->n, this->value);
+        mem::ufill(
+            mem::fill(begin, len, this->value),
+            begin + this->n, this->value);
     }
 
     UWR_FORCEINLINE void assign_to_long(T* begin, size_type len) {
@@ -153,9 +154,11 @@ public:
         mem::fill(begin, end, this->value);
     }
 
-    UWR_FORCEINLINE void insert_with_spill(T* position, T* end, T* spill) {
-        mem::fill(position, end, this->value);
+    UWR_FORCEINLINE T* insert_with_spill(T* position, T* end, T* spill) {
+        T* new_end = mem::umove_and_fill(spill, position, end, this->value);
         mem::ufill(end, spill, this->value);
+
+        return new_end;
     }
 
 private:
@@ -165,13 +168,13 @@ public:
     size_type count;
 };
 
-template<class T, class InputIterator>
+template<class T, class InIt>
 class insert_copy_range_proxy {
 private:
     using size_type = mem::len_t;
 
 public:
-    UWR_FORCEINLINE insert_copy_range_proxy(InputIterator first, InputIterator last, size_type count)
+    UWR_FORCEINLINE insert_copy_range_proxy(InIt first, InIt last, size_type count)
         : first(first), last(last), count(count) {
         UWR_ASSERT(this->count == static_cast<size_type>(
                     std::distance(this->first, this->last)));
@@ -181,18 +184,21 @@ public:
         mem::copy(begin, this->first, this->last);
     }
 
-    UWR_FORCEINLINE void insert_with_spill(T* position, T* end, T*) {
+    UWR_FORCEINLINE T* insert_with_spill(T* position, T* end, T* spill) {
         size_type rest = static_cast<size_type>(
                 std::distance(position, end));
-        InputIterator split = std::next(this->first, rest);
+        InIt split = std::next(this->first, rest);
 
-        mem::copy(position, this->first, split);
+        T* new_end = mem::umove_and_copy(spill, position,
+                        end, this->first, split);
         mem::ucopy(end, split, this->last);
+
+        return new_end;
     }
 
 private:
-    InputIterator first;
-    InputIterator last;
+    InIt first;
+    InIt last;
 
 public:
     size_type count;

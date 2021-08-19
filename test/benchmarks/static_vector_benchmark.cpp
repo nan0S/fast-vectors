@@ -10,15 +10,15 @@ using namespace benchmark;
 /*
  * configurable parameters
  */
-static  constexpr  int  INT_ARG               =  500;
-static  constexpr  int  STRING_ARG            =  300;
-static  constexpr  int  TEST_TYPE_ARG         =  300;
-static  constexpr  int  ARRAY_ARG             =  200;
-static  constexpr  int  INT_STRING_ARG        =  200;
-static  constexpr  int  INT_STRING_ARRAY_ARG  =  100;
+static  constexpr  int  INT_ARG               =  1000;
+static  constexpr  int  STRING_ARG            =  900;
+static  constexpr  int  TEST_TYPE_ARG         =  1000;
+static  constexpr  int  ARRAY_ARG             =  900;
+static  constexpr  int  INT_STRING_ARG        =  900;
+static  constexpr  int  INT_STRING_ARRAY_ARG  =  700;
 
 /* use the same number of iterations in all benchmarks */
-#define COMMON_ITERS 0
+#define COMMON_ITERS 1
 
 #define  INT_ITERS               (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 #define  STRING_ITERS            (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)

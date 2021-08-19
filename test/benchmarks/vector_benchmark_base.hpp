@@ -2,6 +2,7 @@
 #include <benchmark/benchmark.h>
 #include <test_type/test_type.hpp>
 #include <boost/format.hpp>
+#include <bench_timer/bench_timer.hpp>
 
 using namespace benchmark;
 
@@ -12,12 +13,20 @@ public:
         : gen(seed), do_print(do_print) {}
 
     void run_simulation(int iters=1000) {
+        this->iters = iters;
         for (int i = 0; i < iters; ++i) {
             (dispatch_action<Ts>(i), ...);
+            // if ((i + 1) % 500 == 0)
+                // std::cout << get_length_sum() << std::endl;
         }
     }
 
 private:
+    void print_stats() {
+        // std::cout << "total number of vectors: "
+            // <<get_total_number_of_vectors() << 
+    }
+
     template<class T>
     void print_sizes() {
         auto& typed_env = this->get_env_of_type<T>();
@@ -48,7 +57,7 @@ private:
     template<class T>
     void dispatch_action(int i) {
         // TODO: maybe add probability distribution other than uniform
-        switch (random(1, 7)) {
+        switch (random(1, 3)) {
             case 1: construct_action<T>(i); break;
             case 2: destroy_action<T>(i); break;
             case 3: push_back_action<T>(i); break;
@@ -67,11 +76,10 @@ private:
         auto& typed_env = this->get_env_of_type<T>();
         int q = random(1, 3);
         std::uniform_int_distribution<> size_dist(1, i + 10);
+        bench_timer timer("construct");
 
         while (q--) {
             typed_env.emplace_back(size_dist(this->gen));
-            DoNotOptimize(typed_env.back().data());
-            ClobberMemory();
         }
     }
 
@@ -88,13 +96,13 @@ private:
         }
 
         int q = random(1, std::min(3, typed_env_size));
+        bench_timer timer("destroy");
 
         while (q--) {
             int pick = random(0, --typed_env_size);
 
             std::swap(typed_env[pick], typed_env.back());
             typed_env.pop_back();
-            ClobberMemory();
         }
     }
 
@@ -114,6 +122,7 @@ private:
         int q = random(1, typed_env_size / 3 + 1);
         std::uniform_int_distribution<> pick_dist(0, typed_env_size - 1);
         size_type<T> max_size = i * 100 + 1;
+        bench_timer timer("push_back");
 
         while (q--) {
             auto& picked = typed_env[pick_dist(this->gen)];
@@ -123,7 +132,6 @@ private:
             while (put_in--) {
                 picked.emplace_back();
             }
-            ClobberMemory();
         }
     }
 
@@ -141,6 +149,7 @@ private:
 
         int q = random(1, typed_env_size / 3 + 1);
         std::uniform_int_distribution<> pick_dist(0, typed_env_size - 1);
+        bench_timer timer("pop_back");
 
         while (q--) {
             auto& picked = typed_env[pick_dist(this->gen)];
@@ -148,7 +157,6 @@ private:
 
             while (cnt--) {
                 picked.pop_back();
-                ClobberMemory();
             }
         }
     }
@@ -167,14 +175,13 @@ private:
 
         int q = random(1, 3);
         std::uniform_int_distribution<> pick_dist(0, typed_env_size - 1);
+        bench_timer timer("copy");
 
         while (q--) {
             auto pick = pick_dist(this->gen);
 
             typed_env.emplace_back();
             typed_env.back() = typed_env[pick];
-
-            ClobberMemory();
         }
     }
 
@@ -193,6 +200,7 @@ private:
         int q = random(1, typed_env_size / 3 + 1);
         std::uniform_int_distribution<> pick_dist(0, typed_env_size - 1);
         size_type<T> max_insert = i + 1;
+        bench_timer timer("insert");
 
         while (q--) {
             auto& picked = typed_env[pick_dist(this->gen)];
@@ -201,7 +209,6 @@ private:
             auto pos = random<size_type<T>>(0, picked.size());
 
             picked.insert(picked.begin() + pos, cnt, T());
-            ClobberMemory();
         }
     }
 
@@ -219,6 +226,7 @@ private:
 
         int q = random(1, typed_env_size / 3 + 1);
         std::uniform_int_distribution<> pick_dist(0, typed_env_size - 1);
+        bench_timer timer("erase");
 
         while (q--) {
             auto& picked = typed_env[pick_dist(this->gen)];
@@ -230,7 +238,6 @@ private:
             auto begin = random<decltype(picked_size)>(0, end - 1);
 
             picked.erase(picked.begin() + begin, picked.begin() + end);
-            ClobberMemory();
         }
     }
 
@@ -246,7 +253,7 @@ private:
 
 private:
     template<class Vec>
-    using env_container = V<Vec>;
+    using env_container = std::vector<Vec>;
 
     template<class T>
     using env_type = env_container<V<T>>;
@@ -258,6 +265,7 @@ private:
     std::mt19937 gen;
     std::tuple<env_container<V<Ts>>...> env;
     bool do_print;
+    int iters;
 };
 
 template<class Vector>
@@ -272,12 +280,8 @@ void BM_push_back(State& s) {
     for (auto _ : s)
         for (; iters < max_iters; iters *= 10) {
             Vector v;
-            DoNotOptimize(v.data());
-
             for (int i = 0; i < iters; ++i)
                 v.push_back(T());
-
-            ClobberMemory();
         }
 
     int id = s.range(1);
@@ -302,6 +306,9 @@ void BM_environment(State& s) {
     }
 
     // test_type::print_stats();
+
+    // bench_timer::print();
+    // bench_timer::reset();
 
     int id = s.range(1);
     s.counters["t" + std::to_string(id)];

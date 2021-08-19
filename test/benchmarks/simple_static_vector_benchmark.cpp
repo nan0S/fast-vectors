@@ -2,7 +2,6 @@
 #include <vector>
 #include <chrono>
 #include <functional>
-
 #include <benchmark/benchmark.h>
 #include <utils/utils.hpp>
 #include <test_type/test_type.hpp>
@@ -10,17 +9,27 @@
 #include <static_vector.hpp>
 #include <static_vector_alt.hpp>
 
-using namespace benchmark; 
+using namespace benchmark;
+using args_t = std::vector<int64_t>;
 
 /*
  * configurable parameters
  */
-using value_type = std::array<int, 10>;
+using T_t = std::array<int, 10>;
+using NT_t = std::string;
 
-static  constexpr  int  PUSH_BACK_ARG           =  10000;
-static  constexpr  int  PUSH_BACK_POP_BACK_ARG  =  500;
-static  constexpr  int  SWAP_ARG                =  100;
-static  constexpr  int  RESIZE_ARG              =  50;
+// number of consecutive push backs in one iteration
+static  const  args_t  PUSH_BACK_ARGS           =  { 10'000 };
+// maximum vector size and number of push_back/pop_back rounds in iteration 
+static  const  args_t  PUSH_BACK_POP_BACK_ARGS  =  { 500 };
+// sizes of swapped vectors
+static  const  args_t  SWAP_ARGS                =  { 100 };
+// number of resizes in one iteration
+static  const  args_t  RESIZE_ARGS              =  { 50 };
+// initial vector size and number of erases in one iteration
+static  const  args_t  ERASE_ARGS               =  { 500'000, 10 };
+// initial vector size and number of inserts in one iteration
+static  const  args_t  INSERT_ARGS              =  { 100'000, 1 };
 
 /* use the same number of iterations in all benchmarks */
 #define COMMON_ITERS 0
@@ -29,20 +38,23 @@ static  constexpr  int  RESIZE_ARG              =  50;
 #define  PUSH_BACK_POP_BACK_ITERS  (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 #define  SWAP_ITERS                (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 #define  RESIZE_ITERS              (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
+#define  ERASE_ITERS               (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
+#define  INSERT_ITERS              (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 
 #define DO_STATIC_VECTOR_BENCH
 #define DO_STATIC_VECTOR_ALT_BENCH
 
-static constexpr int C = 50000; // static_vector capacity
+static constexpr int C = 500'000; // static_vector capacity
 
 /*
  * tested vectors
  */
-using boost_static_vector = boost::container::static_vector<value_type, C>;
-using uwr_static_vector = uwr::static_vector<value_type, C>;
-using uwr_static_vector_alt = uwr::static_vector_alt<value_type, C>;
-
-static_assert(C >= PUSH_BACK_ARG, "C cannot be smaller than PUSH_BACK_ARG!");
+template<class T>
+using boost_static_vector = boost::container::static_vector<T, C>;
+template<class T>
+using uwr_static_vector = uwr::static_vector<T, C>;
+template<class T>
+using uwr_static_vector_alt = uwr::static_vector_alt<T, C>;
 
 /*
  * benchmark push_back
@@ -157,35 +169,122 @@ void BM_resize(State& s) {
 }
 
 /*
+* benchmark erasing from vector
+*/
+template<class Vector>
+void BM_erase(State& s) {
+    using size_type = typename Vector::size_type;
+    Random::seed(3213);
+
+    size_type initial_size = s.range(0);
+    size_type times = s.range(1);
+
+    for (auto _ : s) {
+        Vector v(initial_size);
+        DoNotOptimize(v.data());
+        ClobberMemory();
+
+        for (size_type i = 0; i < times; ++i) {
+            size_type size = v.size();
+            size_type pos = Random::rand(size + 1);
+            size_type count = Random::rand(size - pos + 1);
+            v.erase(v.begin() + pos, v.begin() + pos + count);
+            ClobberMemory();
+        }
+    }
+}
+
+/*
+* benchmark inserting by fill to vector
+*/
+template<class Vector>
+void BM_insert_fill(State& s) {
+    using T = typename Vector::value_type;
+    using size_type = typename Vector::size_type;
+    Random::seed(3213);
+
+    size_type initial_size = s.range(0);
+    size_type times = s.range(1);
+
+    for (auto _ : s) {
+        Vector v(initial_size);
+        DoNotOptimize(v.data());
+        ClobberMemory();
+
+        for (size_type i = 0; i < times; ++i) {
+            size_type pos = Random::rand(v.size() + 1);
+            size_type count = Random::rand(v.capacity() - v.size() + 1);
+            v.insert(v.begin() + pos, count, get_value<T>(pos));
+            ClobberMemory();
+        }
+    }
+}
+
+/*
+* benchmark inserting by range to vector
+*/
+template<class Vector>
+void BM_insert_range(State& s) {
+    using T = typename Vector::value_type;
+    using size_type = typename Vector::size_type;
+    Random::seed(3213);
+
+    T range[C];
+    for (size_type i = 0; i < C; ++i)
+        range[i] = get_value<T>(i);
+
+    size_type initial_size = s.range(0);
+    size_type times = s.range(1);
+
+    for (auto _ : s) {
+        Vector v(initial_size);
+        DoNotOptimize(v.data());
+        ClobberMemory();
+
+        for (size_type i = 0; i < times; ++i) {
+            size_type pos = Random::rand(v.size() + 1);
+            size_type count = Random::rand(v.capacity() - v.size() + 1);
+            size_type range_pos = Random::rand(C - count + 1);
+            v.insert(v.begin() + pos, range + range_pos, range + range_pos + count);
+            ClobberMemory();
+        }
+    }
+}
+
+/*
  * some macro magic
  */
 #define CONCAT(a, b) CONCAT_INNER(a, b)
 #define CONCAT_INNER(a, b) a ## b
 
-#define REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, vector) \
-    BENCHMARK_TEMPLATE(func, vector) \
+#define REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, vector, type) \
+    BENCHMARK_TEMPLATE(func, vector<type>) \
         ->Unit(unit) \
         ->Iterations(CONCAT(varname, _ITERS)) \
-        ->Arg(CONCAT(varname, _ARG))
+        ->Args({CONCAT(varname, _ARGS)})
 
 #ifdef DO_STATIC_VECTOR_BENCH
-#define REGISTER_BENCHMARK_FOR_STATIC_VECTOR(func, unit, varname) \
-    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, uwr_static_vector)
+#define REGISTER_BENCHMARK_FOR_STATIC_VECTOR(func, unit, varname, type) \
+    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, uwr_static_vector, type)
 #else
-#define REGISTER_BENCHMARK_FOR_STATIC_VECTOR(func, unit, varname)
+#define REGISTER_BENCHMARK_FOR_STATIC_VECTOR(func, unit, varname, type)
 #endif
 
 #ifdef DO_STATIC_VECTOR_ALT_BENCH
-#define REGISTER_BENCHMARK_FOR_STATIC_VECTOR_ALT(func, unit, varname) \
-    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, uwr_static_vector_alt)
+#define REGISTER_BENCHMARK_FOR_STATIC_VECTOR_ALT(func, unit, varname, type) \
+    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, uwr_static_vector_alt, type)
 #else
-#define REGISTER_BENCHMARK_FOR_STATIC_VECTOR_ALT(func, unit, varname)
+#define REGISTER_BENCHMARK_FOR_STATIC_VECTOR_ALT(func, unit, varname, type)
 #endif
 
+#define REGISTER_BENCHMARK_FOR_TYPE(func, unit, varname, type) \
+    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, boost_static_vector, type); \
+    REGISTER_BENCHMARK_FOR_STATIC_VECTOR(func, unit, varname, type); \
+    REGISTER_BENCHMARK_FOR_STATIC_VECTOR_ALT(func, unit, varname, type)
+
 #define REGISTER_BENCHMARK(func, unit, varname) \
-    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, boost_static_vector); \
-    REGISTER_BENCHMARK_FOR_STATIC_VECTOR(func, unit, varname); \
-    REGISTER_BENCHMARK_FOR_STATIC_VECTOR_ALT(func, unit, varname)
+    REGISTER_BENCHMARK_FOR_TYPE(func, unit, varname, T_t); \
+    REGISTER_BENCHMARK_FOR_TYPE(func, unit, varname, NT_t)
 
 /*
  * register all benchmarks
@@ -194,5 +293,8 @@ REGISTER_BENCHMARK(BM_push_back,           kMicrosecond,  PUSH_BACK);
 REGISTER_BENCHMARK(BM_push_back_pop_back,  kMicrosecond,  PUSH_BACK_POP_BACK);
 REGISTER_BENCHMARK(BM_swap,                kMicrosecond,  SWAP);
 REGISTER_BENCHMARK(BM_resize,              kNanosecond,   RESIZE);
+REGISTER_BENCHMARK(BM_erase,               kMicrosecond,  ERASE);
+REGISTER_BENCHMARK(BM_insert_fill,         kMicrosecond,  INSERT);
+REGISTER_BENCHMARK(BM_insert_range,        kMicrosecond,  INSERT);
 
 BENCHMARK_MAIN();

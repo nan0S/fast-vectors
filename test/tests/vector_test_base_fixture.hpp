@@ -47,9 +47,9 @@ protected:
     void InsertOneElementByMove(vector& v, size_type pos, int id);
     void InsertMultipleElementsByFill(vector& v, size_type pos,
             size_type count, int id);
-    template<class InputIterator>
+    template<class InIt>
     void InsertMultipleElementsByRange(vector& v, size_type pos,
-            InputIterator begin, InputIterator end);
+            InIt begin, InIt end);
     void InsertMultipleElementsByInitializerList(vector& v, size_type pos,
             std::initializer_list<value_type> ilist);
 
@@ -225,10 +225,10 @@ VectorTestBaseFixture<V>::InsertMultipleElementsByFill(vector& v, size_type pos,
 }
 
 template<class V>
-template<class InputIterator>
+template<class InIt>
 void
 VectorTestBaseFixture<V>::InsertMultipleElementsByRange(vector& v, size_type pos,
-        InputIterator begin, InputIterator end) {
+        InIt begin, InIt end) {
     const vector save = v;
     const size_type count = std::distance(begin, end);
     value_type save_range[count];
