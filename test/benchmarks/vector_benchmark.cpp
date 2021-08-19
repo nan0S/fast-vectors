@@ -31,12 +31,11 @@ static  constexpr  int  INT_STRING_ARRAY_ARG  =  1000;
 #define  INT_STRING_ITERS        (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 #define  INT_STRING_ARRAY_ITERS  (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 
-#define DO_BOOST_VECTOR_BENCH
+// #define DO_BOOST_VECTOR_BENCH
 #define DO_STD_VECTOR_BENCH
 #define DO_RVECTOR_BENCH
 #define DO_UWR_VECTOR_BENCH
 #define DO_UWR_STD_VECTOR_BENCH
-#define DO_SIMPLE_VECTOR_BENCH
 // #define DO_UWR_BIG_VECTOR_BENCH
 
 static constexpr int N = 10; // used in std::array<int, N>
@@ -132,11 +131,11 @@ using uwr_big_vector = uwr::big_vector<T>;
 /*
  * register all benchmarks
  */
-REGISTER_BENCHMARK(kMillisecond,  INT,               1,  int);                                            
-REGISTER_BENCHMARK(kMillisecond,  STRING,            2,  std::string);                                    
-REGISTER_BENCHMARK(kMillisecond,  TEST_TYPE,         3,  test_type);                                      
-REGISTER_BENCHMARK(kMillisecond,  ARRAY,             4,  std::array<int, N>);                            
-REGISTER_BENCHMARK(kMillisecond,  INT_STRING,        5,  int, std::string);                   
+REGISTER_BENCHMARK(kMillisecond,  INT,               1,  int);
+REGISTER_BENCHMARK(kMillisecond,  STRING,            2,  std::string);
+REGISTER_BENCHMARK(kMillisecond,  TEST_TYPE,         3,  test_type);
+REGISTER_BENCHMARK(kMillisecond,  ARRAY,             4,  std::array<int, N>);
+REGISTER_BENCHMARK(kMillisecond,  INT_STRING,        5,  int, std::string);
 REGISTER_BENCHMARK(kMillisecond,  INT_STRING_ARRAY,  6,  int, std::string, std::array<int, N>);
 
 int main(int argc, char** argv) {

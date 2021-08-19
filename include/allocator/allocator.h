@@ -130,14 +130,14 @@ namespace mm
 		std::uninitialized_fill_n(data, n, value);
 	}
 
-	template<typename T, typename InputIterator>
-	T_Copy<T> fill(T* data, InputIterator begin, InputIterator end)
+	template<typename T, typename InIt>
+	T_Copy<T> fill(T* data, InIt begin, InIt end)
 	{
         std::copy(begin, end, data);
 	}
 
-	template<typename T, typename InputIterator>
-	NT_Copy<T> fill(T* data, InputIterator begin, InputIterator end)
+	template<typename T, typename InIt>
+	NT_Copy<T> fill(T* data, InIt begin, InIt end)
 	{
 		std::uninitialized_copy(begin, end, data);
 	}

@@ -291,25 +291,11 @@ vector<T, A>::max_size() const noexcept {
     return std::numeric_limits<size_type>::max() / sizeof(T);
 }
 
-#if 1
 template<class T, class A>
 constexpr void
 vector<T, A>::resize(size_type n) {
     this->priv_resize(default_construct_proxy<T>(n));
 }
-#else
-template<class T, class A>
-constexpr void
-vector<T, A>::resize(size_type n) {
-    if (n > this->capacity())
-        this->m_alloc.realloc(n);
-    if (n < this->size())
-        mem::destroy(this->data() + n, this->end());
-    else if (n > this->size())
-        mem::construct(this->end(), this->data() + n);
-    this->m_alloc.m_size = n;
-}
-#endif
 
 template<class T, class A>
 constexpr void
@@ -506,24 +492,56 @@ vector<T, A>::erase(const_iterator pos) {
     return m_pos;
 }
 
+#if 0
 template<class T, class A>
 constexpr typename vector<T, A>::iterator
 vector<T, A>::erase(const_iterator first, const_iterator last) {
     T* const m_first = const_cast<T* const>(first);
+    T* const m_last = const_cast<T* const>(last);
 
-    if (UWR_LIKELY(first != last)) {
+    if (UWR_LIKELY(m_first != m_last)) {
         T* const m_end = this->end();
 
         mem::destroy(
-                mem::shiftl(m_first, last, m_end),
+                mem::shiftl(m_first, m_last, m_end),
                 m_end);
 
         this->m_alloc.m_size -= static_cast<size_type>(
-                std::distance(first, last));
+                std::distance(m_first, m_last));
     }
 
     return m_first;
 }
+#else
+template<class T, class A>
+constexpr typename vector<T, A>::iterator
+vector<T, A>::erase(const_iterator first, const_iterator last) {
+    T* const m_first = const_cast<T* const>(first);
+    T* const m_last = const_cast<T* const>(last);
+
+    if (UWR_LIKELY(m_first != m_last)) {
+        T* const m_end = this->end();
+        size_type count = static_cast<size_type>(
+                std::distance(m_first, m_last));
+        T* const new_end = m_end - count;
+
+        if (new_end >= m_last) {
+            mem::move_and_destroy(
+                mem::move(m_first, m_last, new_end),
+                new_end, m_end);
+        }
+        else {
+            mem::destroy(
+                mem::shiftl(m_first, m_last, m_end),
+                m_end); 
+        };
+
+        this->m_alloc.m_size -= count;
+    }
+
+    return m_first;
+}
+#endif
 
 template<class T, class A>
 constexpr void
@@ -538,7 +556,7 @@ vector<T, A>::clear() noexcept {
     this->m_alloc.m_size = 0;
 }
 
-#if 1
+#if 0 // broken
 template<class T, class A>
 template<class... Args>
 constexpr typename vector<T, A>::iterator
@@ -666,23 +684,6 @@ vector<T, A>::priv_copy_insert(const_iterator pos, InputIterator first, InputIte
     return this->priv_insert(pos, insert_copy_range_proxy<T, InputIterator>(first, last, n));
 }
 
-#if 0 // seems to work fast in simple_benchmark - probably to restore
-template<class T, class A>
-template<class AssignProxy>
-constexpr void
-vector<T, A>::priv_assign(AssignProxy&& proxy) {
-    if (UWR_UNLIKELY(proxy.n > this->capacity())) {
-        if (this->m_alloc.expand_or_dealloc_and_alloc_raw(proxy.n))
-            proxy.assign_to_short(this->data(), this->size());
-        else
-            proxy.assign_to_short(this->data(), 0);
-    }
-    else
-        proxy.assign_to_short(this->data(), 0);
-
-    this->m_alloc.m_size = proxy.n;
-}
-#else
 template<class T, class A>
 template<class AssignProxy>
 constexpr void
@@ -700,16 +701,12 @@ vector<T, A>::priv_assign(AssignProxy&& proxy) {
 
     this->m_alloc.m_size = proxy.n;
 }
-#endif
 
-#if 1
 template<class T, class A>
 template<class ResizeProxy>
 constexpr void
 vector<T, A>::priv_resize(ResizeProxy&& proxy) {
     if (proxy.n > this->capacity()) {
-        // TODO: restore
-        // this->m_alloc.realloc(proxy.n);
         this->m_alloc.realloc(this->next_capacity(proxy.n));
         proxy.construct(this->end(), this->data() + proxy.n);
     }
@@ -725,28 +722,8 @@ vector<T, A>::priv_resize(ResizeProxy&& proxy) {
 
     this->m_alloc.m_size = proxy.n;
 }
-#else
-template<class T, class A>
-template<class ResizeProxy>
-constexpr void
-vector<T, A>::priv_resize(ResizeProxy&& proxy) {
-    if (proxy.n > this->capacity()) {
-        this->m_alloc.realloc(proxy.n);
-        // this->m_alloc.realloc(this->next_capacity(proxy.n));
-    }
 
-    T* const m_end = this->end();
-    T* const new_end = this->data() + proxy.n;
-    if (proxy.n > this->size())
-        proxy.construct(m_end, new_end);
-    else
-        mem::destroy(new_end, m_end);
-
-    this->m_alloc.m_size = proxy.n;
-}
-#endif
-
-#if 1
+#if 0 // broken
 template<class T, class A>
 template<class InsertProxy>
 constexpr typename vector<T, A>::iterator
@@ -756,7 +733,6 @@ vector<T, A>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
     if (UWR_UNLIKELY(!proxy.count))
         return m_pos;
 
-    T* const m_end = this->end();
     size_type new_size = this->size() + proxy.count;
 
     if (new_size > this->capacity()) {
@@ -767,13 +743,14 @@ vector<T, A>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
         if (this->m_alloc.expand_or_alloc_raw(
                     new_capacity, new_data)) {
             T* const spill = m_pos + proxy.count;
+            T* const m_end = this->end();
 
             if (spill < m_end) {
                 mem::shiftr(spill, m_pos, m_end);
                 proxy.insert_without_spill(m_pos, spill);
             }
             else {
-                mem::umove(spill, m_pos, m_end);
+                // mem::umove(spill, m_pos, m_end);
                 proxy.insert_with_spill(m_pos, m_end, spill);
             }
 
@@ -785,9 +762,10 @@ vector<T, A>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
         else {
             UWR_ASSERT(new_data);
 
+            T* const m_end = this->end();
             T* const i_begin = mem::umove(new_data, this->cbegin(), pos);
             T* const i_end = i_begin + proxy.count;
-            mem::umove<T, const T*>(i_end, pos, m_end);
+            mem::umove(i_end, m_pos, m_end);
             proxy.insert_with_spill(i_begin, i_begin, i_end);
 
             mem::destroy(this->data(), m_end);
@@ -801,10 +779,11 @@ vector<T, A>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
         }
     }
     else {
+        T* const m_end = this->end();
         T* const spill = m_pos + proxy.count;
 
         if (spill > m_end) {
-            mem::umove(spill, m_pos, m_end);
+            // mem::umove(spill, m_pos, m_end);
             proxy.insert_with_spill(m_pos, m_end, spill);
         }
         else {
@@ -844,7 +823,7 @@ vector<T, A>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
         proxy.insert_without_spill(m_pos, spill);
     }
     else {
-        mem::umove(spill, m_pos, m_end);
+        // mem::umove(spill, m_pos, m_end);
         proxy.insert_with_spill(m_pos, m_end, spill);
     }
 

@@ -52,9 +52,9 @@ public:
     explicit rvector(size_type count);
 	explicit rvector(size_type count, const T& value);
 
-    template <class InputIterator, 
-        typename = typename std::iterator_traits<InputIterator>::value_type>
-    rvector (InputIterator first, InputIterator last);
+    template <class InIt, 
+        typename = typename std::iterator_traits<InIt>::value_type>
+    rvector (InIt first, InIt last);
 
 	rvector(const rvector& other);
 	rvector(rvector&& other) noexcept;
@@ -130,10 +130,10 @@ public:
     iterator insert(const_iterator position, const T& x);
     iterator insert(const_iterator position, T&& x);
     iterator insert(const_iterator position, size_type n, const T& x);
-    template <class InputIterator, 
-        typename = typename std::iterator_traits<InputIterator>::value_type>
-    iterator insert (const_iterator position, InputIterator first, 
-                         InputIterator last);
+    template <class InIt, 
+        typename = typename std::iterator_traits<InIt>::value_type>
+    iterator insert (const_iterator position, InIt first, 
+                         InIt last);
     iterator insert(const_iterator position, std::initializer_list<T>);
  
     iterator erase(const_iterator position);
@@ -181,8 +181,8 @@ template <typename T>
 rvector(typename rvector<T>::size_type length, const T& v) -> rvector<T>;
 
 template <typename T>
-template <class InputIterator, typename>
-rvector<T>::rvector(InputIterator first, InputIterator last)
+template <class InIt, typename>
+rvector<T>::rvector(InIt first, InIt last)
  : data_(nullptr),
  length_(std::distance(first, last)),
  capacity_(mm::fix_capacity<T>(length_))
@@ -191,9 +191,9 @@ rvector<T>::rvector(InputIterator first, InputIterator last)
     mm::fill(data_, first, last);
 }
 
-template <class InputIterator, typename = typename std::iterator_traits<InputIterator>::value_type>
-rvector(InputIterator first, InputIterator last) -> 
-    rvector<typename std::iterator_traits<InputIterator>::value_type>;
+template <class InIt, typename = typename std::iterator_traits<InIt>::value_type>
+rvector(InIt first, InIt last) -> 
+    rvector<typename std::iterator_traits<InIt>::value_type>;
 
 template<typename T>
 rvector<T>::rvector(const rvector<T>& other)
@@ -673,10 +673,10 @@ rvector<T>::insert(rvector<T>::const_iterator position, size_type n, const T& x)
 }
 
 template <typename T>
-template <class InputIterator, typename>
+template <class InIt, typename>
 typename rvector<T>::iterator 
-rvector<T>::insert (rvector<T>::const_iterator position, InputIterator first, 
-                     InputIterator last)
+rvector<T>::insert (rvector<T>::const_iterator position, InIt first, 
+                     InIt last)
 {
     auto position_ = const_cast<iterator>(position);
     if (first == last)

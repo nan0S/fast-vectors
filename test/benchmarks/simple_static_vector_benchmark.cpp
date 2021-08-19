@@ -18,14 +18,14 @@ using args_t = std::vector<int64_t>;
 using T_t = std::array<int, 10>;
 using NT_t = std::string;
 
-// number of consecutive push backs in one iteration
-static  const  args_t  PUSH_BACK_ARGS           =  { 10'000 };
-// maximum vector size and number of push_back/pop_back rounds in iteration 
-static  const  args_t  PUSH_BACK_POP_BACK_ARGS  =  { 500 };
+// number of consecutive push_backs in one iteration
+static  const  args_t  PUSH_BACK_ARGS           =  { 100'000 };
+// number of push_back/pop_back rounds in iteration 
+static  const  args_t  PUSH_BACK_POP_BACK_ARGS  =  { 10 };
 // sizes of swapped vectors
-static  const  args_t  SWAP_ARGS                =  { 100 };
+static  const  args_t  SWAP_ARGS                =  { 1000 };
 // number of resizes in one iteration
-static  const  args_t  RESIZE_ARGS              =  { 50 };
+static  const  args_t  RESIZE_ARGS              =  { 10 };
 // initial vector size and number of erases in one iteration
 static  const  args_t  ERASE_ARGS               =  { 500'000, 10 };
 // initial vector size and number of inserts in one iteration
@@ -62,19 +62,24 @@ using uwr_static_vector_alt = uwr::static_vector_alt<T, C>;
 template<class Vector>
 void BM_push_back(State& s) {
     using T = typename Vector::value_type;
-    int times = s.range(0);
+    using size_type = typename Vector::size_type;
+
+    size_type times = s.range(0);
 
     for (auto _ : s) {
         Vector v;
         DoNotOptimize(v.data());
         
-        for (int j = 0; j < times; ++j) {
+        for (size_type j = 0; j < times; ++j) {
             v.push_back(get_value<T>(j));
         }
         ClobberMemory();
     }
 
-    s.counters["t1"];
+    if constexpr (std::is_trivial_v<T>)
+        s.counters["T1"];
+    else
+        s.counters["NT1"];
 }
 
 /*
@@ -86,35 +91,38 @@ void BM_push_back_pop_back(State& s) {
     using size_type = typename Vector::size_type;
     Random::seed(12321);
 
-    int times = s.range(0);
+    size_type times = s.range(0);
 
     for (auto _ : s) {
         Vector v;
 
         DoNotOptimize(v.data());
 
-        for (int i = 0; i < times; ++i) {
+        for (size_type i = 0; i < times; ++i) {
             if (Random::rand(2)) {
                 size_type rest = v.capacity() - v.size();
                 size_type c = Random::rand<size_type>(0, rest + 1);
 
                 while (c--) {
                     v.push_back(get_value<T>(c));
-                    ClobberMemory();
                 }
+                ClobberMemory();
             }
             else {
                 size_type c = Random::rand<size_type>(0, v.size() + 1);
                 
                 while (c--) {
                     v.pop_back();
-                    ClobberMemory();
                 }
+                ClobberMemory();
             }
         }
     }
 
-    s.counters["t2"];
+    if constexpr (std::is_trivial_v<T>)
+        s.counters["T2"];
+    else
+        s.counters["NT2"];
 }
 
 /*
@@ -122,11 +130,12 @@ void BM_push_back_pop_back(State& s) {
  */
 template<class Vector>
 void BM_swap(State& s) {
+    using T = typename Vector::value_type;
+    using size_type = typename Vector::size_type;
     Random::seed(3213121);
 
-    int size1 = s.range(0);
-    int size2 = size1 * 3 / 4;
-
+    size_type size1 = s.range(0);
+    size_type size2 = size1 * 3 / 4;
     if (Random::rand(2))
         std::swap(size1, size2);
 
@@ -142,7 +151,10 @@ void BM_swap(State& s) {
         ClobberMemory();
     }
 
-    s.counters["t3"];
+    if constexpr (std::is_trivial_v<T>)
+        s.counters["T3"];
+    else
+        s.counters["NT3"];
 }
 
 /*
@@ -150,22 +162,27 @@ void BM_swap(State& s) {
  */
 template<class Vector>
 void BM_resize(State& s) {
+    using T = typename Vector::value_type;
+    using size_type = typename Vector::size_type;
     Random::seed(31231);
-    int times = s.range(0);
+
+    size_type times = s.range(0);
 
     for (auto _ : s) {
         Vector v;
-
         DoNotOptimize(v.data());
 
-        for (int i = 0; i < times; ++i) {
-            int new_size = Random::rand(v.capacity() + 1);
+        for (size_type i = 0; i < times; ++i) {
+            size_type new_size = Random::rand(v.capacity() + 1);
             v.resize(new_size);
             ClobberMemory();
         }
     }
 
-    s.counters["t4"];
+    if constexpr (std::is_trivial_v<T>)
+        s.counters["T4"];
+    else
+        s.counters["NT4"];
 }
 
 /*
@@ -173,6 +190,7 @@ void BM_resize(State& s) {
 */
 template<class Vector>
 void BM_erase(State& s) {
+    using T = typename Vector::value_type;
     using size_type = typename Vector::size_type;
     Random::seed(3213);
 
@@ -192,6 +210,11 @@ void BM_erase(State& s) {
             ClobberMemory();
         }
     }
+
+    if constexpr (std::is_trivial_v<T>)
+        s.counters["T5"];
+    else
+        s.counters["NT5"];
 }
 
 /*
@@ -218,6 +241,11 @@ void BM_insert_fill(State& s) {
             ClobberMemory();
         }
     }
+
+    if constexpr (std::is_trivial_v<T>)
+        s.counters["T6"];
+    else
+        s.counters["NT6"];
 }
 
 /*
@@ -249,6 +277,11 @@ void BM_insert_range(State& s) {
             ClobberMemory();
         }
     }
+
+    if constexpr (std::is_trivial_v<T>)
+        s.counters["T7"];
+    else
+        s.counters["NT7"];
 }
 
 /*

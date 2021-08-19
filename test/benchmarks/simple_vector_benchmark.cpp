@@ -9,7 +9,6 @@
 #include <vector.hpp>
 #include <rvector.h>
 #include <std_vector.hpp>
-#include <simple_vector.hpp>
 
 using namespace benchmark; 
 using args_t = std::vector<int64_t>;
@@ -17,25 +16,26 @@ using args_t = std::vector<int64_t>;
 /*
  * configurable parameters
  */
-using value_type = std::string;
-// using value_type = int;
-// using value_type = test_type;
-// using value_type = std::array<int, 10>;
+using T_t = std::array<int, 10>;
+using NT_t = std::string;
 
 // number of consecutive push backs in one iteration
-static const args_t PUSH_BACK_ARG = { 50000 };
+static const args_t PUSH_BACK_ARG = { 120'000'000 };
 // maximum vector size and number of push_back/pop_back rounds in iteration 
-static const args_t PUSH_BACK_POP_BACK_ARG = { 50000, 10 };
-// aximum resize size and resize count
-static const args_t RESIZE_ARG = { 50000, 10 };
+static const args_t PUSH_BACK_POP_BACK_ARG = { 50'000, 10 };
+// maximum resize size and resize count
+static const args_t RESIZE_ARG = { 50'000, 10 };
 // maximum size of created vector and insert count
-static const args_t INSERT_ARG = { 1000, 100 };
+static const args_t INSERT_ARG = { 1'000, 100 };
 // maximum size of created vector
-static const args_t CREATE_ARG = { 50000 };
+static const args_t CREATE_ARG = { 50'000 };
 // maximum size of created and assigned vector and assign count
-static const args_t ASSIGN_ARG = { 50000, 20 };
+static const args_t ASSIGN_ARG = { 50'000, 20 };
 // maximum size of created vector and emplace count
-static const args_t EMPLACE_ARG = { 50000, 10 };
+static const args_t EMPLACE_ARG = { 200'000, 10 };
+// initial size of vector and number of erases in one iteration
+static const args_t ERASE_ARG = { 200'000, 10 };
+
 
 /* use the same number of iterations in all benchmarks */
 #define COMMON_ITERS 0
@@ -47,13 +47,13 @@ static const args_t EMPLACE_ARG = { 50000, 10 };
 #define  CREATE_ITERS              (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 #define  ASSIGN_ITERS              (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 #define  EMPLACE_ITERS             (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
+#define  ERASE_ITERS               (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 
-#define DO_STD_VECTOR_BENCH
-#define DO_BOOST_VECTOR_BENCH
+// #define DO_STD_VECTOR_BENCH
+// #define DO_BOOST_VECTOR_BENCH
 #define DO_UWR_VECTOR_BENCH
 #define DO_RVECTOR_BENCH
 #define DO_UWR_STD_VECTOR_BENCH
-#define DO_SIMPLE_VECTOR_BENCH
 
 // turn on verbose printing for test_type type
 // #define VERBOSE_FOR_TEST_TYPE
@@ -61,23 +61,26 @@ static const args_t EMPLACE_ARG = { 50000, 10 };
 /*
  * tested vectors
  */
-using std_vector = std::vector<value_type>;
+template<class T>
+using std_vector = std::vector<T>;
 using boost_gf = boost::container::growth_factor_100;
 using boost_options = boost::container::vector_options_t<boost::container::growth_factor<boost_gf>>;
-using boost_vector = boost::container::vector<value_type, boost::container::new_allocator<value_type>, boost_options>; 
-// using boost_vector = boost::container::vector<value_type>;
-using uwr_vector = uwr::vector<value_type>;
-using rvector_t = rvector<value_type>;
-using uwr_std_vector = uwr::std_vector<value_type>;
-using simple_vector = uwr::simple_vector<value_type>;
+template<class T>
+using boost_vector = boost::container::vector<T, boost::container::new_allocator<T>, boost_options>; 
+template<class T>
+using rvector_t = rvector<T>;
+template<class T>
+using uwr_vector = uwr::vector<T>;
+template<class T>
+using uwr_std_vector = uwr::std_vector<T>;
 
 /*
  * benchmark push_back
  */
 template<class Vector>
 void BM_push_back(State& s) {
-    using size_type = typename Vector::size_type;
     using T = typename Vector::value_type;
+    using size_type = typename Vector::size_type;
 
     #ifdef VERBOSE_FOR_TEST_TYPE
     test_type::start_recording();
@@ -87,7 +90,8 @@ void BM_push_back(State& s) {
 
     for (auto _ : s) {
         Vector v;
-        DoNotOptimize(v);
+        DoNotOptimize(v.data());
+        // v.reserve(times);
 
         for (size_type j = 0; j < times; ++j) {
             v.push_back(get_value<T>(j));
@@ -99,7 +103,10 @@ void BM_push_back(State& s) {
     test_type::print_stats();
     #endif
 
-    s.counters["t1"];
+    if constexpr (std::is_trivial_v<T>)
+        s.counters["T1"];
+    else
+        s.counters["NT1"];
 }
 
 /*
@@ -145,7 +152,10 @@ void BM_push_back_pop_back(State& s) {
     test_type::print_stats();
     #endif
 
-    s.counters["t2"];
+    if constexpr (std::is_trivial_v<T>)
+        s.counters["T2"];
+    else
+        s.counters["NT2"];
 }
 
 /*
@@ -153,6 +163,7 @@ void BM_push_back_pop_back(State& s) {
  */
 template<class Vector>
 void BM_resize(State& s) {
+    using T = typename Vector::value_type;
     using size_type = typename Vector::size_type;
     Random::seed(31231);
 
@@ -178,7 +189,10 @@ void BM_resize(State& s) {
     test_type::print_stats();
     #endif
 
-    s.counters["t3"];
+    if constexpr (std::is_trivial_v<T>)
+        s.counters["T3"];
+    else
+        s.counters["NT3"];
 }
 
 /*
@@ -186,8 +200,8 @@ void BM_resize(State& s) {
  */
 template<class Vector>
 void BM_insert(State& s) {
-    using size_type = typename Vector::size_type;
     using T = typename Vector::value_type;
+    using size_type = typename Vector::size_type;
     Random::seed(123);
 
     #ifdef VERBOSE_FOR_TEST_TYPE
@@ -216,7 +230,10 @@ void BM_insert(State& s) {
     test_type::print_stats();
     #endif
 
-    s.counters["t4"];
+    if constexpr (std::is_trivial_v<T>)
+        s.counters["T4"];
+    else
+        s.counters["NT4"];
 }
 
 /*
@@ -224,6 +241,7 @@ void BM_insert(State& s) {
  */
 template<class Vector>
 void BM_create(State& s) {
+    using T = typename Vector::value_type;
     using size_type = typename Vector::size_type;
     Random::seed(123);
 
@@ -244,7 +262,10 @@ void BM_create(State& s) {
     test_type::print_stats();
     #endif
 
-    s.counters["t5"];
+    if constexpr (std::is_trivial_v<T>)
+        s.counters["T5"];
+    else
+        s.counters["NT5"];
 }
 
 /*
@@ -252,8 +273,8 @@ void BM_create(State& s) {
 */
 template<class Vector>
 void BM_assign(State& s) {
-    using size_type = typename Vector::size_type;
     using T = typename Vector::value_type;
+    using size_type = typename Vector::size_type;
     Random::seed(123);
 
     #ifdef VERBOSE_FOR_TEST_TYPE
@@ -280,7 +301,10 @@ void BM_assign(State& s) {
     test_type::print_stats();
     #endif
     
-    s.counters["t6"];
+    if constexpr (std::is_trivial_v<T>)
+        s.counters["T6"];
+    else
+        s.counters["NT6"];
 }
 
 /*
@@ -288,8 +312,8 @@ void BM_assign(State& s) {
 */
 template<class Vector>
 void BM_emplace(State& s) {
-    using size_type = typename Vector::size_type;
     using T = typename Vector::value_type;
+    using size_type = typename Vector::size_type;
     Random::seed(123);
 
     #ifdef VERBOSE_FOR_TEST_TYPE
@@ -316,7 +340,42 @@ void BM_emplace(State& s) {
     test_type::print_stats();
     #endif
     
-    s.counters["t7"];
+    if constexpr (std::is_trivial_v<T>)
+        s.counters["T7"];
+    else
+        s.counters["NT7"];
+}
+
+/*
+* benchmark erasing from vector
+*/
+template<class Vector>
+void BM_erase(State& s) {
+    using T = typename Vector::value_type;
+    using size_type = typename Vector::size_type;
+    Random::seed(3213);
+
+    size_type initial_size = s.range(0);
+    size_type times = s.range(1);
+
+    for (auto _ : s) {
+        Vector v(initial_size);
+        DoNotOptimize(v.data());
+        ClobberMemory();
+
+        for (size_type i = 0; i < times; ++i) {
+            size_type size = v.size();
+            size_type pos = Random::rand(size + 1);
+            size_type count = Random::rand(size - pos + 1);
+            v.erase(v.begin() + pos, v.begin() + pos + count);
+            ClobberMemory();
+        }
+    }
+
+    if constexpr (std::is_trivial_v<T>)
+        s.counters["T8"];
+    else
+        s.counters["NT8"];
 }
 
 /*
@@ -325,72 +384,69 @@ void BM_emplace(State& s) {
 #define CONCAT(a, b) CONCAT_INNER(a, b)
 #define CONCAT_INNER(a, b) a ## b
 
-#define REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, vector) \
-    BENCHMARK_TEMPLATE(func, vector) \
+#define REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, type, vector) \
+    BENCHMARK_TEMPLATE(func, vector<type>) \
         ->Unit(unit) \
         ->Iterations(CONCAT(varname, _ITERS)) \
         ->Args(CONCAT(varname, _ARG))
 
 #ifdef DO_STD_VECTOR_BENCH
-#define REGISTER_BENCHMARK_FOR_STD_VECTOR(func, unit, varname) \
-    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, std_vector)
+#define REGISTER_BENCHMARK_FOR_STD_VECTOR(func, unit, varname, type) \
+    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, type, std_vector)
 #else
-#define REGISTER_BENCHMARK_FOR_STD_VECTOR(func, unit, varname)
+#define REGISTER_BENCHMARK_FOR_STD_VECTOR(func, unit, varname, type)
 #endif
 
 #ifdef DO_BOOST_VECTOR_BENCH
-#define REGISTER_BENCHMARK_FOR_BOOST_VECTOR(func, unit, varname) \
-    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, boost_vector)
+#define REGISTER_BENCHMARK_FOR_BOOST_VECTOR(func, unit, varname, type) \
+    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, type, boost_vector)
 #else
-#define REGISTER_BENCHMARK_FOR_BOOST_VECTOR(func, unit, varname)
+#define REGISTER_BENCHMARK_FOR_BOOST_VECTOR(func, unit, varname, type)
 #endif
 
 #ifdef DO_UWR_VECTOR_BENCH
-#define REGISTER_BENCHMARK_FOR_UWR_VECTOR(func, unit, varname) \
-    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, uwr_vector)
+#define REGISTER_BENCHMARK_FOR_UWR_VECTOR(func, unit, varname, type) \
+    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, type, uwr_vector)
 #else
-#define REGISTER_BENCHMARK_FOR_UWR_VECTOR(func, unit, varname)
+#define REGISTER_BENCHMARK_FOR_UWR_VECTOR(func, unit, varname, type)
 #endif
 
 #ifdef DO_RVECTOR_BENCH
-#define REGISTER_BENCHMARK_FOR_RVECTOR(func, unit, varname) \
-    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, rvector_t)
+#define REGISTER_BENCHMARK_FOR_RVECTOR(func, unit, varname, type) \
+    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, type, rvector_t)
 #else
-#define REGISTER_BENCHMARK_FOR_RVECTOR(func, unit, varname)
+#define REGISTER_BENCHMARK_FOR_RVECTOR(func, unit, varname, type)
 #endif
 
 #ifdef DO_UWR_STD_VECTOR_BENCH
-#define REGISTER_BENCHMARK_FOR_UWR_STD_VECTOR(func, unit, varname) \
-    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, uwr_std_vector)
+#define REGISTER_BENCHMARK_FOR_UWR_STD_VECTOR(func, unit, varname, type) \
+    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, type, uwr_std_vector)
 #else
-#define REGISTER_BENCHMARK_FOR_UWR_STD_VECTOR(func, unit, varname)
+#define REGISTER_BENCHMARK_FOR_UWR_STD_VECTOR(func, unit, varname, type)
 #endif
 
-#ifdef DO_SIMPLE_VECTOR_BENCH
-#define REGISTER_BENCHMARK_FOR_SIMPLE_VECTOR(func, unit, varname) \
-    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, simple_vector)
-#else
-#define REGISTER_BENCHMARK_FOR_SIMPLE_VECTOR(func, unit, varname)
-#endif
+#define REGISTER_BENCHMARK_FOR_TYPE(func, unit, varname, type) \
+    REGISTER_BENCHMARK_FOR_STD_VECTOR(func, unit, varname, type); \
+    REGISTER_BENCHMARK_FOR_BOOST_VECTOR(func, unit, varname, type); \
+    REGISTER_BENCHMARK_FOR_RVECTOR(func, unit, varname, type); \
+    REGISTER_BENCHMARK_FOR_UWR_VECTOR(func, unit, varname, type); \
+    REGISTER_BENCHMARK_FOR_UWR_STD_VECTOR(func, unit, varname, type)
 
 #define REGISTER_BENCHMARK(func, unit, varname) \
-    REGISTER_BENCHMARK_FOR_STD_VECTOR(func, unit, varname); \
-    REGISTER_BENCHMARK_FOR_BOOST_VECTOR(func, unit, varname); \
-    REGISTER_BENCHMARK_FOR_RVECTOR(func, unit, varname); \
-    REGISTER_BENCHMARK_FOR_UWR_VECTOR(func, unit, varname); \
-    REGISTER_BENCHMARK_FOR_UWR_STD_VECTOR(func, unit, varname); \
-    REGISTER_BENCHMARK_FOR_SIMPLE_VECTOR(func, unit, varname)
+    REGISTER_BENCHMARK_FOR_TYPE(func, unit, varname, T_t); \
+    REGISTER_BENCHMARK_FOR_TYPE(func, unit, varname, NT_t)
 
 /*
  * register all benchmarks
  */
-REGISTER_BENCHMARK(BM_push_back,           kMicrosecond,  PUSH_BACK);
+REGISTER_BENCHMARK(BM_push_back,           kMillisecond,  PUSH_BACK);
 REGISTER_BENCHMARK(BM_push_back_pop_back,  kMicrosecond,  PUSH_BACK_POP_BACK);
 REGISTER_BENCHMARK(BM_resize,              kMicrosecond,  RESIZE);
 REGISTER_BENCHMARK(BM_insert,              kMicrosecond,  INSERT);
 REGISTER_BENCHMARK(BM_create,              kMicrosecond,  CREATE);
 REGISTER_BENCHMARK(BM_assign,              kMicrosecond,  ASSIGN);
 REGISTER_BENCHMARK(BM_emplace,             kMicrosecond,  EMPLACE);
+REGISTER_BENCHMARK(BM_erase,               kMicrosecond,  ERASE);
 
 int main(int argc, char** argv) {
     // turn on thounsand commas when printing

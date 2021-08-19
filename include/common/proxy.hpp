@@ -188,7 +188,6 @@ public:
         size_type rest = static_cast<size_type>(
                 std::distance(position, end));
         InIt split = std::next(this->first, rest);
-
         T* new_end = mem::umove_and_copy(spill, position,
                         end, this->first, split);
         mem::ucopy(end, split, this->last);

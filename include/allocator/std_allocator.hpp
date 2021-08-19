@@ -66,8 +66,7 @@ std_allocator<T>::realloc(size_type req) {
     req = this->fix_capacity(req);
 
     pointer new_data = this->alloc(req);
-    umove(new_data, this->m_data, this->m_size);
-    destroy(this->m_data, this->m_size);
+    umove_and_destroy(new_data, this->m_data, this->m_size);
     this->dealloc(this->m_data, this->m_capacity);
 
     this->m_data = new_data;
