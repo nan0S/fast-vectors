@@ -44,8 +44,10 @@ else
         # "simple_vector_benchmark" \
         # "--benchmark_repetitions=100 --benchmark_filter=BM_create"
     run_test \
-        "vector_benchmark" \
-        "--benchmark_filter=<uwr_vector,.std::string>"
+        "simple_vector_benchmark" \
+        "--benchmark_filter=BM_erase"
+    # run_test \
+        # "single_vector_benchmark"
     # run_test \
         # "vector_benchmark" \
         # "--benchmark_filter=vector,.test_type>"
