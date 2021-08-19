@@ -9,6 +9,8 @@
 #include <vector.hpp>
 #include <rvector.h>
 #include <std_vector.hpp>
+#include <big_vector.hpp>
+#include <c_vector.hpp>
 
 using namespace benchmark; 
 using args_t = std::vector<int64_t>;
@@ -54,6 +56,8 @@ static const args_t ERASE_ARG = { 200'000, 10 };
 #define DO_UWR_VECTOR_BENCH
 #define DO_RVECTOR_BENCH
 #define DO_UWR_STD_VECTOR_BENCH
+// #define DO_BIG_VECTOR_BENCH
+// #define DO_C_VECTOR_BENCH
 
 // turn on verbose printing for test_type type
 // #define VERBOSE_FOR_TEST_TYPE
@@ -73,6 +77,10 @@ template<class T>
 using uwr_vector = uwr::vector<T>;
 template<class T>
 using uwr_std_vector = uwr::std_vector<T>;
+template<class T>
+using big_vector = uwr::big_vector<T>;
+template<class T>
+using c_vector = uwr::c_vector<T>;
 
 /*
  * benchmark push_back
@@ -425,12 +433,28 @@ void BM_erase(State& s) {
 #define REGISTER_BENCHMARK_FOR_UWR_STD_VECTOR(func, unit, varname, type)
 #endif
 
+#ifdef DO_BIG_VECTOR_BENCH
+#define REGISTER_BENCHMARK_FOR_BIG_VECTOR(func, unit, varname, type) \
+    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, type, big_vector)
+#else
+#define REGISTER_BENCHMARK_FOR_BIG_VECTOR(func, unit, varname, type)
+#endif
+
+#ifdef DO_C_VECTOR_BENCH
+#define REGISTER_BENCHMARK_FOR_C_VECTOR(func, unit, varname, type) \
+    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, type, c_vector)
+#else
+#define REGISTER_BENCHMARK_FOR_C_VECTOR(func, unit, varname, type)
+#endif
+
 #define REGISTER_BENCHMARK_FOR_TYPE(func, unit, varname, type) \
     REGISTER_BENCHMARK_FOR_STD_VECTOR(func, unit, varname, type); \
     REGISTER_BENCHMARK_FOR_BOOST_VECTOR(func, unit, varname, type); \
     REGISTER_BENCHMARK_FOR_RVECTOR(func, unit, varname, type); \
     REGISTER_BENCHMARK_FOR_UWR_VECTOR(func, unit, varname, type); \
-    REGISTER_BENCHMARK_FOR_UWR_STD_VECTOR(func, unit, varname, type)
+    REGISTER_BENCHMARK_FOR_UWR_STD_VECTOR(func, unit, varname, type); \
+    REGISTER_BENCHMARK_FOR_BIG_VECTOR(func, unit, varname, type); \
+    REGISTER_BENCHMARK_FOR_C_VECTOR(func, unit, varname, type)
 
 #define REGISTER_BENCHMARK(func, unit, varname) \
     REGISTER_BENCHMARK_FOR_TYPE(func, unit, varname, T_t); \

@@ -154,10 +154,7 @@ big_allocator<T>::do_realloc(size_type req, false_type) {
     // TODO: unlikely here (?)
     if (new_data == (pointer)-1) {
         new_data = this->alloc(req);
-
-        umove(new_data, this->m_data, this->m_size);
-        destroy(this->m_data, this->m_size);
-
+        umove_and_destroy(new_data, this->m_data, this->m_size);
         this->dealloc(this->m_data, this->m_capacity);
     }
 
@@ -174,17 +171,10 @@ big_allocator<T>::do_expand_or_alloc_raw(size_type req, pointer& out_ptr, true_t
     out_ptr = (pointer)mremap(
             this->m_data,
             this->m_capacity * sizeof(T),
-            req * sizeof(T), 0);
+            req * sizeof(T),
+            MREMAP_MAYMOVE);
 
-    // TODO: unlikely here (?)
-    if (out_ptr == (pointer)-1) {
-        out_ptr = this->alloc(req);
-        return false;
-    }
-    else {
-        UWR_ASSERT(out_ptr == this->m_data);
-        return true;
-    }
+    return false;
 }
 
 template<class T>
