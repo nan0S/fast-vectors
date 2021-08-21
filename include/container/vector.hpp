@@ -902,8 +902,8 @@ operator>=(const vector<T, A>& lhs, const vector<T, A>& rhs) {
 template<class T, class A>
 constexpr std::ostream&
 operator<<(std::ostream& out, const vector<T, A>& v) {
-    for (typename vector<T, A>::size_type i = 0; i < v.size() - 1; ++i)
-        out << v[i] << ' ';
+    for (typename vector<T, A>::size_type i = 1; i < v.size(); ++i)
+        out << v[i - 1] << ' ';
     if (!v.empty())
         out << v.back();
     return out;

@@ -763,8 +763,8 @@ operator>=(const static_vector_alt<T, C>& lhs, const static_vector_alt<T, C>& rh
 template<class T, len_t C>
 constexpr std::ostream&
 operator<<(std::ostream& out, const static_vector_alt<T, C>& v) {
-    for (typename static_vector_alt<T, C>::size_type i = 0; i < v.size() - 1; ++i)
-        out << v[i] << ' ';
+    for (typename static_vector_alt<T, C>::size_type i = 1; i < v.size(); ++i)
+        out << v[i - 1] << ' ';
     if (!v.empty())
         out << v.back();
     return out;

@@ -779,8 +779,8 @@ operator>=(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
 template<class T, len_t C>
 constexpr std::ostream&
 operator<<(std::ostream& out, const static_vector<T, C>& v) {
-    for (typename static_vector<T, C>::size_type i = 0; i < v.size() - 1; ++i)
-        out << v[i] << ' ';
+    for (typename static_vector<T, C>::size_type i = 1; i < v.size(); ++i)
+        out << v[i - 1] << ' ';
     if (!v.empty())
         out << v.back();
     return out;

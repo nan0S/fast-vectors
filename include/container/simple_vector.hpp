@@ -830,8 +830,8 @@ operator>=(const simple_vector<T>& lhs, const simple_vector<T>& rhs) {
 template<class T>
 constexpr std::ostream&
 operator<<(std::ostream& out, const simple_vector<T>& v) {
-    for (typename simple_vector<T>::size_type i = 0; i < v.size() - 1; ++i)
-        out << v[i] << ' ';
+    for (typename simple_vector<T>::size_type i = 1; i < v.size(); ++i)
+        out << v[i - 1] << ' ';
     if (!v.empty())
         out << v.back();
     return out;
