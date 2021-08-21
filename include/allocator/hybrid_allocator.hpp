@@ -224,8 +224,8 @@ hybrid_allocator<T>::do_realloc(size_type req, true_type) {
             return new_data;
         }
         case 0b11: { /* both are big sizes */
-// TODO: remove
-#ifdef UWR_TRACK
+            // TODO: remove
+            #ifdef UWR_TRACK
             pointer ret = (pointer)mremap(
                     this->m_data,
                     this->m_capacity * sizeof(T),
@@ -233,13 +233,13 @@ hybrid_allocator<T>::do_realloc(size_type req, true_type) {
                     MREMAP_MAYMOVE);
             counters::mremaps(this->m_data == ret);
             return ret;
-#else
+            #else
             return (pointer)mremap(
                     this->m_data,
                     this->m_capacity * sizeof(T),
                     req * sizeof(T),
                     MREMAP_MAYMOVE);
-#endif
+            #endif
         }
         default: { /* impossible */
             UWR_ASSERT(false);
@@ -278,13 +278,13 @@ hybrid_allocator<T>::do_realloc(size_type req, false_type) {
                     this->m_capacity * sizeof(T),
                     req * sizeof(T), 0);
 
-// TODO: remove
-#ifdef UWR_TRACK
+            // TODO: remove
+            #ifdef UWR_TRACK
             counters::mremaps(this->m_data == new_data);
-#endif
+            #endif
 
-// TODO: remove
-#ifdef UWR_VERBOSE_PRINTING
+            // TODO: remove
+            #ifdef UWR_VERBOSE_PRINTING
             if (new_data == this->m_data) {
                 std::cout << "ha: "
                     << npages(this->m_capacity)
@@ -292,7 +292,7 @@ hybrid_allocator<T>::do_realloc(size_type req, false_type) {
                     << (new_data == this->m_data)
                     << std::endl;
             }
-#endif
+            #endif
 
             if (new_data == (pointer)-1) {
                 new_data = this->big_alloc(req);
@@ -316,11 +316,11 @@ hybrid_allocator<T>::expand_or_dealloc_and_alloc_raw(size_type req) {
 
     req = this->fix_capacity(req);
 
-// TODO: remove
-#ifdef UWR_TRACK
-    if (this->m_capacity)
+   // TODO: remove
+   #ifdef UWR_TRACK
+   if (this->m_capacity)
         counters::grows(double(req) / this->m_capacity);
-#endif
+   #endif
 
     if (UWR_LIKELY(!!this->m_data)) {
         return this->do_expand_or_dealloc_and_alloc_raw(req,
@@ -422,10 +422,10 @@ hybrid_allocator<T>::do_expand_or_dealloc_and_alloc_raw(size_type req, false_typ
                     this->m_capacity * sizeof(T),
                     req * sizeof(T), 0);
 
-// TODO: remove
-#ifdef UWR_TRACK
+            // TODO: remove
+            #ifdef UWR_TRACK
             counters::mremaps(this->m_data == (pointer)new_data);
-#endif
+            #endif
 
             if (new_data == (pointer)-1) {
                 // first alloc, then dealloc - why?
