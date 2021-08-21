@@ -62,12 +62,9 @@ public:
      * derived allocators
      */
     size_type fix_capacity(size_type n);
-
     pointer alloc(size_type n) const;
     void realloc(size_type n);
     void dealloc(pointer data, size_type n) const;
-
-    bool expand_or_alloc_raw(size_type req, pointer& out_ptr);
     bool expand_or_dealloc_and_alloc_raw(size_type req);
 
 private:

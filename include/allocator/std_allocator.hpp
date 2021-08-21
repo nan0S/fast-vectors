@@ -17,12 +17,9 @@ public:
     constexpr explicit std_allocator(size_type n);
 
     UWR_FORCEINLINE constexpr size_type fix_capacity(size_type n) const;
-
     UWR_FORCEINLINE constexpr pointer alloc(size_type n) const;
     UWR_FORCEINLINE constexpr void dealloc(pointer data, size_type n) const;
     constexpr void realloc(size_type req);
-
-    constexpr bool expand_or_alloc_raw(size_type req, pointer& out_ptr);
     constexpr bool expand_or_dealloc_and_alloc_raw(size_type req);
 };
 
@@ -71,17 +68,6 @@ std_allocator<T>::realloc(size_type req) {
 
     this->m_data = new_data;
     this->m_capacity = req;
-}
-
-template<class T>
-constexpr bool
-std_allocator<T>::expand_or_alloc_raw(size_type req, pointer& out_ptr) {
-    UWR_ASSERT(req > this->m_capacity);
-    UWR_ASSERT(req == this->fix_capacity(req));
-
-    out_ptr = this->alloc(req);
-
-    return false;
 }
 
 template<class T>

@@ -55,22 +55,6 @@ UWR_FORCEINLINE constexpr
 T* fill(T* begin, len_t n, const T& val);
 
 /*
- * hybrid fill continuous memory,
- * initialized and unitialized variants
- */
-template<class T>
-UWR_FORCEINLINE constexpr
-T_Copy_A<T> hybrid_fill(T* begin, len_t n, const T& val);
-template<class T>
-UWR_FORCEINLINE constexpr
-T_Copy_C<T> hybrid_ufill(T* begin, len_t n, const T& val);
-// TODO: temporary
-#define HYBRID_THRESHOLD 1
-template<class T>
-constexpr
-void _hybrid_fill(T* begin, len_t n, const T& val);
-
-/*
  * fill unitialized continuous memory
  */
 template<class T>
@@ -268,40 +252,6 @@ template<class T>
 constexpr
 T* fill(T* begin, len_t n, const T& val) {
     return std::fill_n(begin, n, val);
-}
-
-// TODO: remove or standarize
-template<class T>
-constexpr
-T_Copy_A<T> hybrid_fill(T* begin, len_t n, const T& val) {
-    if (n <= HYBRID_THRESHOLD)
-        fill(begin, n, val);
-    else
-        _hybrid_fill(begin, n, val);
-}
-
-// TODO: remove or standarize
-template<class T>
-constexpr
-T_Copy_C<T> hybrid_ufill(T* begin, len_t n, const T& val) {
-    if (n <= HYBRID_THRESHOLD)
-        ufill(begin, n, val);
-    else
-        _hybrid_fill(begin, n, val);
-}
-
-// TODO: remove or standarize
-template<class T>
-constexpr
-void _hybrid_fill(T* begin, len_t n, const T& val) {
-    *begin = val;
-    len_t cur = 1;
-    while (2 * cur <= n) {
-        std::memcpy(begin + cur, begin, cur * sizeof(T));
-        cur *= 2;
-    }
-    int last = n - cur;
-    std::memcpy(begin + cur, begin + cur - last, last * sizeof(T));
 }
 
 template<class T>

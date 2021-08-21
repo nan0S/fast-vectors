@@ -20,12 +20,9 @@ public:
     constexpr explicit malloc_allocator(size_type n);
 
     UWR_FORCEINLINE constexpr size_type fix_capacity(size_type n) const;
-
     UWR_FORCEINLINE constexpr pointer alloc(size_type n) const;
     UWR_FORCEINLINE constexpr void dealloc(pointer data, size_type n) const;
     UWR_FORCEINLINE constexpr void realloc(size_type req);
-
-    constexpr bool expand_or_alloc_raw(size_type req, pointer& out_ptr);
     constexpr bool expand_or_dealloc_and_alloc_raw(size_type req);
 
 private:
@@ -77,14 +74,19 @@ malloc_allocator<T>::realloc(size_type req) {
 }
 
 template<class T>
-constexpr bool
-malloc_allocator<T>::expand_or_alloc_raw(size_type req, pointer& out_ptr) {
-    UWR_ASSERT(req > this->m_capacity);
-    UWR_ASSERT(req == this->fix_capacity(req));
+constexpr T*
+malloc_allocator<T>::do_realloc(size_type req, true_type) {
+    return (T*)::realloc(this->m_data, req * sizeof(T));
+}
 
-    out_ptr = this->alloc(req);
+template<class T>
+constexpr T*
+malloc_allocator<T>::do_realloc(size_type req, false_type) {
+    pointer new_data = this->alloc(req);
+    umove_and_destroy(new_data, this->m_data, this->m_size);
+    this->dealloc(this->m_data, this->m_capacity);
 
-    return false;
+    return new_data;
 }
 
 template<class T>
@@ -99,22 +101,6 @@ malloc_allocator<T>::expand_or_dealloc_and_alloc_raw(size_type req) {
     this->m_data = this->alloc(this->m_capacity);
 
     return false;
-}
-
-template<class T>
-constexpr T*
-malloc_allocator<T>::do_realloc(size_type req, true_type) {
-    return (T*)::realloc(this->m_data, req * sizeof(T));
-}
-
-template<class T>
-constexpr T*
-malloc_allocator<T>::do_realloc(size_type req, false_type) {
-    pointer new_data = this->alloc(req);
-    umove_and_destroy(new_data, this->m_data, this->m_size);
-    this->dealloc(this->m_data, this->m_capacity);
-
-    return new_data;
 }
 
 } // namespace uwr::mem

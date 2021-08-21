@@ -133,7 +133,8 @@ private:
 
 template<class T, class A>
 constexpr
-vector<T, A>::vector() noexcept {}
+vector<T, A>::vector() noexcept
+    : m_alloc() {}
 
 template<class T, class A>
 constexpr
@@ -446,8 +447,9 @@ vector<T, A>::safe_pop_back() noexcept {
         this->pop_back();
         return true;
     }
-    else
+    else {
         return false;
+    }
 }
 
 template<class T, class A>
@@ -492,7 +494,7 @@ vector<T, A>::erase(const_iterator pos) {
     return m_pos;
 }
 
-#if 0
+#if 0 // TODO: check cache unfriendly
 template<class T, class A>
 constexpr typename vector<T, A>::iterator
 vector<T, A>::erase(const_iterator first, const_iterator last) {
@@ -512,7 +514,7 @@ vector<T, A>::erase(const_iterator first, const_iterator last) {
 
     return m_first;
 }
-#else
+#else // TODO: check cache friendly
 template<class T, class A>
 constexpr typename vector<T, A>::iterator
 vector<T, A>::erase(const_iterator first, const_iterator last) {
@@ -556,67 +558,6 @@ vector<T, A>::clear() noexcept {
     this->m_alloc.m_size = 0;
 }
 
-#if 0 // broken
-template<class T, class A>
-template<class... Args>
-constexpr typename vector<T, A>::iterator
-vector<T, A>::emplace(const_iterator pos, Args&&... args) {
-    T* const m_end = this->end();
-
-    if (this->size() == this->capacity()) {
-        size_type new_capacity = this->m_alloc.fix_capacity(
-                this->next_capacity(this->size() + 1));
-        T* new_data;
-
-        if (this->m_alloc.expand_or_alloc_raw(
-                    new_capacity, new_data)) {
-            T* const m_pos = const_cast<T* const>(pos);
-            
-            if (m_pos != m_end) {
-                mem::shiftr(m_pos + 1, m_pos, m_end);
-                *m_pos = mem::create<T>(std::forward<Args>(args)...);
-            }
-            else
-                new (m_pos) T(std::forward<Args>(args)...);
-
-            ++this->m_alloc.m_size;
-            this->m_alloc.m_capacity = new_capacity;
-
-            return m_pos;
-        }
-        else {
-            UWR_ASSERT(new_data);
-
-            T* const e_begin = mem::umove(new_data, this->cbegin(), pos);
-            mem::umove<T, const T*>(e_begin + 1, pos, m_end);
-            new (e_begin) T(std::forward<Args>(args)...);
-            
-            mem::destroy(this->data(), m_end);
-            this->m_alloc.dealloc(this->data(), this->capacity());
-
-            ++this->m_alloc.m_size;
-            this->m_alloc.m_capacity = new_capacity;
-            this->m_alloc.m_data = new_data;
-
-            return e_begin;
-        }
-    }
-    else {
-        T* const m_pos = const_cast<T* const>(pos);
-        
-        if (m_pos != m_end) {
-            mem::shiftr(m_pos + 1, m_pos, m_end);
-            *m_pos = mem::create<T>(std::forward<Args>(args)...);
-        }
-        else
-            new (m_pos) T(std::forward<Args>(args)...);
-
-        ++this->m_alloc.m_size;
-
-        return m_pos;
-    }
-}
-#else
 template<class T, class A>
 template<class... Args>
 constexpr typename vector<T, A>::iterator
@@ -636,14 +577,14 @@ vector<T, A>::emplace(const_iterator pos, Args&&... args) {
         mem::shiftr(m_pos + 1, m_pos, m_end);
         *m_pos = mem::create<T>(std::forward<Args>(args)...);
     }
-    else
+    else {
         new (m_pos) T(std::forward<Args>(args)...);
+    }
 
     ++this->m_alloc.m_size;
 
     return m_pos;
 }
-#endif
 
 template<class T, class A>
 template<class... Args>
@@ -723,80 +664,6 @@ vector<T, A>::priv_resize(ResizeProxy&& proxy) {
     this->m_alloc.m_size = proxy.n;
 }
 
-#if 0 // broken
-template<class T, class A>
-template<class InsertProxy>
-constexpr typename vector<T, A>::iterator
-vector<T, A>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
-    T* const m_pos = const_cast<T* const>(pos);
-
-    if (UWR_UNLIKELY(!proxy.count))
-        return m_pos;
-
-    size_type new_size = this->size() + proxy.count;
-
-    if (new_size > this->capacity()) {
-        size_type new_capacity = this->m_alloc.fix_capacity(
-                this->next_capacity(new_size));
-        T* new_data;
-
-        if (this->m_alloc.expand_or_alloc_raw(
-                    new_capacity, new_data)) {
-            T* const spill = m_pos + proxy.count;
-            T* const m_end = this->end();
-
-            if (spill < m_end) {
-                mem::shiftr(spill, m_pos, m_end);
-                proxy.insert_without_spill(m_pos, spill);
-            }
-            else {
-                // mem::umove(spill, m_pos, m_end);
-                proxy.insert_with_spill(m_pos, m_end, spill);
-            }
-
-            this->m_alloc.m_capacity = new_capacity;
-            this->m_alloc.m_size = new_size;
-
-            return m_pos;
-        }
-        else {
-            UWR_ASSERT(new_data);
-
-            T* const m_end = this->end();
-            T* const i_begin = mem::umove(new_data, this->cbegin(), pos);
-            T* const i_end = i_begin + proxy.count;
-            mem::umove(i_end, m_pos, m_end);
-            proxy.insert_with_spill(i_begin, i_begin, i_end);
-
-            mem::destroy(this->data(), m_end);
-            this->m_alloc.dealloc(this->data(), this->capacity());
-
-            this->m_alloc.m_data = new_data;
-            this->m_alloc.m_capacity = new_capacity;
-            this->m_alloc.m_size = new_size;
-            
-            return i_begin;
-        }
-    }
-    else {
-        T* const m_end = this->end();
-        T* const spill = m_pos + proxy.count;
-
-        if (spill > m_end) {
-            // mem::umove(spill, m_pos, m_end);
-            proxy.insert_with_spill(m_pos, m_end, spill);
-        }
-        else {
-            mem::shiftr(spill, m_pos, m_end);
-            proxy.insert_without_spill(m_pos, spill);
-        }
-
-        this->m_alloc.m_size = new_size;
-
-        return m_pos;
-    }
-}
-#else
 template<class T, class A>
 template<class InsertProxy>
 constexpr typename vector<T, A>::iterator
@@ -823,7 +690,6 @@ vector<T, A>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
         proxy.insert_without_spill(m_pos, spill);
     }
     else {
-        // mem::umove(spill, m_pos, m_end);
         proxy.insert_with_spill(m_pos, m_end, spill);
     }
 
@@ -831,7 +697,6 @@ vector<T, A>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
 
     return m_pos;
 }
-#endif
 
 
 /*

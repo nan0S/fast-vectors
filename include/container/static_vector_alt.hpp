@@ -441,8 +441,9 @@ static_vector_alt<T, C>::safe_pop_back() noexcept {
         this->pop_back();
         return true;
     }
-    else
+    else {
         return false;
+    }
 }
 
 template<class T, len_t C>
@@ -487,7 +488,7 @@ static_vector_alt<T, C>::erase(const_iterator pos) {
     return m_pos;
 }
 
-#if 0 // seems to be worse
+#if 0 // TODO: check cache unfriendly version
 template<class T, len_t C>
 constexpr typename static_vector_alt<T, C>::iterator
 static_vector_alt<T, C>::erase(const_iterator first, const_iterator last) {
@@ -502,7 +503,7 @@ static_vector_alt<T, C>::erase(const_iterator first, const_iterator last) {
 
     return m_first;
 }
-#else // more cache friendly
+#else // TODO: check cache friendly version
 template<class T, len_t C>
 constexpr typename static_vector_alt<T, C>::iterator
 static_vector_alt<T, C>::erase(const_iterator first, const_iterator last) {
@@ -511,6 +512,7 @@ static_vector_alt<T, C>::erase(const_iterator first, const_iterator last) {
 
     if (UWR_LIKELY(m_first != m_last)) {
         T* const new_end = m_first + (this->m_end - m_last);
+
         if (new_end >= m_last) {
             mem::move_and_destroy(
                 mem::move(m_first, m_last, new_end),
@@ -521,6 +523,7 @@ static_vector_alt<T, C>::erase(const_iterator first, const_iterator last) {
                 mem::shiftl(m_first, m_last, m_end),
                 m_end);
         }
+
         this->m_end = new_end;
     }
 
@@ -566,8 +569,9 @@ static_vector_alt<T, C>::emplace(const_iterator pos, Args&&... args) {
         // T(std::forward<Args>(args)...) will do
         *m_pos = mem::create<T>(std::forward<Args>(args)...);
     }
-    else
+    else {
         new (m_pos) T(std::forward<Args>(args)...);
+    }
 
     ++this->m_end;
 

@@ -449,8 +449,9 @@ static_vector<T, C>::safe_pop_back() noexcept {
         this->pop_back();
         return true;
     }
-    else
+    else {
         return false;
+    }
 }
 
 template<class T, len_t C>
@@ -495,7 +496,7 @@ static_vector<T, C>::erase(const_iterator pos) {
     return m_pos;
 }
 
-#if 0 // seems to be worse even though it has one more if
+#if 0 // TODO: check cache unfriendly version
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::erase(const_iterator first, const_iterator last) {
@@ -515,7 +516,7 @@ static_vector<T, C>::erase(const_iterator first, const_iterator last) {
 
     return m_first;
 }
-#else // cache friendly version
+#else // TODO: check cache friendly version
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::erase(const_iterator first, const_iterator last) {
@@ -582,8 +583,9 @@ static_vector<T, C>::emplace(const_iterator pos, Args&&... args) {
         // T(std::forward<Args>(args)...) will do
         *m_pos = mem::create<T>(std::forward<Args>(args)...);
     }
-    else
+    else {
         new (m_pos) T(std::forward<Args>(args)...);
+    }
     
     ++this->m_size;
 

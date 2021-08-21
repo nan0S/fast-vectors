@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <bits/getopt_ext.h>
 #include <test_type/test_type.hpp>
+#include <identifiers/identifiers.hpp>
 #include <boost/container/vector.hpp>
 #include <vector>
 #include <rvector.h>

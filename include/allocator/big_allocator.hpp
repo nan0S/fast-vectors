@@ -22,20 +22,14 @@ public:
     constexpr explicit big_allocator(size_type n);
 
     UWR_FORCEINLINE constexpr size_type fix_capacity(size_type n) const;
-
     UWR_FORCEINLINE constexpr pointer alloc(size_type n) const;
     UWR_FORCEINLINE constexpr void dealloc(pointer data, size_type n) const;
     UWR_FORCEINLINE constexpr void realloc(size_type req);
-
-    UWR_FORCEINLINE constexpr bool expand_or_alloc_raw(size_type req, pointer& out_ptr);
     UWR_FORCEINLINE constexpr bool expand_or_dealloc_and_alloc_raw(size_type req);
 
 private:
     constexpr void do_realloc(size_type req, true_type);
     constexpr void do_realloc(size_type req, false_type);
-
-    constexpr bool do_expand_or_alloc_raw(size_type req, pointer& out_ptr, true_type);
-    constexpr bool do_expand_or_alloc_raw(size_type req, pointer& out_ptr, false_type);
     constexpr bool do_expand_or_dealloc_and_alloc_raw(size_type req, true_type);
     constexpr bool do_expand_or_dealloc_and_alloc_raw(size_type req, false_type);
 };
@@ -95,39 +89,6 @@ big_allocator<T>::realloc(size_type req) {
 }
 
 template<class T>
-constexpr bool
-big_allocator<T>::expand_or_alloc_raw(size_type req, pointer& out_ptr) {
-    UWR_ASSERT(req > this->m_capacity);
-    UWR_ASSERT(req == this->fix_capacity(req));
-
-    if (UWR_LIKELY(!!this->m_data))
-        return this->do_expand_or_alloc_raw(req, out_ptr,
-                std::is_trivially_move_constructible<T>());
-    else {
-        out_ptr = this->alloc(req);
-        return false;
-    }
-}
-
-template<class T>
-constexpr bool
-big_allocator<T>::expand_or_dealloc_and_alloc_raw(size_type req) {
-    UWR_ASSERT(req > this->m_capacity);
-
-    req = this->fix_capacity(req);
-
-    if (UWR_LIKELY(!!this->m_data))
-        return this->do_expand_or_dealloc_and_alloc_raw(req,
-                std::is_trivially_move_constructible<T>());
-    else {
-        this->m_data = this->alloc(req);
-        this->m_capacity = req;
-
-        return false;
-    }
-}
-
-template<class T>
 constexpr void
 big_allocator<T>::do_realloc(size_type req, true_type) {
     UWR_ASSERT(req > this->m_capacity);
@@ -161,43 +122,23 @@ big_allocator<T>::do_realloc(size_type req, false_type) {
     this->m_data = new_data;
 }
 
-// TODO: simplify
 template<class T>
 constexpr bool
-big_allocator<T>::do_expand_or_alloc_raw(size_type req, pointer& out_ptr, true_type) {
+big_allocator<T>::expand_or_dealloc_and_alloc_raw(size_type req) {
     UWR_ASSERT(req > this->m_capacity);
-    UWR_ASSERT(req == this->fix_capacity(req));
 
-    out_ptr = (pointer)mremap(
-            this->m_data,
-            this->m_capacity * sizeof(T),
-            req * sizeof(T),
-            MREMAP_MAYMOVE);
+    req = this->fix_capacity(req);
 
-    return false;
-}
+    if (UWR_LIKELY(!!this->m_data))
+        return this->do_expand_or_dealloc_and_alloc_raw(req,
+                std::is_trivially_move_constructible<T>());
+    else {
+        this->m_data = this->alloc(req);
+        this->m_capacity = req;
 
-template<class T>
-constexpr bool
-big_allocator<T>::do_expand_or_alloc_raw(size_type req, pointer& out_ptr, false_type) {
-    UWR_ASSERT(req > this->m_capacity);
-    UWR_ASSERT(req == this->fix_capacity(req));
-
-    out_ptr = (pointer)mremap(
-            this->m_data,
-            this->m_capacity * sizeof(T),
-            req * sizeof(T), 0);
-
-    // TODO: unlikely here (?)
-    if (out_ptr == (pointer)-1) {
-        out_ptr = this->alloc(req);
         return false;
     }
-    else {
-        UWR_ASSERT(out_ptr == this->m_data);
-        return true;
-    }
-}    
+}
 
 template<class T>
 constexpr bool
