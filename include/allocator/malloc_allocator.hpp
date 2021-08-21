@@ -69,7 +69,7 @@ constexpr void
 malloc_allocator<T>::realloc(size_type req) {
     req = this->fix_capacity(req);
     this->m_data = this->do_realloc(req,
-        std::is_trivially_move_constructible<T>());
+        is_trivially_relocatable<T>());
     this->m_capacity = req;
 }
 

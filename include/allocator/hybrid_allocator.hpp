@@ -41,6 +41,11 @@ struct counters {
                   << "mean grow       = " << mean(grows) << "\n"
                   << std::endl;
     }
+
+    static void reset() {
+        mremaps = {};
+        grows = {};
+    }
 };
 
 accumulator_set<int,
@@ -193,7 +198,7 @@ hybrid_allocator<T>::realloc(size_type req) {
 
     if (UWR_LIKELY(!!this->m_data)) {
         this->m_data = this->do_realloc(req,
-            std::is_trivially_move_constructible<T>());
+            is_trivially_relocatable<T>());
     }
     else {
         this->m_data = this->alloc(req);
@@ -324,7 +329,7 @@ hybrid_allocator<T>::expand_or_dealloc_and_alloc_raw(size_type req) {
 
     if (UWR_LIKELY(!!this->m_data)) {
         return this->do_expand_or_dealloc_and_alloc_raw(req,
-                std::is_trivially_move_constructible<T>());
+                is_trivially_relocatable<T>());
     }
     else {
         this->m_data = this->alloc(req);

@@ -52,9 +52,6 @@ big_allocator<T>::fix_capacity(size_type n) const {
 #endif
     return ((n * sizeof(T) + page_size - 1) / page_size)
             * page_size / sizeof(T);
-    // TODO: change
-    // return ((n * sizeof(T) + page_size - 1) / page_size + 1)
-        // * page_size / sizeof(T);
 }
 
 template<class T>
@@ -80,10 +77,13 @@ constexpr void
 big_allocator<T>::realloc(size_type req) {
     req = this->fix_capacity(req);
 
-    if (UWR_LIKELY(!!this->m_data))
-        this->do_realloc(req, std::is_trivially_move_constructible<T>());
-    else
+    if (UWR_LIKELY(!!this->m_data)) {
+        this->do_realloc(req,
+                is_trivially_relocatable<T>());
+    }
+    else {
         this->m_data = this->alloc(req);
+    }
 
     this->m_capacity = req;
 }
@@ -112,7 +112,6 @@ big_allocator<T>::do_realloc(size_type req, false_type) {
             this->m_capacity * sizeof(T),
             req * sizeof(T), 0);
 
-    // TODO: unlikely here (?)
     if (new_data == (pointer)-1) {
         new_data = this->alloc(req);
         umove_and_destroy(new_data, this->m_data, this->m_size);
@@ -129,9 +128,10 @@ big_allocator<T>::expand_or_dealloc_and_alloc_raw(size_type req) {
 
     req = this->fix_capacity(req);
 
-    if (UWR_LIKELY(!!this->m_data))
+    if (UWR_LIKELY(!!this->m_data)) {
         return this->do_expand_or_dealloc_and_alloc_raw(req,
-                std::is_trivially_move_constructible<T>());
+                is_trivially_relocatable<T>());
+    }
     else {
         this->m_data = this->alloc(req);
         this->m_capacity = req;
@@ -176,7 +176,6 @@ big_allocator<T>::do_expand_or_dealloc_and_alloc_raw(size_type req, false_type) 
             req * sizeof(T),
             0);
 
-    // TODO: unlikely here (?)
     if (new_data == (void*)-1) {
         destroy(this->m_data, this->m_size);
         this->dealloc(this->m_data, this->m_capacity);
