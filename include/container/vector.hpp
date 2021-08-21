@@ -32,8 +32,8 @@ public:
     constexpr vector() noexcept;
     constexpr explicit vector(size_type n);
     constexpr vector(size_type n, const T& val);
-    template<class InputIterator, class = typename std::iterator_traits<InputIterator>::value_type>
-    constexpr vector(InputIterator first, InputIterator last);
+    template<class InIt, class = typename std::iterator_traits<InIt>::value_type>
+    constexpr vector(InIt first, InIt last);
     constexpr vector(const vector& x);
     constexpr vector(vector&& x) noexcept;
     constexpr vector(std::initializer_list<T> ilist);
@@ -81,8 +81,8 @@ public:
     UWR_FORCEINLINE constexpr T* data() noexcept;
     UWR_FORCEINLINE constexpr const T* data() const noexcept;
 
-    template<class InputIterator, class = typename std::iterator_traits<InputIterator>::value_type>
-    UWR_FORCEINLINE constexpr void assign(InputIterator first, InputIterator last);
+    template<class InIt, class = typename std::iterator_traits<InIt>::value_type>
+    UWR_FORCEINLINE constexpr void assign(InIt first, InIt last);
     UWR_FORCEINLINE constexpr void assign(size_type n, const T& val);
     UWR_FORCEINLINE constexpr void assign(std::initializer_list<T> ilist);
 
@@ -96,8 +96,8 @@ public:
     UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, const T& value);
     UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, T&& value);
     UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, size_type count, const T& value);
-    template<class InputIterator, class = typename std::iterator_traits<InputIterator>::value_type>
-    UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, InputIterator first, InputIterator last);
+    template<class InIt, class = typename std::iterator_traits<InIt>::value_type>
+    UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, InIt first, InIt last);
     UWR_FORCEINLINE constexpr iterator insert(const_iterator pos, std::initializer_list<T> ilist);
 
     constexpr iterator erase(const_iterator pos);
@@ -115,10 +115,10 @@ public:
 
 private:
     UWR_FORCEINLINE constexpr size_type next_capacity(size_type new_size) const noexcept;
-    template<class InputIterator>
-    UWR_FORCEINLINE constexpr void priv_copy_assign(InputIterator first, InputIterator last, size_type n);
-    template<class InputIterator>
-    UWR_FORCEINLINE constexpr iterator priv_copy_insert(const_iterator pos, InputIterator first, InputIterator last, size_type n);
+    template<class InIt>
+    UWR_FORCEINLINE constexpr void priv_copy_assign(InIt first, InIt last, size_type n);
+    template<class InIt>
+    UWR_FORCEINLINE constexpr iterator priv_copy_insert(const_iterator pos, InIt first, InIt last, size_type n);
 
     template<class ResizeProxy>
     constexpr void priv_resize(ResizeProxy&& proxy);
@@ -151,9 +151,9 @@ vector<T, A>::vector(size_type n, const T& val)
 }
 
 template<class T, class A>
-template<class InputIterator, class>
+template<class InIt, class>
 constexpr
-vector<T, A>::vector(InputIterator first, InputIterator last)
+vector<T, A>::vector(InIt first, InIt last)
     : m_alloc(std::distance(first, last)) {
     mem::ucopy(this->data(), first, last);
 }
@@ -397,9 +397,9 @@ vector<T, A>::data() const noexcept {
 }
 
 template<class T, class A>
-template<class InputIterator, class>
+template<class InIt, class>
 constexpr void
-vector<T, A>::assign(InputIterator first, InputIterator last) {
+vector<T, A>::assign(InIt first, InIt last) {
     this->priv_copy_assign(first, last,
             static_cast<size_type>(std::distance(first, last)));
 }
@@ -471,9 +471,9 @@ vector<T, A>::insert(const_iterator pos, size_type count, const T& value) {
 }
 
 template<class T, class A>
-template<class InputIterator, class>
+template<class InIt, class>
 constexpr typename vector<T, A>::iterator
-vector<T, A>::insert(const_iterator pos, InputIterator first, InputIterator last) {
+vector<T, A>::insert(const_iterator pos, InIt first, InIt last) {
     return this->priv_copy_insert(pos, first, last,
             static_cast<size_type>(std::distance(first, last)));
 }
@@ -612,17 +612,17 @@ vector<T, A>::next_capacity(size_type new_size) const noexcept {
 }
 
 template<class T, class A>
-template<class InputIterator>
+template<class InIt>
 constexpr void
-vector<T, A>::priv_copy_assign(InputIterator first, InputIterator last, size_type n) {
-    this->priv_assign(copy_assign_range_proxy<T, InputIterator>(first, last, n));
+vector<T, A>::priv_copy_assign(InIt first, InIt last, size_type n) {
+    this->priv_assign(copy_assign_range_proxy<T, InIt>(first, last, n));
 }
 
 template<class T, class A>
-template<class InputIterator>
+template<class InIt>
 constexpr typename vector<T, A>::iterator
-vector<T, A>::priv_copy_insert(const_iterator pos, InputIterator first, InputIterator last, size_type n) {
-    return this->priv_insert(pos, insert_copy_range_proxy<T, InputIterator>(first, last, n));
+vector<T, A>::priv_copy_insert(const_iterator pos, InIt first, InIt last, size_type n) {
+    return this->priv_insert(pos, insert_copy_range_proxy<T, InIt>(first, last, n));
 }
 
 template<class T, class A>
