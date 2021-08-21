@@ -527,16 +527,17 @@ template<class T>
 constexpr typename simple_vector<T>::iterator
 simple_vector<T>::erase(const_iterator first, const_iterator last) {
     T* const m_first = const_cast<T* const>(first);
+    T* const m_last = const_cast<T* const>(last);
 
-    if (UWR_LIKELY(first != last)) {
+    if (UWR_LIKELY(m_first != m_last)) {
         T* const m_end = this->end();
 
         mem::destroy(
-                mem::shiftl(m_first, last, m_end),
+                mem::shiftl(m_first, m_last, m_end),
                 m_end);
 
         this->m_size -= static_cast<size_type>(
-                std::distance(first, last));
+                std::distance(m_first, m_last));
     }
 
     return m_first;

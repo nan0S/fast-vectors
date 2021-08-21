@@ -1,10 +1,10 @@
 CXX := g++
-# check c++20, but write for at least c++17 compatibility
 # VERSION := -std=c++17
+# check c++20, but write for at least c++17 compatibility
 VERSION := -std=c++20
 
 # OFLAGS := -Ofast -march=native -flto -fomit-frame-pointer -s -DNDEBUG
-OFLAGS := -O3 -march=native -DNDEBUG -flto
+OFLAGS := -O3 -march=native -flto -DNDEBUG
 TFLAGS := -O0 -march=native
 WFLAGS := -Wall -Wextra
 IFLAGS := -I include -I src -I include/container

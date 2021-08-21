@@ -16,35 +16,41 @@ public:
         this->iters = iters;
         for (int i = 0; i < iters; ++i) {
             (dispatch_action<Ts>(i), ...);
-            // if ((i + 1) % 500 == 0)
-                // std::cout << get_length_sum() << std::endl;
         }
+        // print_stats();
     }
 
 private:
     void print_stats() {
-        // std::cout << "total number of vectors: "
-            // <<get_total_number_of_vectors() << 
+        size_t total_vectors = get_total_number_of_vectors();
+        size_t total_size_sum = get_vector_size_sum();
+        size_t min_vector_size = get_min_vector_size();
+        size_t max_vector_size = get_max_vector_size();
+        size_t avg_vector_size = total_size_sum / total_vectors;
+
+        std::cout
+            << "total number of vectors = "
+            << total_vectors << "\n"
+            << "vector size sum         = "
+            << total_size_sum << "\n"
+            << "avg vector size         = "
+            << avg_vector_size << "\n"
+            << "min vector size         = "
+            << min_vector_size << "\n"
+            << "max vector size         = "
+            << max_vector_size << "\n";
+    }
+
+    size_t get_total_number_of_vectors() {
+        return (get_env_of_type<Ts>().size() + ...);
+    }
+
+    size_t get_vector_size_sum() {
+        return (get_typed_vector_size_sum<Ts>() + ...);
     }
 
     template<class T>
-    void print_sizes() {
-        auto& typed_env = this->get_env_of_type<T>();
-        std::cout << typed_env.size() << ": ";
-        for (const auto& v : typed_env)
-            std::cout << v.size() << " ";
-        std::cout << std::endl;
-        for (const auto& v : typed_env)
-            std::cout << v.capacity() << " ";
-        std::cout << std::endl;
-    }
-
-    size_t get_length_sum() {
-        return (get_typed_length_sum<Ts>() + ...);
-    }
-
-    template<class T>
-    size_t get_typed_length_sum() {
+    size_t get_typed_vector_size_sum() {
         auto& typed_env = this->get_env_of_type<T>();
         size_t length_sum = 0;
 
@@ -52,6 +58,38 @@ private:
             length_sum += v.size();
 
         return length_sum;
+    }
+
+    size_t get_min_vector_size() {
+        return std::min({(get_typed_min_vector_size<Ts>(), ...)});
+    }
+
+    template<class T>
+    size_t get_typed_min_vector_size() {
+        auto& typed_env = this->get_env_of_type<T>();
+        size_t min_size = std::numeric_limits<size_t>::max();
+
+        for (const auto& v : typed_env)
+            if (v.size() < min_size)
+                min_size = v.size();
+
+        return min_size;
+    }
+
+    size_t get_max_vector_size() {
+        return std::min({(get_typed_max_vector_size<Ts>(), ...)});
+    }
+
+    template<class T>
+    size_t get_typed_max_vector_size() {
+        auto& typed_env = this->get_env_of_type<T>();
+        size_t max_size = std::numeric_limits<size_t>::min();
+
+        for (const auto& v : typed_env)
+            if (v.size() > max_size)
+                max_size = v.size();
+
+        return max_size;
     }
 
     template<class T>
@@ -309,6 +347,15 @@ void BM_environment(State& s) {
 
     // bench_timer::print();
     // bench_timer::reset();
+
+    #ifdef UWR_TRACK
+    uwr::mem::counters::print();
+    uwr::mem::counters::reset();
+    #endif
+    #ifdef RVECTOR_TRACK
+    mm::counters::print();
+    mm::counters::reset();
+    #endif
 
     int id = s.range(1);
     s.counters["t" + std::to_string(id)];

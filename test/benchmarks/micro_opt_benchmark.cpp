@@ -62,6 +62,8 @@ static_assert(C  >=  ERASE_ARG1,          "N  cannot  be  smaller  than  ERASE_A
 
 using uwr_static_vector = uwr::static_vector<value_type, C>;
 
+#if 0 // turn off because out-of-date
+
 /*
  * benchmark resize
  */
@@ -434,5 +436,7 @@ REGISTER_BENCHMARK(BM_safe_pop_back,  kNanosecond,  SAFE_POP_BACK);
 REGISTER_BENCHMARK(BM_insert,         kNanosecond,  INSERT);
 REGISTER_BENCHMARK(BM_erase,          kNanosecond,  ERASE);
 REGISTER_BENCHMARK(BM_emplace_back,   kNanosecond,  EMPLACE_BACK);
+
+#endif // out-of-data
 
 BENCHMARK_MAIN();

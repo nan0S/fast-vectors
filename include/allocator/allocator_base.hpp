@@ -80,4 +80,4 @@ public:
     pointer m_data;
 };
 
-}
+} // namespace uwr::mem

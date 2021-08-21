@@ -43,6 +43,11 @@ namespace mm
 	                  << "mean grow       = " << mean(grows) << "\n"
 	                  << std::endl;
 	    }
+
+	    static void reset() {
+			mremaps = {};
+			grows = {};
+		}
 	};
 
 	accumulator_set<int,
