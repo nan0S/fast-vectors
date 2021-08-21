@@ -19,12 +19,12 @@ using namespace benchmark;
  */
 
 /* number of iterations in vector environment */
-static    int  INT_ARG               =  2000;
-static    int  STRING_ARG            =  1000;
-static    int  TEST_TYPE_ARG         =  1000;
-static    int  ARRAY_ARG             =  1200;
-static    int  INT_STRING_ARG        =  1000;
-static    int  INT_STRING_ARRAY_ARG  =  1000;
+static  int  INT_ARG               =  2000;
+static  int  STRING_ARG            =  1000;
+static  int  TEST_TYPE_ARG         =  1000;
+static  int  ARRAY_ARG             =  1200;
+static  int  INT_STRING_ARG        =  1000;
+static  int  INT_STRING_ARRAY_ARG  =  1000;
 
 /* use the same number of iterations in all benchmarks */
 static int COMMON_ITERS = 0;
@@ -46,13 +46,13 @@ static  bool  DO_BIG_VECTOR_BENCH      =  0;
 static  bool  DO_C_VECTOR_BENCH        =  1;
 
 /* turn off some vectors from even compiling */
-// #define TURN_OFF_STD_VECTOR_BENCH
-#define TURN_OFF_BOOST_VECTOR_BENCH
-// #define TURN_OFF_RVECTOR_BENCH
-// #define TURN_OFF_UWR_VECTOR_BENCH
-#define TURN_OFF_UWR_STD_VECTOR_BENCH
-#define TURN_OFF_BIG_VECTOR_BENCH
-// #define TURN_OFF_C_VECTOR_BENCH
+#define TURN_ON_STD_VECTOR_BENCH
+// #define TURN_ON_BOOST_VECTOR_BENCH
+#define TURN_ON_RVECTOR_BENCH
+#define TURN_ON_UWR_VECTOR_BENCH
+// #define TURN_ON_UWR_STD_VECTOR_BENCH
+// #define TURN_ON_BIG_VECTOR_BENCH
+#define TURN_ON_C_VECTOR_BENCH
 
 /* default benchmark type to run */
 static int benchmark_type = bench_type::PUSH_ONLY;
@@ -215,49 +215,49 @@ static void ParseCustomOptions(int argc, char** argv) {
     if (cond) \
         REGISTER_BENCHMARK_FOR_VECTOR(unit, varname, counter, type, vector, __VA_ARGS__)
 
-#ifndef TURN_OFF_STD_VECTOR_BENCH
+#ifdef TURN_ON_STD_VECTOR_BENCH
 #define REGISTER_BENCHMARK_FOR_STD_VECTOR(unit, varname, counter, type, ...) \
     COND_REGISTER_BENCHMARK_FOR_VECTOR(DO_STD_VECTOR_BENCH, unit, varname, counter, type, std_vector, __VA_ARGS__)
 #else
 #define REGISTER_BENCHMARK_FOR_STD_VECTOR(unit, varname, counter, type, ...)
 #endif
 
-#ifndef TURN_OFF_BOOST_VECTOR_BENCH
+#ifdef TURN_ON_BOOST_VECTOR_BENCH
 #define REGISTER_BENCHMARK_FOR_BOOST_VECTOR(unit, varname, counter, type, ...) \
     COND_REGISTER_BENCHMARK_FOR_VECTOR(DO_BOOST_VECTOR_BENCH, unit, varname, counter, type, boost_vector, __VA_ARGS__)
 #else
 #define REGISTER_BENCHMARK_FOR_BOOST_VECTOR(unit, varname, counter, type, ...)
 #endif
 
-#ifndef TURN_OFF_RVECTOR_BENCH
+#ifdef TURN_ON_RVECTOR_BENCH
 #define REGISTER_BENCHMARK_FOR_RVECTOR(unit, varname, counter, type, ...) \
     COND_REGISTER_BENCHMARK_FOR_VECTOR(DO_RVECTOR_BENCH, unit, varname, counter, type, rvector, __VA_ARGS__)
 #else
 #define REGISTER_BENCHMARK_FOR_RVECTOR(unit, varname, counter, type, ...)
 #endif
 
-#ifndef TURN_OFF_UWR_VECTOR_BENCH
+#ifdef TURN_ON_UWR_VECTOR_BENCH
 #define REGISTER_BENCHMARK_FOR_UWR_VECTOR(unit, varname, counter, type, ...) \
     COND_REGISTER_BENCHMARK_FOR_VECTOR(DO_UWR_VECTOR_BENCH, unit, varname, counter, type, uwr_vector, __VA_ARGS__)
 #else
 #define REGISTER_BENCHMARK_FOR_UWR_VECTOR(unit, varname, counter, type, ...)
 #endif
 
-#ifndef TURN_OFF_UWR_STD_VECTOR_BENCH
+#ifdef TURN_ON_UWR_STD_VECTOR_BENCH
 #define REGISTER_BENCHMARK_FOR_UWR_STD_VECTOR(unit, varname, counter, type, ...) \
     COND_REGISTER_BENCHMARK_FOR_VECTOR(DO_UWR_STD_VECTOR_BENCH, unit, varname, counter, type, uwr_std_vector, __VA_ARGS__)
 #else
 #define REGISTER_BENCHMARK_FOR_UWR_STD_VECTOR(unit, varname, counter, type, ...)
 #endif
 
-#ifndef TURN_OFF_BIG_VECTOR_BENCH
+#ifdef TURN_ON_BIG_VECTOR_BENCH
 #define REGISTER_BENCHMARK_FOR_BIG_VECTOR(unit, varname, counter, type, ...) \
     COND_REGISTER_BENCHMARK_FOR_VECTOR(DO_BIG_VECTOR_BENCH, unit, varname, counter, type, big_vector, __VA_ARGS__)
 #else
 #define REGISTER_BENCHMARK_FOR_BIG_VECTOR(unit, varname, counter, type, ...)
 #endif
 
-#ifndef TURN_OFF_C_VECTOR_BENCH
+#ifdef TURN_ON_C_VECTOR_BENCH
 #define REGISTER_BENCHMARK_FOR_C_VECTOR(unit, varname, counter, type, ...) \
     COND_REGISTER_BENCHMARK_FOR_VECTOR(DO_C_VECTOR_BENCH, unit, varname, counter, type, c_vector, __VA_ARGS__)
 #else
@@ -274,7 +274,7 @@ static void ParseCustomOptions(int argc, char** argv) {
     REGISTER_BENCHMARK_FOR_C_VECTOR(unit, varname, counter, type, __VA_ARGS__)
 
 static void RegisterBenchmarkForType(bench_type type) {
-    std::cout << "Running: " << std::to_string(type) << " benchmark." << std::endl;
+    std::cout << boost::format("==== Running: %s benchmark. ====\n") % std::to_string(type).c_str();
     REGISTER_BENCHMARK(kMillisecond,  INT,               1,  type, int);
     REGISTER_BENCHMARK(kMillisecond,  STRING,            2,  type, std::string);
     REGISTER_BENCHMARK(kMillisecond,  TEST_TYPE,         3,  type, test_type);
