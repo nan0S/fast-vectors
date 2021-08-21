@@ -3,21 +3,42 @@
 #include <test_type/test_type.hpp>
 #include <boost/format.hpp>
 #include <bench_timer/bench_timer.hpp>
+#include <common/identifiers.hpp>
 
 using namespace benchmark;
+
+enum bench_type : int {
+    NONE = 0,
+    PUSH_ONLY = 1,
+    PUSH_CONS_DEST = 2,
+    ALL = 4,
+};
+
+namespace std {
+    std::string to_string(bench_type type) {
+        switch (type) {
+            case NONE: return "NONE";
+            case PUSH_ONLY: return "PUSH_ONLY";
+            case PUSH_CONS_DEST: return "PUSH_CONS_DEST";
+            case ALL: return "ALL";
+            default: return "UNKNOWN";
+        }
+    }
+}
 
 template<template<class> class V, class... Ts>
 class vector_bench_env {
 public:
-    vector_bench_env(int seed, bool do_print=false)
-        : gen(seed), do_print(do_print) {}
+    vector_bench_env(bench_type type, int seed, int verbose)
+        : type(type), gen(seed), verbose(verbose) {}
 
     void run_simulation(int iters=1000) {
         this->iters = iters;
         for (int i = 0; i < iters; ++i) {
             (dispatch_action<Ts>(i), ...);
         }
-        // print_stats();
+        if (verbose > 0)
+            print_stats();
     }
 
 private:
@@ -95,7 +116,23 @@ private:
     template<class T>
     void dispatch_action(int i) {
         // TODO: maybe add probability distribution other than uniform
-        switch (random(1, 3)) {
+        int chosen;
+        switch (this->type) {
+            case PUSH_ONLY:
+                chosen = 3;
+                break;
+            case PUSH_CONS_DEST:
+                chosen = random(1, 3);
+                break;
+            case ALL:
+                chosen = random(1, 7);
+                break;
+            default:
+                chosen = -1;
+                break;
+        }
+        
+        switch (chosen) {
             case 1: construct_action<T>(i); break;
             case 2: destroy_action<T>(i); break;
             case 3: push_back_action<T>(i); break;
@@ -103,12 +140,13 @@ private:
             case 5: copy_action<T>(i); break;
             case 6: insert_action<T>(i); break;
             case 7: erase_action<T>(i); break;
+            default: break;
         }
     }
 
     template<class T>
     void construct_action(int i) {
-        if (do_print)
+        if (verbose > 4)
             std::cout << boost::format("construct_action(%d)\n") % i;
 
         auto& typed_env = this->get_env_of_type<T>();
@@ -123,7 +161,7 @@ private:
 
     template<class T>
     void destroy_action(int i) {
-        if (do_print)
+        if (verbose > 4)
             std::cout << boost::format("destroy_action(%d)\n") % i;
 
         auto& typed_env = this->get_env_of_type<T>();
@@ -146,7 +184,7 @@ private:
 
     template<class T>
     void push_back_action(int i) {
-        if (do_print)
+        if (verbose > 4)
             std::cout << boost::format("push_back_action(%d)\n") % i;
 
         auto& typed_env = this->get_env_of_type<T>();
@@ -175,7 +213,7 @@ private:
 
     template<class T>
     void pop_back_action(int i) {
-        if (do_print)
+        if (verbose > 4)
             std::cout << boost::format("pop_back_action(%d)\n") % i;
 
         auto& typed_env = this->get_env_of_type<T>();
@@ -201,7 +239,7 @@ private:
 
     template<class T>
     void copy_action(int i) {
-        if (do_print)
+        if (verbose > 4)
             std::cout << boost::format("copy_action(%d)\n") % i;
 
         auto& typed_env = this->get_env_of_type<T>();
@@ -225,7 +263,7 @@ private:
 
     template<class T>
     void insert_action(int i) {
-        if (do_print)
+        if (verbose > 4)
             std::cout << boost::format("insert_action(%d)\n") % i;
 
         auto& typed_env = this->get_env_of_type<T>();
@@ -252,7 +290,7 @@ private:
 
     template<class T>
     void erase_action(int i) {
-        if (do_print)
+        if (verbose > 4)
             std::cout << boost::format("erase_action(%d)\n") % i;
 
         auto& typed_env = this->get_env_of_type<T>();
@@ -300,10 +338,11 @@ private:
     using size_type = typename V<T>::size_type;
 
 private:
+    bench_type type;
     std::mt19937 gen;
-    std::tuple<env_container<V<Ts>>...> env;
-    bool do_print;
+    int verbose;
     int iters;
+    std::tuple<env_container<V<Ts>>...> env;
 };
 
 template<class Vector>
@@ -327,15 +366,19 @@ void BM_push_back(State& s) {
 }
 
 template<template<class> class V, class... Ts>
-void BM_environment(State& s) {
+void BM_environment(State& s, bench_type type, int verbose) {
     constexpr int seed = 12345512;
     int iters = s.range(0);
     int r = 0;
 
-    // test_type::start_recording();
+    constexpr bool is_test_type = (std::is_same_v<Ts, test_type> | ...);
+    if constexpr (is_test_type)
+        if (verbose > 3)
+            test_type::start_recording();
 
     for (auto _ : s) {
-        vector_bench_env<V, Ts...> v_env(seed + r++);
+        vector_bench_env<V, Ts...> v_env(
+                type, seed + r++, verbose);
         DoNotOptimize(v_env);
 
         v_env.run_simulation(iters);
@@ -343,18 +386,32 @@ void BM_environment(State& s) {
         ClobberMemory();
     }
 
-    // test_type::print_stats();
+    /* test_type printing */
+    if constexpr (is_test_type)
+        if (verbose > 3)
+            test_type::print_stats();
 
-    // bench_timer::print();
-    // bench_timer::reset();
+    /* bench timer stats printing */
+    if (verbose > 2) {
+        bench_timer::print();
+        bench_timer::reset();
+    }
 
+    /* uwr vector allocator statistics */
     #ifdef UWR_TRACK
-    uwr::mem::counters::print();
-    uwr::mem::counters::reset();
+    if constexpr (uwr::is_uwr_vector<V<int>>::value)
+        if (verbose > 1) {
+            uwr::mem::counters::print();
+            uwr::mem::counters::reset();
+        }
     #endif
+    /* rvector allocator statistics */
     #ifdef RVECTOR_TRACK
-    mm::counters::print();
-    mm::counters::reset();
+    if constexpr (uwr::is_rvector<V<int>>::value)
+        if (verbose > 1) {
+            mm::counters::print();
+            mm::counters::reset();
+        }
     #endif
 
     int id = s.range(1);
