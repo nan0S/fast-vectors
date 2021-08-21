@@ -5,6 +5,9 @@
 
 namespace uwr::mem {
 
+using std::true_type;
+using std::false_type;
+
 template<class T>
 class malloc_allocator : public allocator_base<malloc_allocator<T>, T> {
 public:
@@ -20,10 +23,14 @@ public:
 
     UWR_FORCEINLINE constexpr pointer alloc(size_type n) const;
     UWR_FORCEINLINE constexpr void dealloc(pointer data, size_type n) const;
-    constexpr void realloc(size_type req);
+    UWR_FORCEINLINE constexpr void realloc(size_type req);
 
     constexpr bool expand_or_alloc_raw(size_type req, pointer& out_ptr);
     constexpr bool expand_or_dealloc_and_alloc_raw(size_type req);
+
+private:
+    UWR_FORCEINLINE constexpr T* do_realloc(size_type req, true_type);
+    constexpr T* do_realloc(size_type req, false_type);
 };
 
 template<class T>
@@ -64,12 +71,8 @@ template<class T>
 constexpr void
 malloc_allocator<T>::realloc(size_type req) {
     req = this->fix_capacity(req);
-
-    pointer new_data = this->alloc(req);
-    umove_and_destroy(new_data, this->m_data, this->m_size);
-    this->dealloc(this->m_data, this->m_capacity);
-
-    this->m_data = new_data;
+    this->m_data = this->do_realloc(req,
+        std::is_trivially_move_constructible<T>());
     this->m_capacity = req;
 }
 
@@ -96,6 +99,22 @@ malloc_allocator<T>::expand_or_dealloc_and_alloc_raw(size_type req) {
     this->m_data = this->alloc(this->m_capacity);
 
     return false;
+}
+
+template<class T>
+constexpr T*
+malloc_allocator<T>::do_realloc(size_type req, true_type) {
+    return (T*)::realloc(this->m_data, req * sizeof(T));
+}
+
+template<class T>
+constexpr T*
+malloc_allocator<T>::do_realloc(size_type req, false_type) {
+    pointer new_data = this->alloc(req);
+    umove_and_destroy(new_data, this->m_data, this->m_size);
+    this->dealloc(this->m_data, this->m_capacity);
+
+    return new_data;
 }
 
 } // namespace uwr::mem

@@ -22,7 +22,8 @@ run_test() {
 
 run_bench() {
     test_exe="$1"
-    opts="$2"
+    shift
+    opts="$@"
     test_path="$BIN_PATH/$test_exe"
 
     make -j2 "$test_path" && \
@@ -33,30 +34,10 @@ run_bench() {
 }
 
 if [ $# -gt 0 ]; then
-    test_name="$1"
-    shift
-    run_test "$test_name" "$@"
+    run_test "$@"
 else
-    # run_test \
-        # "simple_vector_benchmark" \
-        # "--benchmark_repetitions=1 --benchmark_filter=BM_emplace<"
-    # run_test \
-        # "simple_vector_benchmark" \
-        # "--benchmark_repetitions=100 --benchmark_filter=BM_create"
     run_test \
         "vector_benchmark" \
-        "--benchmark_filter=vector,.(std::array|std::string)"
-    # run_test \
-        # "single_vector_benchmark"
-    # run_test \
-        # "vector_benchmark" \
-        # "--benchmark_filter=vector,.test_type>"
-    # run_test \
-        # "vector_benchmark" \
-        # "--benchmark_filter=vector,.int>"
-    # run_bench \
-        # "vector_benchmark" \
-        # "--benchmark_repetitions=10
-         # --benchmark_filter=vector,.std::string>"
-        # "--benchmark_filter=int> --benchmark_repetitions=10"
+        "--benchmark_filter=vector,.(std::array|std::string)" \
+        "--push_cons_dest"
 fi
