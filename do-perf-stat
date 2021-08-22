@@ -1,10 +1,10 @@
 #!/bin/sh
 
 bench_name="$1"
-filter="$2"
+shift
+opts="$@"
 
 bench_path="bin/benchmarks/$bench_name"
 
 make "$bench_path" &&
-    perf stat -d -d -d "$bench_path" \
-    --benchmark_filter="$filter"
+    perf stat -d -d -d "$bench_path" $opts

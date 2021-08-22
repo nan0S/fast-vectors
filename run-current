@@ -36,6 +36,7 @@ run_bench() {
 
 if [ $# -gt 0 ]; then
     run_test "$@"
+    # run_bench "$@"
 else
     run_test \
         "vector_benchmark" \
