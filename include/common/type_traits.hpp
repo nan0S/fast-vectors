@@ -96,18 +96,7 @@ template<class T>
 inline constexpr bool is_trivially_destructible_v =
     std::is_trivially_destructible_v<T>;
 
-/* T(const&) && op=(const&) */
-template<class T>
-inline constexpr bool is_trivially_copyable_v =
-    is_trivially_copy_constructible_v<T> &&
-    is_trivially_copy_assignable_v<T>;
-
-/* T(&&) && op=(&&) */
-template<class T>
-inline constexpr bool is_trivially_moveable_v =
-    is_trivially_move_constructible_v<T> &&
-    is_trivially_move_assignable_v<T>;
-
+/* T(&&) && ~T() */
 template<class T>
 inline constexpr bool is_trivially_relocatable_v =
     is_trivially_move_constructible_v<T> &&
@@ -147,16 +136,6 @@ struct is_trivially_move_assignable
 template<class T>
 struct is_trivially_destructible
     : std::integral_constant<bool, is_trivially_destructible_v<T>> {};
-
-/* T(const&) && op=(const&) */
-template<class T>
-struct is_trivially_copyable
-    : std::integral_constant<bool, is_trivially_copyable_v<T>> {};
-
-/* T(&&) && op=(&&) */
-template<class T>
-struct is_trivially_moveable
-    : std::integral_constant<bool, is_trivially_moveable_v<T>> {};
 
 /* T(&&) && ~T() */
 template<class T>
@@ -216,22 +195,6 @@ template<class T, class R = void>
 using NT_Dest =
     std::enable_if_t<!is_trivially_destructible_v<T>, R>;
 
-/* T(const&) && op=(const&) */
-template<class T, class R = void>
-using T_Copy =
-    std::enable_if_t<is_trivially_copyable_v<T>, R>;
-template<class T, class R = void>
-using NT_Copy =
-    std::enable_if_t<!is_trivially_copyable_v<T>, R>;
-
-/* T(&&) && op=(&&) */
-template<class T, class R = void>
-using T_Move =
-    std::enable_if_t<is_trivially_moveable_v<T>, R>;
-template<class T, class R = void>
-using NT_Move =
-    std::enable_if_t<!is_trivially_moveable_v<T>, R>;
-
 /* T(&&) && ~T() */
 template<class T, class R = void>
 using T_Reloc =
@@ -239,5 +202,55 @@ using T_Reloc =
 template<class T, class R = void>
 using NT_Reloc =
     std::enable_if_t<!is_trivially_relocatable_v<T>, R>;
+
+/* T(const&) && op=(const&) */
+template<class T, class R = void>
+using T_Copy =
+    std::enable_if_t<is_trivially_copy_constructible_v<T> &&
+                     is_trivially_copy_assignable_v<T>, R>;
+template<class T, class R = void>
+using NT_Copy =
+    std::enable_if_t<!(is_trivially_copy_constructible_v<T> &&
+                       is_trivially_copy_assignable_v<T>), R>;
+
+/* T(&&) && op=(&&) */
+template<class T, class R = void>
+using T_Move =
+    std::enable_if_t<is_trivially_move_constructible_v<T> &&
+                     is_trivially_move_assignable_v<T>, R>;
+template<class T, class R = void>
+using NT_Move =
+    std::enable_if_t<!(is_trivially_move_constructible_v<T> &&
+                       is_trivially_move_assignable_v<T>), R>;
+
+/* T(&&) && ~T() */
+template<class T, class R = void>
+using T_Move_C_Dest =
+    std::enable_if_t<is_trivially_move_constructible_v<T> &&
+                     is_trivially_destructible_v<T>, R>;
+template<class T, class R = void>
+using NT_Move_C_Dest =
+    std::enable_if_t<!(is_trivially_move_constructible_v<T> &&
+                       is_trivially_destructible_v<T>), R>;
+
+/* op(&&) && ~T() */
+template<class T, class R = void>
+using T_Move_A_Dest =
+    std::enable_if_t<is_trivially_move_assignable_v<T> &&
+                     is_trivially_destructible_v<T>, R>;
+template<class T, class R = void>
+using NT_Move_A_Dest =
+    std::enable_if_t<!(is_trivially_move_assignable_v<T> &&
+                       is_trivially_destructible_v<T>), R>;
+
+/* T(&&) && op=(const&) */
+template<class T, class R = void>
+using T_Move_C_Copy_A =
+    std::enable_if_t<is_trivially_move_constructible_v<T> &&
+                     is_trivially_copy_assignable_v<T>, R>;
+template<class T, class R = void>
+using NT_Move_C_Copy_A =
+    std::enable_if_t<!(is_trivially_move_constructible_v<T> &&
+                       is_trivially_copy_assignable_v<T>), R>;
 
 } // namespace uwr

@@ -35,143 +35,242 @@ template<class T>
 UWR_FORCEINLINE constexpr
 T_Cons_D<T> construct(T* begin, T* end);
 template<class T>
-UWR_FORCEINLINE constexpr
+constexpr
 NT_Cons_D<T> construct(T* begin, T* end);
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Cons_D<T> construct(T* begin, len_t n);
 template<class T>
-UWR_FORCEINLINE constexpr
+constexpr
 NT_Cons_D<T> construct(T* begin, len_t n);
 
 /*
  * fill initialized, continuous memory
  */
 template<class T>
-UWR_FORCEINLINE constexpr
+constexpr
 void fill(T* begin, T* end, const T& val);
 template<class T>
-UWR_FORCEINLINE constexpr
+constexpr
 T* fill(T* begin, len_t n, const T& val);
 
 /*
  * fill unitialized continuous memory
  */
 template<class T>
-UWR_FORCEINLINE constexpr
+constexpr
 void ufill(T* begin, T* end, const T& val);
 template<class T>
-UWR_FORCEINLINE constexpr
+constexpr
 T* ufill(T* begin, len_t n, const T& val);
 
 /*
  * copy into initialized memory
  */
 template<class T, class InIt>
-UWR_FORCEINLINE constexpr
+constexpr
 T* copy(T* dest, InIt begin, InIt end);
-template<class T, class InIt>
+template<class T>
 UWR_FORCEINLINE constexpr
+T_Copy_A<T, T*> copy(T* dest, T* begin, T* end);
+template<class T>
+UWR_FORCEINLINE constexpr
+T_Copy_A<T, T*> copy(T* dest, const T* begin, const T* end);
+
+template<class T, class InIt>
+constexpr
 T* copy(T* dest, InIt begin, len_t n);
+template<class T>
+UWR_FORCEINLINE constexpr
+T_Copy_A<T, T*> copy(T* dest, T* begin, len_t n);
+template<class T>
+UWR_FORCEINLINE constexpr
+T_Copy_A<T, T*> copy(T* dest, const T* begin, len_t n);
+
+template<class T>
+UWR_FORCEINLINE static constexpr
+T* do_copy(T* dest, const T* begin, const T* end);
+template<class T>
+UWR_FORCEINLINE static constexpr
+T* do_copy(T* dest, const T* begin, len_t n);
 
 /*
  * copy into uninitialized, continuous memory
  */
 template<class T, class InIt>
-UWR_FORCEINLINE constexpr
+constexpr
 T* ucopy(T* dest, InIt begin, InIt end);
-template<class T, class InIt>
+template<class T>
 UWR_FORCEINLINE constexpr
+T_Copy_C<T, T*> ucopy(T* dest, T* begin, T* end);
+template<class T>
+UWR_FORCEINLINE constexpr
+T_Copy_C<T, T*> ucopy(T* dest, const T* begin, const T* end);
+
+template<class T, class InIt>
+constexpr
 T* ucopy(T* dest, InIt begin, len_t n);
+template<class T>
+UWR_FORCEINLINE constexpr
+T_Copy_C<T, T*> ucopy(T* dest, T* begin, len_t n);
+template<class T>
+UWR_FORCEINLINE constexpr
+T_Copy_C<T, T*> ucopy(T* dest, const T* begin, len_t n);
 
 /*
  * move into initialized, continuous memory
  */
 template<class T, class InIt>
-UWR_FORCEINLINE constexpr
+constexpr
 T* move(T* dest, InIt begin, InIt end);
-template<class T, class InIt>
+template<class T>
 UWR_FORCEINLINE constexpr
+T_Move_A<T, T*> move(T* dest, T* begin, T* end);
+template<class T>
+UWR_FORCEINLINE constexpr
+T_Move_A<T, T*> move(T* dest, const T* begin, const T* end);
+
+template<class T, class InIt>
+constexpr
 T* move(T* dest, InIt begin, len_t n);
+template<class T>
+UWR_FORCEINLINE constexpr
+T_Move_A<T, T*> move(T* dest, T* begin, len_t n);
+template<class T>
+UWR_FORCEINLINE constexpr
+T_Move_A<T, T*> move(T* dest, const T* begin, len_t n);
 
 /*
  * move into uninitialized memory
  */
 template<class T, class InIt>
-UWR_FORCEINLINE constexpr
+constexpr
 T* umove(T* dest, InIt begin, InIt end);
-template<class T, class InIt>
+template<class T>
 UWR_FORCEINLINE constexpr
+T_Move_C<T, T*> umove(T* dest, T* begin, T* end);
+template<class T>
+UWR_FORCEINLINE constexpr
+T_Move_C<T, T*> umove(T* dest, const T* begin, const T* end);
+
+template<class T, class InIt>
+constexpr
 T* umove(T* dest, InIt begin, len_t n);
+template<class T>
+UWR_FORCEINLINE constexpr
+T_Move_C<T, T*> umove(T* dest, T* begin, len_t n);
+template<class T>
+UWR_FORCEINLINE constexpr
+T_Move_C<T, T*> umove(T* dest, const T* begin, len_t n);
 
 /*
  * destroy range of objects (so are initialized)
  */
 template<class T>
 UWR_FORCEINLINE constexpr
-void destroy(T* begin, T* end);
+T_Dest<T> destroy(T* begin, T* end);
+template<class T>
+constexpr
+NT_Dest<T> destroy(T* begin, T* end);
 template<class T>
 UWR_FORCEINLINE constexpr
-T* destroy(T* begin, len_t n);
+T_Dest<T, T*> destroy(T* begin, len_t n);
+template<class T>
+constexpr
+NT_Dest<T, T*> destroy(T* begin, len_t n);
 
 /*
  * destroy at specified address
  */
 template<class T>
 UWR_FORCEINLINE constexpr
-void destroy_at(T* addr);
+T_Dest<T> destroy_at(T* addr);
+template<class T>
+UWR_FORCEINLINE constexpr
+NT_Dest<T> destroy_at(T* addr);
 
 /*
 * do umove and destroy at the same time (cache friendly)
 */
 template<class T>
 UWR_FORCEINLINE constexpr
-T_Move_C<T> umove_and_destroy(T* dest, T* begin, T* end);
+T_Move_C_Dest<T> umove_and_destroy(T* dest, T* begin, T* end);
+template<class T>
+constexpr
+NT_Move_C_Dest<T> umove_and_destroy(T* dest, T* begin, T* end);
 template<class T>
 UWR_FORCEINLINE constexpr
-NT_Move_C<T> umove_and_destroy(T* dest, T* begin, T* end);
+T_Move_C_Dest<T> umove_and_destroy(T* dest, T* begin, len_t n);
 template<class T>
-UWR_FORCEINLINE constexpr
-T_Move_C<T> umove_and_destroy(T* dest, T* begin, len_t n);
-template<class T>
-UWR_FORCEINLINE constexpr
-NT_Move_C<T> umove_and_destroy(T* dest, T* begin, len_t n);
+constexpr
+NT_Move_C_Dest<T> umove_and_destroy(T* dest, T* begin, len_t n);
 
 /*
 * do move and destroy at the same time (cache friendly)
 */
 template<class T>
 UWR_FORCEINLINE constexpr
-T_Move_C<T> move_and_destroy(T* dest, T* begin, T* end);
+T_Move_A_Dest<T> move_and_destroy(T* dest, T* begin, T* end);
+template<class T>
+constexpr
+NT_Move_A_Dest<T> move_and_destroy(T* dest, T* begin, T* end);
 template<class T>
 UWR_FORCEINLINE constexpr
-NT_Move_C<T> move_and_destroy(T* dest, T* begin, T* end);
+T_Move_A_Dest<T> move_and_destroy(T* dest, T* begin, len_t n);
 template<class T>
-UWR_FORCEINLINE constexpr
-T_Move_C<T> move_and_destroy(T* dest, T* begin, len_t n);
-template<class T>
-UWR_FORCEINLINE constexpr
-NT_Move_C<T> move_and_destroy(T* dest, T* begin, len_t n);
+constexpr
+NT_Move_A_Dest<T> move_and_destroy(T* dest, T* begin, len_t n);
 
 /*
 * do move and fill at the same time (cache friendly)
 */
 template<class T>
 UWR_FORCEINLINE constexpr
-T_Move_C<T, T*> umove_and_fill(T* dest, T* begin, T* end, const T& val);
+T_Move_C_Copy_A<T, T*> umove_and_fill(T* dest, T* begin, T* end, const T& val);
 template<class T>
-UWR_FORCEINLINE constexpr
-NT_Move_C<T, T*> umove_and_fill(T* dest, T* begin, T* end, const T& val);
+constexpr
+NT_Move_C_Copy_A<T, T*> umove_and_fill(T* dest, T* begin, T* end, const T& val);
 
 /*
 * do move and copy at the same time (cache friendly)
 */
 template<class T, class InIt>
 UWR_FORCEINLINE constexpr
-T_Move_C<T, T*> umove_and_copy(T* dest, T* begin, T* end, InIt first, InIt split);
+T_Move_C_Copy_A<T, T*> umove_and_copy(T* dest, T* begin, T* end, InIt first, InIt split);
 template<class T, class InIt>
+constexpr
+NT_Move_C_Copy_A<T, T*> umove_and_copy(T* dest, T* begin, T* end, InIt first, InIt split);
+
+/*
+ * shifts data to the right,
+ * assumption: begin < dest <= end 
+ * and addresses >= end are uninitialized,
+ */
+template<class T>
 UWR_FORCEINLINE constexpr
-NT_Move_C<T, T*> umove_and_copy(T* dest, T* begin, T* end, InIt first, InIt split);
+T_Move<T> shiftr(T* dest, T* begin, T* end);
+template<class T>
+UWR_FORCEINLINE constexpr
+NT_Move<T> shiftr(T* dest, T* begin, T* end);
+
+/*
+ * move to destination moving in backward direction
+ */
+template<class T>
+UWR_FORCEINLINE constexpr
+T_Move_A<T> move_backward(T* dest, T* begin, T* end);
+template<class T>
+constexpr
+NT_Move_A<T> move_backward(T* dest, T* begin, T* end);
+
+/*
+ * shifts data to the left,
+ * assumption: dest < begin,
+ * returns dest + (end - begin)
+ */
+template<class T>
+UWR_FORCEINLINE constexpr
+T* shiftl(T* dest, T* begin, T* end);
 
 /*
  * create object of type T (call its constructor)
@@ -193,27 +292,6 @@ template<class T>
 UWR_FORCEINLINE constexpr
 T create();
 
-/*
- * shifts data to the right,
- * assumption: begin < dest <= end 
- * and addresses >= end are uninitialized,
- */
-template<class T>
-UWR_FORCEINLINE constexpr
-T_Move<T> shiftr(T* dest, T* begin, T* end);
-template<class T>
-UWR_FORCEINLINE constexpr
-NT_Move<T> shiftr(T* dest, T* begin, T* end);
-
-/*
- * shifts data to the left,
- * assumption: dest < begin,
- * returns dest + (end - begin)
- */
-template<class T>
-UWR_FORCEINLINE constexpr
-T* shiftl(T* dest, T* begin, T* end);
-
 
 /*
  * implementations
@@ -227,7 +305,8 @@ T_Cons_D<T> construct(T* begin, T* end) {
 template<class T>
 constexpr
 NT_Cons_D<T> construct(T* begin, T* end) {
-    std::uninitialized_default_construct(begin, end);
+    while (begin != end)
+        new (begin++) T;
 }
 
 template<class T>
@@ -239,108 +318,259 @@ T_Cons_D<T> construct(T* begin, len_t n) {
 template<class T>
 constexpr
 NT_Cons_D<T> construct(T* begin, len_t n) {
-    std::uninitialized_default_construct_n(begin, n);
+    while (n--)
+        new (begin++) T;
 }
 
 template<class T>
 constexpr
 void fill(T* begin, T* end, const T& val) {
-    std::fill(begin, end, val);
+    while (begin != end)
+        *begin++ = val;
 }
 
 template<class T>
 constexpr
 T* fill(T* begin, len_t n, const T& val) {
-    return std::fill_n(begin, n, val);
+    while (n--)
+        *begin++ = val;
+    return begin;
 }
 
 template<class T>
 constexpr
 void ufill(T* begin, T* end, const T& val) {
-    std::uninitialized_fill(begin, end, val);
+    while (begin != end)
+        new (begin++) T(val);
 }
 
 template<class T>
 constexpr
 T* ufill(T* begin, len_t n, const T& val) {
-    return std::uninitialized_fill_n(begin, n, val);
+    while (n--)
+        new (begin++) T(val);
+    return begin;
 }
 
 template<class T, class InIt>
 constexpr
 T* copy(T* dest, InIt begin, InIt end) {
-    return std::copy(begin, end, dest);
+    while (begin != end)
+        *dest++ = *begin++;
+    return dest;
+}
+
+template<class T>
+constexpr
+T_Copy_A<T, T*> copy(T* dest, T* begin, T* end) {
+    return mem::do_copy(dest, begin, end);
+}
+
+template<class T>
+constexpr
+T_Copy_A<T, T*> copy(T* dest, const T* begin, const T* end) {
+    return mem::do_copy(dest, begin, end);
 }
 
 template<class T, class InIt>
 constexpr
-T* copy(T* dest, InIt begin, len_t n) {
-    return std::copy_n(begin, n, dest);
+T_Copy_A<T, T*> copy(T* dest, InIt begin, len_t n) {
+    while (n--)
+        *dest++ = *begin++;
+    return dest;
+}
+
+template<class T>
+constexpr
+T_Copy_A<T, T*> copy(T* dest, T* begin, len_t n) {
+    return mem::do_copy(dest, begin, n);
+}
+
+template<class T>
+constexpr
+T_Copy_A<T, T*> copy(T* dest, const T* begin, len_t n) {
+    return mem::do_copy(dest, begin, n);
+}
+
+template<class T>
+constexpr
+T* do_copy(T* dest, const T* begin, const T* end) {
+    len_t n = (end - begin);
+    std::memcpy(dest, begin, n * sizeof(T));
+    return dest + n;
+}
+
+template<class T>
+constexpr
+T* do_copy(T* dest, const T* begin, len_t n) {
+    std::memcpy(dest, begin, n * sizeof(T));
+    return dest + n;
 }
 
 template<class T, class InIt>
 constexpr
 T* ucopy(T* dest, InIt begin, InIt end) {
-    return std::uninitialized_copy(begin, end, dest);
+    while (begin != end)
+        new (dest++) T(*begin++);
+    return dest;
+}
+
+template<class T>
+constexpr
+T_Copy_C<T, T*> ucopy(T* dest, T* begin, T* end) {
+    return mem::do_copy(dest, begin, end);
+}
+
+template<class T>
+constexpr
+T_Copy_C<T, T*> ucopy(T* dest, const T* begin, const T* end) {
+    return mem::do_copy(dest, begin, end);
 }
 
 template<class T, class InIt>
 constexpr
 T* ucopy(T* dest, InIt begin, len_t n) {
-    return std::uninitialized_copy_n(begin, n, dest);
+    while (n--)
+        new (dest++) T(*begin++);
+    return dest;
+}
+
+template<class T>
+constexpr
+T_Copy_C<T, T*> ucopy(T* dest, T* begin, len_t n) {
+    return mem::do_copy(dest, begin, n);
+}
+
+template<class T>
+constexpr
+T_Copy_C<T, T*> ucopy(T* dest, const T* begin, len_t n) {
+    return mem::do_copy(dest, begin, n);
 }
 
 template<class T, class InIt>
 constexpr
 T* move(T* dest, InIt begin, InIt end) {
-    return std::move(begin, end, dest);
+    while (begin != end)
+        *dest++ = std::move(*begin++);
+    return dest;
+}
+
+template<class T>
+constexpr
+T_Move_A<T, T*> move(T* dest, T* begin, T* end) {
+    return mem::do_copy(dest, begin, end);
+}
+
+template<class T>
+constexpr
+T_Move_A<T, T*> move(T* dest, const T* begin, const T* end) {
+    return mem::do_copy(dest, begin, end);
 }
 
 template<class T, class InIt>
 constexpr
 T* move(T* dest, InIt begin, len_t n) {
-    return std::move(begin, begin + n, dest);
+    while (n--)
+        *dest++ = std::move(*begin++);
+    return dest;
+}
+
+template<class T>
+constexpr
+T_Move_A<T, T*> move(T* dest, T* begin, len_t n) {
+    return mem::do_copy(dest, begin, n);
+}
+
+template<class T>
+constexpr
+T_Move_A<T, T*> move(T* dest, const T* begin, len_t n) {
+    return mem::do_copy(dest, begin, n);
 }
 
 template<class T, class InIt>
 constexpr
 T* umove(T* dest, InIt begin, InIt end) {
-    return std::uninitialized_move(begin, end, dest);
+    while (begin != end)
+        new (dest++) T(std::move(*begin++));
+    return dest;
+}
+
+template<class T>
+constexpr
+T_Move_C<T, T*> umove(T* dest, T* begin, T* end) {
+    return mem::do_copy(dest, begin, end);
+}
+
+template<class T>
+constexpr
+T_Move_C<T, T*> umove(T* dest, const T* begin, const T* end) {
+    return mem::do_copy(dest, begin, end);
 }
 
 template<class T, class InIt>
 constexpr
 T* umove(T* dest, InIt begin, len_t n) {
-    return std::uninitialized_move_n(begin, n, dest).second;
+    while (n--)
+        new (dest++) T(std::move(*begin++));
+    return dest;
 }
 
 template<class T>
 constexpr
-void destroy(T* begin, T* end) {
-    std::destroy(begin, end);
+T_Move_C<T, T*> umove(T* dest, T* begin, len_t n) {
+    return mem::do_copy(dest, begin, n);
 }
 
 template<class T>
 constexpr
-T* destroy(T* begin, len_t n) {
-    return std::destroy_n(begin, n);
+T_Move_C<T, T*> umove(T* dest, const T* begin, len_t n) {
+    return mem::do_copy(dest, begin, n);
 }
 
 template<class T>
 constexpr
-void destroy_at(T* addr) {
-    std::destroy_at(addr);
+T_Dest<T> destroy(T*, T*) {}
+
+template<class T>
+constexpr
+NT_Dest<T> destroy(T* begin, T* end) {
+    while (begin != end)
+        mem::destroy_at(begin++);
 }
 
 template<class T>
 constexpr
-T_Move_C<T> umove_and_destroy(T* dest, T* begin, T* end) {
-    umove(dest, begin, end);
+T_Dest<T, T*> destroy(T* begin, len_t n) {
+    return begin + n;
 }
 
 template<class T>
 constexpr
-NT_Move_C<T> umove_and_destroy(T* dest, T* begin, T* end) {
+NT_Dest<T, T*> destroy(T* begin, len_t n) {
+    while (n--)
+        mem::destroy_at(begin++);
+    return begin;
+}
+
+template<class T>
+constexpr
+T_Dest<T> destroy_at(T*) {}
+
+template<class T>
+constexpr
+NT_Dest<T> destroy_at(T* addr) {
+    addr->~T();
+}
+
+template<class T>
+constexpr
+T_Move_C_Dest<T> umove_and_destroy(T* dest, T* begin, T* end) {
+    mem::umove(dest, begin, end);
+}
+
+template<class T>
+constexpr
+NT_Move_C_Dest<T> umove_and_destroy(T* dest, T* begin, T* end) {
     while (begin != end) {
         new (dest++) T(std::move(*begin));
         mem::destroy_at(begin++);
@@ -349,28 +579,28 @@ NT_Move_C<T> umove_and_destroy(T* dest, T* begin, T* end) {
 
 template<class T>
 constexpr
-T_Move_C<T> umove_and_destroy(T* dest, T* begin, len_t n) {
-    umove(dest, begin, n);
+T_Move_C_Dest<T> umove_and_destroy(T* dest, T* begin, len_t n) {
+    mem::umove(dest, begin, n);
 }
 
 template<class T>
 constexpr
-NT_Move_C<T> umove_and_destroy(T* dest, T* begin, len_t n) {
+NT_Move_C_Dest<T> umove_and_destroy(T* dest, T* begin, len_t n) {
     while (n--) {
         new (dest++) T(std::move(*begin));
-        mem::destroy_at(begin++);
+        std::destroy_at(begin++);
     }
 }
 
 template<class T>
 constexpr
-T_Move_C<T> move_and_destroy(T* dest, T* begin, T* end) {
+T_Move_A_Dest<T> move_and_destroy(T* dest, T* begin, T* end) {
     mem::move(dest, begin, end);
 }
 
 template<class T>
 constexpr
-NT_Move_C<T> move_and_destroy(T* dest, T* begin, T* end) {
+NT_Move_A_Dest<T> move_and_destroy(T* dest, T* begin, T* end) {
     while (begin != end) {
         *dest++ = std::move(*begin);
         mem::destroy_at(begin++);
@@ -379,13 +609,13 @@ NT_Move_C<T> move_and_destroy(T* dest, T* begin, T* end) {
 
 template<class T>
 constexpr
-T_Move_C<T> move_and_destroy(T* dest, T* begin, len_t n) {
-    move(dest, begin, n);
+T_Move_A_Dest<T> move_and_destroy(T* dest, T* begin, len_t n) {
+    mem::move(dest, begin, n);
 }
 
 template<class T>
 constexpr
-NT_Move_C<T> move_and_destroy(T* dest, T* begin, len_t n) {
+NT_Move_A_Dest<T> move_and_destroy(T* dest, T* begin, len_t n) {
     while (n--) {
         *dest++ = std::move(*begin);
         mem::destroy_at(begin++);
@@ -395,15 +625,15 @@ NT_Move_C<T> move_and_destroy(T* dest, T* begin, len_t n) {
 // TODO: for trivial types it seems umove and fill is faster
 template<class T>
 UWR_FORCEINLINE constexpr
-T_Move_C<T, T*> umove_and_fill(T* dest, T* begin, T* end, const T& val) {
-    T* ret = umove(dest, begin, end);
-    fill(begin, end, val);
+T_Move_C_Copy_A<T, T*> umove_and_fill(T* dest, T* begin, T* end, const T& val) {
+    T* ret = mem::umove(dest, begin, end);
+    mem::fill(begin, end, val);
     return ret;
 }
 
 template<class T>
 UWR_FORCEINLINE constexpr
-NT_Move_C<T, T*> umove_and_fill(T* dest, T* begin, T* end, const T& val) {
+NT_Move_C_Copy_A<T, T*> umove_and_fill(T* dest, T* begin, T* end, const T& val) {
     while (begin != end) {
         new (dest++) T(std::move(*begin));
         *begin++ = val;
@@ -413,7 +643,7 @@ NT_Move_C<T, T*> umove_and_fill(T* dest, T* begin, T* end, const T& val) {
 
 template<class T, class InIt>
 UWR_FORCEINLINE constexpr
-T_Move_C<T, T*> umove_and_copy(T* dest, T* begin, T* end, InIt first, InIt split) {
+T_Move_C_Copy_A<T, T*> umove_and_copy(T* dest, T* begin, T* end, InIt first, InIt split) {
     T* ret = mem::umove(dest, begin, end);
     mem::copy(begin, first, split);
     return ret;
@@ -421,7 +651,7 @@ T_Move_C<T, T*> umove_and_copy(T* dest, T* begin, T* end, InIt first, InIt split
 
 template<class T, class InIt>
 UWR_FORCEINLINE constexpr
-NT_Move_C<T, T*> umove_and_copy(T* dest, T* begin, T* end, InIt first, InIt) {
+NT_Move_C_Copy_A<T, T*> umove_and_copy(T* dest, T* begin, T* end, InIt first, InIt) {
     while (begin != end) {
         new (dest++) T(std::move(*begin));
         *begin++ = *first++;
@@ -439,14 +669,28 @@ template<class T>
 constexpr
 NT_Move<T> shiftr(T* dest, T* begin, T* end) {
     T* seg = end - (dest - begin);
-    umove(end, seg, end);
-    std::move_backward(begin, seg, end);
+    mem::umove(end, seg, end);
+    mem::move_backward(end, begin, seg);
+}
+
+template<class T>
+constexpr
+T_Move_A<T> move_backward(T* dest, T* begin, T* end) {
+    len_t n = end - begin;
+    std::memmove(dest - n, begin, n * sizeof(T));
+}
+
+template<class T>
+constexpr
+NT_Move_A<T> move_backward(T* dest, T* begin, T* end) {
+    while (begin != end)
+        *(--dest) = std::move(*(--end));
 }
 
 template<class T>
 constexpr
 T* shiftl(T* dest, T* begin, T* end) {
-    return std::move(begin, end, dest);
+    return mem::move(dest, begin, end);
 }
 
 template<class T, class V, class... Args>
