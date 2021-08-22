@@ -155,7 +155,7 @@ static void ParseCustomOptions(int argc, char** argv) {
         "\t--push_cons_dest\n"
         "\t--all\n"
         "\t--verbose=VALUE\n"
-        "\t-h,--help\n";
+        "\t-h, --help\n";
 
     opterr = 0;
     benchmark_type = 0;

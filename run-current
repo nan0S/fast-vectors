@@ -11,7 +11,8 @@ BIN_PATH="bin/benchmarks"
 
 run_test() {
     test_exe="$1"
-    opts="$2"
+    shift
+    opts="$@"
     test_path="$BIN_PATH/$test_exe"
 
     make -j2 "$test_path" && \
