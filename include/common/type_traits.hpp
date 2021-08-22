@@ -19,8 +19,10 @@
 * specfiy is_trivially_moveable struct for that type
 * and hardcode the value to be true:
 * 
-* template<>
-* inline constexpr bool is_trivially_moveable_v<MySpecialType> = true;
+* namespace uwr::mem {
+*       template<>
+*       inline constexpr bool is_trivially_move_constructible_v<MySpecialType> = true;
+* }
 * 
 * This way you still have your constructor
 * specified, you achieve better performance with

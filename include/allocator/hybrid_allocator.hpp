@@ -218,8 +218,8 @@ hybrid_allocator<T>::do_realloc(size_type req, true_type) {
 
     switch (cond) {
         case 0b00: { /* both are small sizes */
-            return (pointer)::realloc(this->m_data,
-                    req * sizeof(T));
+            return (pointer)::realloc(
+                    (void*)this->m_data, req * sizeof(T));
         }
         case 0b10: { /* new size is big, old is small */
             pointer new_data = this->big_alloc(req);
@@ -232,7 +232,7 @@ hybrid_allocator<T>::do_realloc(size_type req, true_type) {
             // TODO: remove
             #ifdef UWR_TRACK
             pointer ret = (pointer)mremap(
-                    this->m_data,
+                    (void*)this->m_data,
                     this->m_capacity * sizeof(T),
                     req * sizeof(T),
                     MREMAP_MAYMOVE);
@@ -240,7 +240,7 @@ hybrid_allocator<T>::do_realloc(size_type req, true_type) {
             return ret;
             #else
             return (pointer)mremap(
-                    this->m_data,
+                    (void*)this->m_data,
                     this->m_capacity * sizeof(T),
                     req * sizeof(T),
                     MREMAP_MAYMOVE);

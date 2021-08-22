@@ -299,7 +299,7 @@ T create();
 template<class T>
 constexpr
 T_Cons_D<T> construct(T* begin, T* end) {
-    std::memset(begin, 0, (end - begin) * sizeof(T));
+    std::memset((void*)begin, 0, (end - begin) * sizeof(T));
 }
 
 template<class T>
@@ -312,7 +312,7 @@ NT_Cons_D<T> construct(T* begin, T* end) {
 template<class T>
 constexpr
 T_Cons_D<T> construct(T* begin, len_t n) {
-    std::memset(begin, 0, n * sizeof(T));
+    std::memset((void*)begin, 0, n * sizeof(T));
 }
 
 template<class T>
@@ -396,14 +396,14 @@ template<class T>
 constexpr
 T* do_copy(T* dest, const T* begin, const T* end) {
     len_t n = (end - begin);
-    std::memcpy(dest, begin, n * sizeof(T));
+    std::memcpy((void*)dest, (void*)begin, n * sizeof(T));
     return dest + n;
 }
 
 template<class T>
 constexpr
 T* do_copy(T* dest, const T* begin, len_t n) {
-    std::memcpy(dest, begin, n * sizeof(T));
+    std::memcpy((void*)dest, (void*)begin, n * sizeof(T));
     return dest + n;
 }
 
@@ -662,7 +662,8 @@ NT_Move_C_Copy_A<T, T*> umove_and_copy(T* dest, T* begin, T* end, InIt first, In
 template<class T>
 constexpr
 T_Move<T> shiftr(T* dest, T* begin, T* end) {
-    std::memmove(dest, begin, (end - begin) * sizeof(T));
+    std::memmove((void*)dest, (void*)begin,
+            (end - begin) * sizeof(T));
 }
 
 template<class T>
@@ -677,7 +678,8 @@ template<class T>
 constexpr
 T_Move_A<T> move_backward(T* dest, T* begin, T* end) {
     len_t n = end - begin;
-    std::memmove(dest - n, begin, n * sizeof(T));
+    std::memmove((void*)(dest - n), (void*)begin,
+            n * sizeof(T));
 }
 
 template<class T>

@@ -95,7 +95,7 @@ big_allocator<T>::do_realloc(size_type req, true_type) {
     UWR_ASSERT(req == this->fix_capacity(req));
 
     this->m_data = (pointer)mremap(
-            this->m_data,
+            (void*)this->m_data,
             this->m_capacity * sizeof(T),
             req * sizeof(T),
             MREMAP_MAYMOVE);
@@ -149,7 +149,7 @@ big_allocator<T>::do_expand_or_dealloc_and_alloc_raw(size_type req, true_type) {
     destroy(this->m_data, this->m_size);
 
     this->m_data = (pointer)mremap(
-            this->m_data,
+            (void*)this->m_data,
             this->m_capacity * sizeof(T),
             req * sizeof(T),
             MREMAP_MAYMOVE);
@@ -173,8 +173,7 @@ big_allocator<T>::do_expand_or_dealloc_and_alloc_raw(size_type req, false_type) 
     void* new_data = mremap(
             this->m_data,
             this->m_capacity * sizeof(T),
-            req * sizeof(T),
-            0);
+            req * sizeof(T), 0);
 
     if (new_data == (void*)-1) {
         destroy(this->m_data, this->m_size);

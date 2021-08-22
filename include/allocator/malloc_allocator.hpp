@@ -76,7 +76,8 @@ malloc_allocator<T>::realloc(size_type req) {
 template<class T>
 constexpr T*
 malloc_allocator<T>::do_realloc(size_type req, true_type) {
-    return (T*)::realloc(this->m_data, req * sizeof(T));
+    return (pointer)::realloc(
+            (void*)this->m_data, req * sizeof(T));
 }
 
 template<class T>
