@@ -150,7 +150,7 @@ private:
             std::cout << boost::format("construct_action(%d)\n") % i;
 
         auto& typed_env = this->get_env_of_type<T>();
-        int q = random(1, 3);
+        int q = random(1, type == bench_type::PUSH_ONLY ? 1 : 3);
         std::uniform_int_distribution<> size_dist(1, i + 10);
         bench_timer timer("construct");
 
