@@ -12,7 +12,7 @@ template<class T>
 class rvector;
 
 // TODO: remove
-#define RVECTOR_TRACK
+// #define RVECTOR_TRACK
 // #define RVECTOR_VERBOSE_PRINTING
 
 #ifdef RVECTOR_TRACK
