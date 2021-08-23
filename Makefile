@@ -4,7 +4,7 @@ CXX := g++
 VERSION := -std=c++20
 
 # OFLAGS := -Ofast -march=native -flto -fomit-frame-pointer -s -DNDEBUG
-OFLAGS := -O3 -march=native -flto -DNDEBUG
+OFLAGS := -Ofast -march=native -flto -DNDEBUG
 TFLAGS := -O0 -march=native
 WFLAGS := -Wall -Wextra
 IFLAGS := -I include -I src -I include/container
