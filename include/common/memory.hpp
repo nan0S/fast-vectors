@@ -374,7 +374,7 @@ T_Copy_A<T, T*> copy(T* dest, const T* begin, const T* end) {
 
 template<class T, class InIt>
 constexpr
-T_Copy_A<T, T*> copy(T* dest, InIt begin, len_t n) {
+T* copy(T* dest, InIt begin, len_t n) {
     while (n--)
         *dest++ = *begin++;
     return dest;
