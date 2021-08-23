@@ -19,10 +19,23 @@
 * specfiy is_trivially_moveable struct for that type
 * and hardcode the value to be true:
 * 
+* ```
+*
+* #include <uwr/common/type_traits.hpp>
+*
+* class MySpecialType {
+*   ...
+* };
+*
 * namespace uwr::mem {
 *       template<>
 *       inline constexpr bool is_trivially_move_constructible_v<MySpecialType> = true;
+*       template<>
+*       inline constexpr bool is_trivially_relocatable_v<MySpecialType> = true;
+*       ...
 * }
+*
+* ```
 * 
 * This way you still have your constructor
 * specified, you achieve better performance with
