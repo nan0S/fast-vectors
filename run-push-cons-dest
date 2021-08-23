@@ -1,0 +1,6 @@
+#!/bin/sh
+
+./run-current vector_benchmark \
+    --push_cons_dest \
+    --common_iters=1 \
+    $@

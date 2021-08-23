@@ -1,0 +1,6 @@
+#!/bin/sh
+
+./run-current vector_benchmark \
+    --all \
+    --common_iters=1 \
+    $@
