@@ -12,6 +12,7 @@ test_type::record_t test_type::record;
 std::deque<test_type::record_t> test_type::records;
 
 test_type::test_type() : val(0), moved(false) {
+    std::fill(ignore, ignore + 3, false);
     ++record.def_cons;
     ++instances;
 
@@ -20,6 +21,7 @@ test_type::test_type() : val(0), moved(false) {
 }
 
 test_type::test_type(int val) : val(val), moved(false) {
+    std::fill(ignore, ignore + 3, val);
     ++record.val_cons;
     ++instances;
 
@@ -28,6 +30,7 @@ test_type::test_type(int val) : val(val), moved(false) {
 }
 
 test_type::test_type(const test_type& o) : val(o.val), moved(o.moved) {
+    std::fill(ignore, ignore + 3, o.val);
     ++record.copy_cons;
     ++instances;
 
@@ -36,6 +39,7 @@ test_type::test_type(const test_type& o) : val(o.val), moved(o.moved) {
 }
 
 test_type::test_type(test_type&& o) : val(o.val), moved(o.moved) {
+    std::fill(ignore, ignore + 3, o.val);
     ++record.move_cons;
     ++instances;
     o.moved = true;
@@ -45,9 +49,10 @@ test_type::test_type(test_type&& o) : val(o.val), moved(o.moved) {
 }
 
 test_type& test_type::operator=(const test_type& o) {
-    ++record.copy_op;
+    std::fill(ignore, ignore + 3, o.val);
     val = o.val;
     moved = o.moved;
+    ++record.copy_op;
 
     if (do_print)
         std::cout << "op=(const&)" << std::endl;
@@ -56,10 +61,11 @@ test_type& test_type::operator=(const test_type& o) {
 }
 
 test_type& test_type::operator=(test_type&& o) {
-    ++record.move_op;
     val = o.val;
     moved = o.moved;
+    std::fill(ignore, ignore + 3, o.val);
     o.moved = true;
+    ++record.move_op;
 
     if (do_print)
         std::cout << "op=(&&)" << std::endl;

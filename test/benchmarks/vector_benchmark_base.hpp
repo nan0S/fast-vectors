@@ -151,7 +151,8 @@ private:
 
         auto& typed_env = this->get_env_of_type<T>();
         int q = random(1, type == bench_type::PUSH_ONLY ? 1 : 3);
-        std::uniform_int_distribution<> size_dist(1, i + 10);
+        // std::uniform_int_distribution<> size_dist(1, i + 10);
+        std::uniform_int_distribution<> size_dist(0, 0);
         bench_timer timer("construct");
 
         while (q--) {

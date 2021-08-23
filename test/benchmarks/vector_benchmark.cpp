@@ -19,13 +19,19 @@ using namespace benchmark;
  * configurable parameters
  */
 
+/* turn on mixed type tests */
+// #define MIXED_TESTS
+
 /* number of iterations in vector environment */
 static  int  INT_ARG               =  2000;
 static  int  STRING_ARG            =  1000;
 static  int  TEST_TYPE_ARG         =  1000;
 static  int  ARRAY_ARG             =  1200;
+static  int  T_TEST_TYPE_ARG       =  1000;
+#ifdef MIXED_TESTS
 static  int  INT_STRING_ARG        =  1000;
 static  int  INT_STRING_ARRAY_ARG  =  1000;
+#endif
 
 /* use the same number of iterations in all benchmarks */
 static int COMMON_ITERS = 0;
@@ -34,25 +40,28 @@ static  int  INT_ITERS               =  COMMON_ITERS  ==  0  ?  0  :  COMMON_ITE
 static  int  STRING_ITERS            =  COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS;
 static  int  TEST_TYPE_ITERS         =  COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS;
 static  int  ARRAY_ITERS             =  COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS;
+static  int  T_TEST_TYPE_ITERS       =  COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS;
+#ifdef MIXED_TESTS
 static  int  INT_STRING_ITERS        =  COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS;
 static  int  INT_STRING_ARRAY_ITERS  =  COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS;
+#endif
 
 /* turn on/off benchamarks for specific vectors */
 static  bool  DO_STD_VECTOR_BENCH      =  1;
-static  bool  DO_BOOST_VECTOR_BENCH    =  0;
+static  bool  DO_BOOST_VECTOR_BENCH    =  1;
 static  bool  DO_RVECTOR_BENCH         =  1;
 static  bool  DO_UWR_VECTOR_BENCH      =  1;
 static  bool  DO_UWR_STD_VECTOR_BENCH  =  0;
-static  bool  DO_BIG_VECTOR_BENCH      =  0;
+static  bool  DO_BIG_VECTOR_BENCH      =  1;
 static  bool  DO_C_VECTOR_BENCH        =  1;
 
 /* turn off some vectors from even compiling */
 #define TURN_ON_STD_VECTOR_BENCH
-// #define TURN_ON_BOOST_VECTOR_BENCH
+#define TURN_ON_BOOST_VECTOR_BENCH
 #define TURN_ON_RVECTOR_BENCH
 #define TURN_ON_UWR_VECTOR_BENCH
 // #define TURN_ON_UWR_STD_VECTOR_BENCH
-// #define TURN_ON_BIG_VECTOR_BENCH
+#define TURN_ON_BIG_VECTOR_BENCH
 #define TURN_ON_C_VECTOR_BENCH
 
 /* default benchmark type to run */
@@ -63,7 +72,8 @@ static int benchmark_type = bench_type::PUSH_ONLY;
     - 1: vector environment statistics
     - 2: allocator counters
     - 3: bench timer statistics
-    - 4: test_type stats */
+    - 4: test_type stats
+    - 5: vector environment call trace */
 static int verbose = 0;
 
 /* used in std::array<int, N> */
@@ -118,14 +128,18 @@ static void ParseCustomOptions(int argc, char** argv) {
         { "test_type_iters", required_argument, 0, 13 },
         { "array_arg", required_argument, 0, 14 },
         { "array_iters", required_argument, 0, 15 },
-        { "int_string_arg", required_argument, 0, 16 },
-        { "int_string_iters", required_argument, 0, 17 },
-        { "int_string_array_arg", required_argument, 0, 18 },
-        { "int_string_array_iters", required_argument, 0, 19 },
-        { "push_only", no_argument, 0, 20 },
-        { "push_cons_dest", no_argument, 0, 21 },
-        { "all", no_argument, 0, 22 },
-        { "verbose", required_argument, 0, 23 },
+        { "T_test_type_arg", required_argument, 0, 16 },
+        { "T_test_type_iters", required_argument, 0, 17 },
+#ifdef MIXED_TESTS
+        { "int_string_arg", required_argument, 0, 18 },
+        { "int_string_iters", required_argument, 0, 19 },
+        { "int_string_array_arg", required_argument, 0, 20 },
+        { "int_string_array_iters", required_argument, 0, 21 },
+#endif
+        { "push_only", no_argument, 0, 22 },
+        { "push_cons_dest", no_argument, 0, 23 },
+        { "all", no_argument, 0, 24 },
+        { "verbose", required_argument, 0, 25 },
         { "help", no_argument, 0, 'h' },
     };
     static const char* shortopts = "h";
@@ -147,10 +161,14 @@ static void ParseCustomOptions(int argc, char** argv) {
         "\t--test_type_iters=VALUE\n"
         "\t--array_arg=VALUE\n"
         "\t--array_iters=VALUE\n"
+        "\t--T_test_type=VALUE\n"
+        "\t--T_test_type=VALUE\n"
+#ifdef MIXED_TESTS
         "\t--int_string_arg=VALUE\n"
         "\t--int_string_iters=VALUE\n"
         "\t--int_string_array_arg=VALUE\n"
         "\t--int_string_array_iters=VALUE\n"
+#endif
         "\t--push_only\n"
         "\t--push_cons_dest\n"
         "\t--all\n"
@@ -183,14 +201,18 @@ static void ParseCustomOptions(int argc, char** argv) {
             case 13: SetReqVar(TEST_TYPE_ITERS); break;
             case 14: SetReqVar(ARRAY_ARG); break;
             case 15: SetReqVar(ARRAY_ITERS); break;
-            case 16: SetReqVar(INT_STRING_ARG); break;
-            case 17: SetReqVar(INT_STRING_ITERS); break;
-            case 18: SetReqVar(INT_STRING_ARRAY_ARG); break;
-            case 19: SetReqVar(INT_STRING_ARRAY_ITERS); break;
-            case 20: benchmark_type |= bench_type::PUSH_ONLY; break;
-            case 21: benchmark_type |= bench_type::PUSH_CONS_DEST; break;
-            case 22: benchmark_type |= bench_type::ALL; break;
-            case 23: SetReqVar(verbose); break;
+            case 16: SetReqVar(T_TEST_TYPE_ARG); break;
+            case 17: SetReqVar(T_TEST_TYPE_ITERS); break;
+#ifdef MIXED_TESTS
+            case 18: SetReqVar(INT_STRING_ARG); break;
+            case 19: SetReqVar(INT_STRING_ITERS); break;
+            case 20: SetReqVar(INT_STRING_ARRAY_ARG); break;
+            case 21: SetReqVar(INT_STRING_ARRAY_ITERS); break;
+#endif
+            case 22: benchmark_type |= bench_type::PUSH_ONLY; break;
+            case 23: benchmark_type |= bench_type::PUSH_CONS_DEST; break;
+            case 24: benchmark_type |= bench_type::ALL; break;
+            case 25: SetReqVar(verbose); break;
             case 'h': printf("%s", helpstr); break;
             default: break;
         }
@@ -198,6 +220,14 @@ static void ParseCustomOptions(int argc, char** argv) {
 
     if (!benchmark_type)
         benchmark_type = bench_type::PUSH_ONLY;
+
+    if (COMMON_ITERS) {
+        INT_ITERS = COMMON_ITERS;
+        STRING_ITERS = COMMON_ITERS;
+        TEST_TYPE_ITERS = COMMON_ITERS;
+        ARRAY_ITERS = COMMON_ITERS;
+        T_TEST_TYPE_ITERS = COMMON_ITERS;
+    }
 }
 
 /*
@@ -278,10 +308,13 @@ static void RegisterBenchmarkForType(bench_type type) {
     std::cout << boost::format("==== Running: %s benchmark. ====\n") % std::to_string(type).c_str();
     REGISTER_BENCHMARK(kMillisecond,  INT,               1,  type, int);
     REGISTER_BENCHMARK(kMillisecond,  STRING,            2,  type, std::string);
-    REGISTER_BENCHMARK(kMillisecond,  TEST_TYPE,         3,  type, test_type);
     REGISTER_BENCHMARK(kMillisecond,  ARRAY,             4,  type, std::array<int, N>);
-    REGISTER_BENCHMARK(kMillisecond,  INT_STRING,        5,  type, int, std::string);
-    REGISTER_BENCHMARK(kMillisecond,  INT_STRING_ARRAY,  6,  type, int, std::string, std::array<int, N>);
+    REGISTER_BENCHMARK(kMillisecond,  TEST_TYPE,         3,  type, test_type);
+    REGISTER_BENCHMARK(kMillisecond,  T_TEST_TYPE,       5,  type, T_test_type);
+#ifdef MIXED_TESTS
+    REGISTER_BENCHMARK(kMillisecond,  INT_STRING,        6,  type, int, std::string);
+    REGISTER_BENCHMARK(kMillisecond,  INT_STRING_ARRAY,  7,  type, int, std::string, std::array<int, N>);
+#endif
 }
 
 int main(int argc, char** argv) {

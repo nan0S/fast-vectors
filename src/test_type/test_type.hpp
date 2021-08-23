@@ -3,6 +3,8 @@
 #include <iostream>
 #include <deque>
 #include <common/define.hpp>
+#include <wrapper/wrapper.hpp>
+#include <common/type_traits.hpp>
 
 #define ON test_type::do_print = true
 #define OFF test_type::do_print = false
@@ -62,4 +64,31 @@ public:
 private:
     int val;
     bool moved;
+    bool ignore[3];
 };
+
+using T_test_type = wrapper<test_type>;
+
+namespace uwr::mem {
+    template<>
+    inline constexpr bool
+        is_trivially_default_constructible_v<T_test_type> = true;
+    template<>
+    inline constexpr bool
+        is_trivially_copy_constructible_v<T_test_type> = true;
+    template<>
+    inline constexpr bool
+        is_trivially_move_constructible_v<T_test_type> = true;
+    template<>
+    inline constexpr bool
+        is_trivially_copy_assignable_v<T_test_type> = true;
+    template<>
+    inline constexpr bool
+        is_trivially_move_assignable_v<T_test_type> = true;
+    template<>
+    inline constexpr bool
+        is_trivially_destructible_v<T_test_type> = true;
+    template<>
+    inline constexpr bool
+        is_trivially_relocatable_v<T_test_type> = true;
+}
