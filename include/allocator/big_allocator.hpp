@@ -69,6 +69,7 @@ template<class T>
 constexpr void
 big_allocator<T>::dealloc(pointer data, size_type n) const {
     UWR_ASSERT(n == this->fix_capacity(n));
+    
     munmap(data, n * sizeof(T));
 }
 
@@ -77,7 +78,7 @@ constexpr void
 big_allocator<T>::realloc(size_type req) {
     req = this->fix_capacity(req);
 
-    if (UWR_LIKELY(!!this->m_data)) {
+    if (UWR_LIKELY(!!this->m_capacity)) {
         this->do_realloc(req,
                 is_trivially_relocatable<T>());
     }

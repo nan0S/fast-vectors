@@ -196,7 +196,7 @@ hybrid_allocator<T>::realloc(size_type req) {
         counters::grows(double(req) / this->m_capacity);
     #endif
 
-    if (UWR_LIKELY(!!this->m_data)) {
+    if (UWR_LIKELY(!!this->m_capacity)) {
         this->m_data = this->do_realloc(req,
             is_trivially_relocatable<T>());
     }
@@ -327,7 +327,7 @@ hybrid_allocator<T>::expand_or_dealloc_and_alloc_raw(size_type req) {
         counters::grows(double(req) / this->m_capacity);
    #endif
 
-    if (UWR_LIKELY(!!this->m_data)) {
+    if (UWR_LIKELY(!!this->m_capacity)) {
         return this->do_expand_or_dealloc_and_alloc_raw(req,
                 is_trivially_relocatable<T>());
     }
