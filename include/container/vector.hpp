@@ -319,7 +319,6 @@ vector<T, A>::empty() const noexcept {
 template<class T, class A>
 constexpr void
 vector<T, A>::reserve(size_type n) noexcept {
-    // TODO: likely here (?)
     if (UWR_LIKELY(n > this->capacity()))
         this->m_alloc.realloc(n);
 }
@@ -443,7 +442,7 @@ vector<T, A>::pop_back() {
 template<class T, class A>
 constexpr bool
 vector<T, A>::safe_pop_back() noexcept {
-    if (UWR_LIKELY(this->size() != 0)) {
+    if (UWR_LIKELY(!this->empty())) {
         this->pop_back();
         return true;
     }

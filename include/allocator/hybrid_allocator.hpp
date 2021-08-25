@@ -6,7 +6,7 @@
 #include "allocator_base.hpp"
 
 // TODO: remove
-// #define UWR_TRACK
+#define UWR_TRACK
 // #define UWR_VERBOSE_PRINTING
 
 // TODO: remove
@@ -32,13 +32,17 @@ struct counters {
                  tag::mean>> mremaps;
     static accumulator_set<double,
         features<tag::mean>> grows;
+    static accumulator_set<size_t,
+        features<tag::sum>> objects;
 
     static void print() {
         std::cout << "\n==== hybrid_allocator::print() ====\n"
-                  << "total mremaps   = " << count(mremaps) << "\n"
-                  << "success mremaps = " << sum(mremaps) << "\n"
-                  << "mean success    = " << mean(mremaps) << "\n"
-                  << "mean grow       = " << mean(grows) << "\n"
+                  << "total mremaps    = " << count(mremaps) << "\n"
+                  << "success mremaps  = " << sum(mremaps) << "\n"
+                  << "failed mremaps   = " << count(mremaps) - sum(mremaps) << "\n"
+                  << "objects mremaped = " << sum(objects) << "\n"
+                  << "mean success     = " << mean(mremaps) << "\n"
+                  << "mean grow        = " << mean(grows) << "\n"
                   << std::endl;
     }
 
@@ -54,6 +58,8 @@ accumulator_set<int,
              tag::mean>> counters::mremaps;
 accumulator_set<double,
     features<tag::mean>> counters::grows;
+accumulator_set<size_t,
+    features<tag::sum>> counters::objects;
 
 #endif // UWR_TRACK
 
@@ -74,8 +80,12 @@ public:
     UWR_FORCEINLINE constexpr void realloc(size_type req);
     UWR_FORCEINLINE constexpr bool expand_or_dealloc_and_alloc_raw(size_type req);
 
+    UWR_FORCEINLINE constexpr size_type npages(size_type x) { return x * sizeof(T) / page_size; }
+
 private:
     UWR_FORCEINLINE constexpr int is_big(size_type n) const;
+    UWR_FORCEINLINE constexpr int is_big(size_type n, true_type) const;
+    UWR_FORCEINLINE constexpr int is_big(size_type n, false_type) const;
 
     UWR_FORCEINLINE constexpr pointer big_alloc(size_type n) const;
     UWR_FORCEINLINE constexpr pointer small_alloc(size_type n) const;
@@ -87,9 +97,6 @@ private:
 
     constexpr bool do_expand_or_dealloc_and_alloc_raw(size_type req, true_type);
     constexpr bool do_expand_or_dealloc_and_alloc_raw(size_type req, false_type);
-
-public:
-    UWR_FORCEINLINE constexpr size_type npages(size_type x) { return x * sizeof(T) / page_size; }
 };
 
 template<class T>
@@ -113,15 +120,26 @@ hybrid_allocator<T>::fix_capacity(size_type n) const {
             * page_size / sizeof(T);
     }
     else {
-        return n;
-        // return std::max((64 + sizeof(T) - 1) / sizeof(T), n);
+        return std::max((64 + sizeof(T) - 1) / sizeof(T), n);
     }
 }
 
 template<class T>
 constexpr int
 hybrid_allocator<T>::is_big(size_type n) const {
-    return n * sizeof(T) > page_size;
+    return this->is_big(n, is_trivially_relocatable<T>());
+}
+
+template<class T>
+constexpr int
+hybrid_allocator<T>::is_big(size_type n, true_type) const {
+    return n * sizeof(T) >= page_size;
+}
+
+template<class T>
+constexpr int
+hybrid_allocator<T>::is_big(size_type n, false_type) const {
+    return n * sizeof(T) >= 32 * 1024 * 1024;
 }
 
 template<class T>
@@ -237,6 +255,9 @@ hybrid_allocator<T>::do_realloc(size_type req, true_type) {
                     req * sizeof(T),
                     MREMAP_MAYMOVE);
             counters::mremaps(this->m_data == ret);
+            if (this->m_data == ret) {
+                counters::objects(this->m_capacity);
+            }
             return ret;
             #else
             return (pointer)mremap(
@@ -286,6 +307,9 @@ hybrid_allocator<T>::do_realloc(size_type req, false_type) {
             // TODO: remove
             #ifdef UWR_TRACK
             counters::mremaps(this->m_data == new_data);
+            if (this->m_data == new_data) {
+                counters::objects(this->m_capacity);
+            }
             #endif
 
             // TODO: remove
@@ -377,6 +401,9 @@ hybrid_allocator<T>::do_expand_or_dealloc_and_alloc_raw(size_type req, true_type
             // TODO: remove
             #ifdef UWR_TRACK
             counters::mremaps(save == this->m_data);
+            if (save == this->m_data) {
+                counters::objects(this->m_capacity);
+            }
             #endif
 
             break;
@@ -430,6 +457,9 @@ hybrid_allocator<T>::do_expand_or_dealloc_and_alloc_raw(size_type req, false_typ
             // TODO: remove
             #ifdef UWR_TRACK
             counters::mremaps(this->m_data == (pointer)new_data);
+            if (this->m_data == (pointer)new_data) {
+                counters::objects(this->m_capacity);
+            }
             #endif
 
             if (new_data == (pointer)-1) {

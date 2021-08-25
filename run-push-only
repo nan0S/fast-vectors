@@ -7,4 +7,5 @@
     --string_arg=1700 \
     --array_arg=1500 \
     --test_type_arg=2000 \
-    --T_test_type_arg=3000
+    --T_test_type_arg=3000 \
+    $@

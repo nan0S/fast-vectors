@@ -4,12 +4,12 @@
 #include <test_type/test_type.hpp>
 #include <identifiers/identifiers.hpp>
 #include <boost/container/vector.hpp>
-#include <vector>
 #include <rvector.h>
 #include <vector.hpp>
 #include <std_vector.hpp>
 #include <big_vector.hpp>
 #include <c_vector.hpp>
+#include <malloc.h>
 
 #include "vector_benchmark_base.hpp"
 
@@ -47,8 +47,6 @@ static  int  INT_STRING_ARRAY_ITERS  =  COMMON_ITERS  ==  0  ?  0  :  COMMON_ITE
 #endif
 
 /* turn on/off benchamarks for specific vectors */
-static  bool  DO_STD_VECTOR_BENCH      =  1;
-static  bool  DO_BOOST_VECTOR_BENCH    =  1;
 static  bool  DO_RVECTOR_BENCH         =  1;
 static  bool  DO_UWR_VECTOR_BENCH      =  1;
 static  bool  DO_UWR_STD_VECTOR_BENCH  =  0;
@@ -56,12 +54,10 @@ static  bool  DO_BIG_VECTOR_BENCH      =  1;
 static  bool  DO_C_VECTOR_BENCH        =  1;
 
 /* turn off some vectors from even compiling */
-#define TURN_ON_STD_VECTOR_BENCH
-#define TURN_ON_BOOST_VECTOR_BENCH
-#define TURN_ON_RVECTOR_BENCH
+// #define TURN_ON_RVECTOR_BENCH
 #define TURN_ON_UWR_VECTOR_BENCH
 // #define TURN_ON_UWR_STD_VECTOR_BENCH
-#define TURN_ON_BIG_VECTOR_BENCH
+// #define TURN_ON_BIG_VECTOR_BENCH
 #define TURN_ON_C_VECTOR_BENCH
 
 /* default benchmark type to run */
@@ -82,12 +78,6 @@ static constexpr int N = 10;
 /*
  * tested vectors
  */
-template<class T>
-using std_vector = std::vector<T>;
-using boost_gf = boost::container::growth_factor_100;
-using boost_options = boost::container::vector_options_t<boost::container::growth_factor<boost_gf>>;
-template<class T>
-using boost_vector = boost::container::vector<T, boost::container::new_allocator<T>, boost_options>; 
 template<class T>
 using uwr_vector = uwr::vector<T>;
 template<class T>
@@ -112,8 +102,6 @@ static void SetReqVar(int& var) {
 
 static void ParseCustomOptions(int argc, char** argv) {
     static struct option longopts[] = {
-        { "do_std_vector", optional_argument, 0, 0 },
-        { "do_boost_vector", optional_argument, 0, 1 },
         { "do_rvector", optional_argument, 0, 2 },
         { "do_uwr_vector", optional_argument, 0, 3 },
         { "do_uwr_std_vector", optional_argument, 0, 4 },
@@ -145,8 +133,6 @@ static void ParseCustomOptions(int argc, char** argv) {
     static const char* shortopts = "h";
     static const char* helpstr =
         "List of possible options:\n"
-        "\t--do_std_vector[=0/1]\n"
-        "\t--do_boost_vector[=0/1]\n"
         "\t--do_rvector[=0/1]\n"
         "\t--do_uwr_vector[=0/1]\n"
         "\t--do_uwr_std_vector[=0/1]\n"
@@ -185,8 +171,6 @@ static void ParseCustomOptions(int argc, char** argv) {
             break;
 
         switch (opt) {
-            case 0: SetOptVar(DO_STD_VECTOR_BENCH); break;
-            case 1: SetOptVar(DO_BOOST_VECTOR_BENCH); break;
             case 2: SetOptVar(DO_RVECTOR_BENCH); break;
             case 3: SetOptVar(DO_UWR_VECTOR_BENCH); break;
             case 4: SetOptVar(DO_UWR_STD_VECTOR_BENCH); break;
@@ -230,6 +214,29 @@ static void ParseCustomOptions(int argc, char** argv) {
     }
 }
 
+using len_t = uwr::mem::len_t;
+
+/* 2.0, 1.9, 1.8, 1.7, 1.6, 1.5, 1.4, 1.3, 1.2, 1.1 */
+static constexpr len_t nums[] = { 2, 19, 9, 17, 8, 3, 7, 13, 6, 11 };
+static constexpr len_t dens[] = { 1, 10, 5, 10, 5, 2, 5, 10, 5, 10 };
+
+/*
+* benchmark wrapper
+*/
+template<template<class> class V, class... Ts>
+void BM_environment_wrapper(State& s, bench_type type, int verbose) {
+    int growth_idx = s.range(2);
+    assert(growth_idx < sizeof(nums) / sizeof(nums[0]));
+
+    len_t num = nums[growth_idx];
+    len_t den = dens[growth_idx];
+
+    s.SetLabel(std::to_string(double(num) / den));
+
+    (V<Ts>::set_growth_rate(num, den), ...);
+    BM_environment<V, Ts...>(s, type, verbose);
+}
+
 /*
  * some macro magic
  */
@@ -237,10 +244,10 @@ static void ParseCustomOptions(int argc, char** argv) {
 #define CONCAT_INNER(a, b) a ## b
 
 #define REGISTER_BENCHMARK_FOR_VECTOR(unit, varname, counter, type, vector, ...) \
-    RegisterBenchmark("BM_environment<" #vector ", " #__VA_ARGS__ ">", BM_environment<vector, __VA_ARGS__>, type, verbose) \
+    RegisterBenchmark("BM_environment_wrapper<" #vector ", " #__VA_ARGS__ ">", BM_environment_wrapper<vector, __VA_ARGS__>, type, verbose) \
         ->Unit(unit) \
         ->Iterations(CONCAT(varname, _ITERS)) \
-        ->Args({CONCAT(varname, _ARG), counter})
+        ->ArgsProduct({{CONCAT(varname, _ARG)}, {counter}, {0, 1, 2, 3, 4, 5, 6}})
 
 #define COND_REGISTER_BENCHMARK_FOR_VECTOR(cond, unit, varname, counter, type, vector, ...) \
     if (cond) \
@@ -317,16 +324,14 @@ static void RegisterBenchmarkForType(bench_type type) {
 #endif
 }
 
-#include <malloc.h>
-uwr::mem::len_t mult;
+len_t mult;
 
 int main(int argc, char** argv) {
     /* turn on thounsand commas when printing */
     std::cout.imbue(std::locale(""));
 
     std::cout << "Type mult: "; std::cin >> mult;
-    if (mult)
-        mallopt(M_MMAP_THRESHOLD, mult * 1024 * 1024);
+    mallopt(M_MMAP_THRESHOLD, mult * 1024 * 1024);
 
     ParseCustomOptions(argc, argv);
     Initialize(&argc, argv);

@@ -37,7 +37,7 @@ public:
         for (int i = 0; i < iters; ++i) {
             (dispatch_action<Ts>(i), ...);
         }
-        if (verbose > 0)
+        if (verbose > 1)
             print_stats();
     }
 
@@ -401,7 +401,7 @@ void BM_environment(State& s, bench_type type, int verbose) {
     /* uwr vector allocator statistics */
     #ifdef UWR_TRACK
     if constexpr (uwr::is_uwr_vector<V<int>>::value)
-        if (verbose > 1) {
+        if (verbose > 0) {
             uwr::mem::counters::print();
             uwr::mem::counters::reset();
         }
@@ -409,7 +409,7 @@ void BM_environment(State& s, bench_type type, int verbose) {
     /* rvector allocator statistics */
     #ifdef RVECTOR_TRACK
     if constexpr (uwr::is_rvector<V<int>>::value)
-        if (verbose > 1) {
+        if (verbose > 0) {
             mm::counters::print();
             mm::counters::reset();
         }
