@@ -63,8 +63,9 @@ public:
      */
     size_type fix_capacity(size_type n);
     pointer alloc(size_type n) const;
-    void realloc(size_type n);
     void dealloc(pointer data, size_type n) const;
+    void realloc(size_type req);
+    void grow(size_type req);
     bool expand_or_dealloc_and_alloc_raw(size_type req);
 
 private:

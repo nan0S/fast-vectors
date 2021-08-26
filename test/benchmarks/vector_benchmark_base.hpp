@@ -29,8 +29,8 @@ namespace std {
 template<template<class> class V, class... Ts>
 class vector_bench_env {
 public:
-    vector_bench_env(bench_type type, int seed, int verbose)
-        : type(type), gen(seed), verbose(verbose) {}
+    vector_bench_env(bench_type type, int seed, int verbose, int num_vectors)
+        : type(type), gen(seed), verbose(verbose), num_vectors(num_vectors) {}
 
     void run_simulation(int iters=1000) {
         this->iters = iters;
@@ -190,7 +190,7 @@ private:
 
         auto& typed_env = this->get_env_of_type<T>();
         int typed_env_size = typed_env.size();
-        if (typed_env_size == 0) {
+        if (typed_env_size < num_vectors) {
             construct_action<T>(i);
             return;
         }
@@ -342,6 +342,7 @@ private:
     bench_type type;
     std::mt19937 gen;
     int verbose;
+    int num_vectors;
     int iters;
     std::tuple<env_container<V<Ts>>...> env;
 };
@@ -367,7 +368,8 @@ void BM_push_back(State& s) {
 }
 
 template<template<class> class V, class... Ts>
-void BM_environment(State& s, bench_type type, int verbose) {
+void BM_environment(State& s, bench_type type, int verbose,
+        int num_vectors) {
     constexpr int seed = 12345512;
     int iters = s.range(0);
     int r = 0;
@@ -379,7 +381,7 @@ void BM_environment(State& s, bench_type type, int verbose) {
 
     for (auto _ : s) {
         vector_bench_env<V, Ts...> v_env(
-                type, seed + r++, verbose);
+                type, seed + r++, verbose, num_vectors);
         DoNotOptimize(v_env);
 
         v_env.run_simulation(iters);

@@ -23,12 +23,26 @@ public:
     UWR_FORCEINLINE constexpr pointer alloc(size_type n) const;
     UWR_FORCEINLINE constexpr void dealloc(pointer data, size_type n) const;
     UWR_FORCEINLINE constexpr void realloc(size_type req);
+    UWR_FORCEINLINE constexpr void grow(size_type req);
     constexpr bool expand_or_dealloc_and_alloc_raw(size_type req);
+
+    static void set_growth_rate(size_type num, size_type den) {
+        malloc_allocator<T>::num = num;
+        malloc_allocator<T>::den = den;
+    }
+    static size_type num;
+    static size_type den;
 
 private:
     UWR_FORCEINLINE constexpr T* do_realloc(size_type req, true_type);
     constexpr T* do_realloc(size_type req, false_type);
+    UWR_FORCEINLINE constexpr size_type next_capacity(size_type req) const;
 };
+
+template<class T>
+typename malloc_allocator<T>::size_type malloc_allocator<T>::num = 2;
+template<class T>
+typename malloc_allocator<T>::size_type malloc_allocator<T>::den = 1;
 
 template<class T>
 constexpr
@@ -88,6 +102,18 @@ malloc_allocator<T>::do_realloc(size_type req, false_type) {
     this->dealloc(this->m_data, this->m_capacity);
 
     return new_data;
+}
+
+template<class T>
+constexpr void
+malloc_allocator<T>::grow(size_type req) {
+    this->realloc(this->next_capacity(req));
+}
+
+template<class T>
+constexpr typename malloc_allocator<T>::size_type
+malloc_allocator<T>::next_capacity(size_type req) const {
+    return std::max(num * this->m_capacity / den, req);
 }
 
 template<class T>

@@ -9,11 +9,11 @@
 #if CPP_ABOVE_17
 #include "../common/synth_three_way.hpp"
 #endif
-#include "../allocator/hybrid_allocator.hpp"
+#include "../allocator/hybrid_allocator_orig.hpp"
 
 namespace uwr {
 
-template<class T, class A = mem::hybrid_allocator<T>>
+template<class T, class A = mem::hybrid_allocator_orig<T>>
 class vector {
 public:
     using value_type = T;
@@ -113,8 +113,11 @@ public:
     template<class... Args>
     UWR_FORCEINLINE constexpr reference fast_emplace_back(Args&&... args) noexcept;
 
+    static void set_growth_rate(size_type num, size_type den) {
+        allocator_type::set_growth_rate(num, den);
+    }
+
 private:
-    UWR_FORCEINLINE constexpr size_type next_capacity(size_type new_size) const noexcept;
     template<class InIt>
     UWR_FORCEINLINE constexpr void priv_copy_assign(InIt first, InIt last, size_type n);
     template<class InIt>
@@ -565,8 +568,7 @@ vector<T, A>::emplace(const_iterator pos, Args&&... args) {
 
     if (this->size() == this->capacity()) {
         size_type m = m_pos - this->data();
-        size_type new_capacity = this->next_capacity(this->size() + 1);
-        this->m_alloc.realloc(new_capacity);
+        this->m_alloc.grow(this->size() + 1);
         m_pos = this->data() + m;
     }
 
@@ -589,9 +591,8 @@ template<class T, class A>
 template<class... Args>
 constexpr typename vector<T, A>::reference
 vector<T, A>::emplace_back(Args&&... args) {
-    // TODO: add unlikely (?)
     if (UWR_UNLIKELY(this->size() == this->capacity()))
-        this->m_alloc.realloc(this->next_capacity(this->size() + 1));
+        this->m_alloc.grow(this->size() + 1);
     return this->fast_emplace_back(std::forward<Args>(args)...);
 }
 
@@ -602,12 +603,6 @@ vector<T, A>::fast_emplace_back(Args&&... args) noexcept {
     T* const last_end = this->data() + this->m_alloc.m_size++;
     new (last_end) T(std::forward<Args>(args)...);
     return *last_end;
-}
-
-template<class T, class A>
-constexpr typename vector<T, A>::size_type
-vector<T, A>::next_capacity(size_type new_size) const noexcept {
-    return std::max(2 * this->capacity(), new_size);
 }
 
 template<class T, class A>
@@ -647,7 +642,7 @@ template<class ResizeProxy>
 constexpr void
 vector<T, A>::priv_resize(ResizeProxy&& proxy) {
     if (proxy.n > this->capacity()) {
-        this->m_alloc.realloc(this->next_capacity(proxy.n));
+        this->m_alloc.grow(proxy.n);
         proxy.construct(this->end(), this->data() + proxy.n);
     }
     else {
@@ -676,8 +671,7 @@ vector<T, A>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
 
     if (new_size > this->capacity()) {
         size_type m = m_pos - this->data();
-        size_type new_capacity = this->next_capacity(new_size);
-        this->m_alloc.realloc(new_capacity);
+        this->m_alloc.grow(new_size);
         m_pos = this->data() + m;
     }
 

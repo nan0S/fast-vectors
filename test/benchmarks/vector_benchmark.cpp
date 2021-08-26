@@ -1,5 +1,6 @@
 #include <getopt.h>
 #include <unistd.h>
+#include <malloc.h>
 #include <bits/getopt_ext.h>
 #include <test_type/test_type.hpp>
 #include <identifiers/identifiers.hpp>
@@ -57,15 +58,22 @@ static  bool  DO_C_VECTOR_BENCH        =  1;
 
 /* turn off some vectors from even compiling */
 #define TURN_ON_STD_VECTOR_BENCH
-#define TURN_ON_BOOST_VECTOR_BENCH
+// #define TURN_ON_BOOST_VECTOR_BENCH
 #define TURN_ON_RVECTOR_BENCH
 #define TURN_ON_UWR_VECTOR_BENCH
 // #define TURN_ON_UWR_STD_VECTOR_BENCH
-#define TURN_ON_BIG_VECTOR_BENCH
+// #define TURN_ON_BIG_VECTOR_BENCH
 #define TURN_ON_C_VECTOR_BENCH
 
 /* default benchmark type to run */
 static int benchmark_type = bench_type::PUSH_ONLY;
+
+/* number of vector in environment in PUSH_ONLY case */
+static int num_env_vectors = 1;
+
+/* set M_MMAP_THRESHOLD through mallopt to malloc_mult * 1024 * 1024,
+   0 means do not set */
+static int malloc_mult = 0;
 
 /* verbose level:
     - 0: nothing
@@ -139,7 +147,9 @@ static void ParseCustomOptions(int argc, char** argv) {
         { "push_only", no_argument, 0, 22 },
         { "push_cons_dest", no_argument, 0, 23 },
         { "all", no_argument, 0, 24 },
-        { "verbose", required_argument, 0, 25 },
+        { "num_env_vectors", required_argument, 0, 25 },
+        { "malloc_mult", required_argument, 0, 26 },
+        { "verbose", required_argument, 0, 27 },
         { "help", no_argument, 0, 'h' },
     };
     static const char* shortopts = "h";
@@ -172,6 +182,8 @@ static void ParseCustomOptions(int argc, char** argv) {
         "\t--push_only\n"
         "\t--push_cons_dest\n"
         "\t--all\n"
+        "\t--num_env_vectors=VALUE\n"
+        "\t--malloc_mult=VALUE\n"
         "\t--verbose=VALUE\n"
         "\t-h, --help\n";
 
@@ -212,7 +224,9 @@ static void ParseCustomOptions(int argc, char** argv) {
             case 22: benchmark_type |= bench_type::PUSH_ONLY; break;
             case 23: benchmark_type |= bench_type::PUSH_CONS_DEST; break;
             case 24: benchmark_type |= bench_type::ALL; break;
-            case 25: SetReqVar(verbose); break;
+            case 25: SetReqVar(num_env_vectors); break;
+            case 26: SetReqVar(malloc_mult); break;
+            case 27: SetReqVar(verbose); break;
             case 'h': printf("%s", helpstr); break;
             default: break;
         }
@@ -237,7 +251,7 @@ static void ParseCustomOptions(int argc, char** argv) {
 #define CONCAT_INNER(a, b) a ## b
 
 #define REGISTER_BENCHMARK_FOR_VECTOR(unit, varname, counter, type, vector, ...) \
-    RegisterBenchmark("BM_environment<" #vector ", " #__VA_ARGS__ ">", BM_environment<vector, __VA_ARGS__>, type, verbose) \
+    RegisterBenchmark("BM_environment<" #vector ", " #__VA_ARGS__ ">", BM_environment<vector, __VA_ARGS__>, type, verbose, num_env_vectors) \
         ->Unit(unit) \
         ->Iterations(CONCAT(varname, _ITERS)) \
         ->Args({CONCAT(varname, _ARG), counter})
@@ -317,19 +331,15 @@ static void RegisterBenchmarkForType(bench_type type) {
 #endif
 }
 
-#include <malloc.h>
-uwr::mem::len_t mult;
-
 int main(int argc, char** argv) {
     /* turn on thounsand commas when printing */
     std::cout.imbue(std::locale(""));
 
-    std::cout << "Type mult: "; std::cin >> mult;
-    if (mult)
-        mallopt(M_MMAP_THRESHOLD, mult * 1024 * 1024);
-
     ParseCustomOptions(argc, argv);
     Initialize(&argc, argv);
+
+    if (malloc_mult)
+        mallopt(M_MMAP_THRESHOLD, malloc_mult * 1024 * 1024);
 
     if (benchmark_type & bench_type::PUSH_ONLY)
         RegisterBenchmarkForType(bench_type::PUSH_ONLY);

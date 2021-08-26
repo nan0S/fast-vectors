@@ -63,6 +63,13 @@ static  bool  DO_C_VECTOR_BENCH        =  1;
 /* default benchmark type to run */
 static int benchmark_type = bench_type::PUSH_ONLY;
 
+/* number of vector in environment in PUSH_ONLY case */
+static int num_env_vectors = 1;
+
+/* set M_MMAP_THRESHOLD through mallopt to malloc_mult * 1024 * 1024,
+   0 means do not set */
+static int malloc_mult = 0;
+
 /* verbose level:
     - 0: nothing
     - 1: vector environment statistics
@@ -127,7 +134,9 @@ static void ParseCustomOptions(int argc, char** argv) {
         { "push_only", no_argument, 0, 22 },
         { "push_cons_dest", no_argument, 0, 23 },
         { "all", no_argument, 0, 24 },
-        { "verbose", required_argument, 0, 25 },
+        { "num_env_vectors", required_argument, 0, 25 },
+        { "malloc_mult", required_argument, 0, 26 },
+        { "verbose", required_argument, 0, 27 },
         { "help", no_argument, 0, 'h' },
     };
     static const char* shortopts = "h";
@@ -158,6 +167,8 @@ static void ParseCustomOptions(int argc, char** argv) {
         "\t--push_only\n"
         "\t--push_cons_dest\n"
         "\t--all\n"
+        "\t--num_env_vectors\n"
+        "\t--malloc_mult=VALUE\n"
         "\t--verbose=VALUE\n"
         "\t-h, --help\n";
 
@@ -196,7 +207,9 @@ static void ParseCustomOptions(int argc, char** argv) {
             case 22: benchmark_type |= bench_type::PUSH_ONLY; break;
             case 23: benchmark_type |= bench_type::PUSH_CONS_DEST; break;
             case 24: benchmark_type |= bench_type::ALL; break;
-            case 25: SetReqVar(verbose); break;
+            case 25: SetReqVar(num_env_vectors); break;
+            case 26: SetReqVar(malloc_mult); break;
+            case 27: SetReqVar(verbose); break;
             case 'h': printf("%s", helpstr); break;
             default: break;
         }
@@ -224,7 +237,8 @@ static constexpr len_t dens[] = { 1, 10, 5, 10, 5, 2, 5, 10, 5, 10 };
 * benchmark wrapper
 */
 template<template<class> class V, class... Ts>
-void BM_environment_wrapper(State& s, bench_type type, int verbose) {
+void BM_environment_wrapper(State& s, bench_type type, int verbose,
+        int num_env_vectors) {
     int growth_idx = s.range(2);
     assert(growth_idx < sizeof(nums) / sizeof(nums[0]));
 
@@ -234,7 +248,7 @@ void BM_environment_wrapper(State& s, bench_type type, int verbose) {
     s.SetLabel(std::to_string(double(num) / den));
 
     (V<Ts>::set_growth_rate(num, den), ...);
-    BM_environment<V, Ts...>(s, type, verbose);
+    BM_environment<V, Ts...>(s, type, verbose, num_env_vectors);
 }
 
 /*
@@ -244,7 +258,7 @@ void BM_environment_wrapper(State& s, bench_type type, int verbose) {
 #define CONCAT_INNER(a, b) a ## b
 
 #define REGISTER_BENCHMARK_FOR_VECTOR(unit, varname, counter, type, vector, ...) \
-    RegisterBenchmark("BM_environment_wrapper<" #vector ", " #__VA_ARGS__ ">", BM_environment_wrapper<vector, __VA_ARGS__>, type, verbose) \
+    RegisterBenchmark("BM_environment_wrapper<" #vector ", " #__VA_ARGS__ ">", BM_environment_wrapper<vector, __VA_ARGS__>, type, verbose, num_env_vectors) \
         ->Unit(unit) \
         ->Iterations(CONCAT(varname, _ITERS)) \
         ->ArgsProduct({{CONCAT(varname, _ARG)}, {counter}, {0, 1, 2, 3, 4, 5, 6}})
@@ -330,11 +344,11 @@ int main(int argc, char** argv) {
     /* turn on thounsand commas when printing */
     std::cout.imbue(std::locale(""));
 
-    std::cout << "Type mult: "; std::cin >> mult;
-    mallopt(M_MMAP_THRESHOLD, mult * 1024 * 1024);
-
     ParseCustomOptions(argc, argv);
     Initialize(&argc, argv);
+
+    if (malloc_mult)
+        mallopt(M_MMAP_THRESHOLD, malloc_mult * 1024 * 1024);
 
     if (benchmark_type & bench_type::PUSH_ONLY)
         RegisterBenchmarkForType(bench_type::PUSH_ONLY);
