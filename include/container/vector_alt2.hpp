@@ -6,6 +6,6 @@
 namespace uwr {
 
 template<class T>
-using vector_alt = vector<T, mem::hybrid_allocator_alt2<T>>;
+using vector_alt2 = vector<T, mem::hybrid_allocator_alt2<T>>;
 
 }

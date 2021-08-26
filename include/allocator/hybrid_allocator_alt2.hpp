@@ -60,7 +60,7 @@ private:
 // TODO: remove
 #ifdef UWR_TRACK
 public:
-    alloc_counter counter;
+    static alloc_counter counter;
 #endif
 };
 

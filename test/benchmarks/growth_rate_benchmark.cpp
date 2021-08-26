@@ -261,7 +261,7 @@ void BM_environment_wrapper(State& s, bench_type type, int verbose,
     RegisterBenchmark("BM_environment_wrapper<" #vector ", " #__VA_ARGS__ ">", BM_environment_wrapper<vector, __VA_ARGS__>, type, verbose, num_env_vectors) \
         ->Unit(unit) \
         ->Iterations(CONCAT(varname, _ITERS)) \
-        ->ArgsProduct({{CONCAT(varname, _ARG)}, {counter}, {0, 1, 2, 3, 4, 5, 6}})
+        ->ArgsProduct({{CONCAT(varname, _ARG)}, {counter}, {0, 1, 2, 3, 4, 5, 6, 7, 8}})
 
 #define COND_REGISTER_BENCHMARK_FOR_VECTOR(cond, unit, varname, counter, type, vector, ...) \
     if (cond) \
