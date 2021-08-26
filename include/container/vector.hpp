@@ -113,10 +113,6 @@ public:
     template<class... Args>
     UWR_FORCEINLINE constexpr reference fast_emplace_back(Args&&... args) noexcept;
 
-    static void set_growth_rate(size_type num, size_type den) {
-        allocator_type::set_growth_rate(num, den);
-    }
-
 private:
     template<class InIt>
     UWR_FORCEINLINE constexpr void priv_copy_assign(InIt first, InIt last, size_type n);
@@ -132,6 +128,16 @@ private:
 
 private:
     allocator_type m_alloc;
+
+public:
+    static void set_growth_rate(size_type num, size_type den) {
+        allocator_type::set_growth_rate(num, den);
+    }
+
+    static void print_stats() {
+        allocator_type::counter.print();
+        allocator_type::counter.reset();
+    }
 };
 
 template<class T, class A>

@@ -4,64 +4,17 @@
 
 #include "../common/memory.hpp"
 #include "allocator_base.hpp"
-
-// TODO: remove
-#define UWR_TRACK
-// #define UWR_VERBOSE_PRINTING
-
-// TODO: remove
 #ifdef UWR_TRACK
-#include <iostream>
-#include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics.hpp>
-using namespace boost::accumulators;
+#include "../common/alloc_counter.hpp"
 #endif
+
+// TODO: remove
+// #define UWR_VERBOSE_PRINTING
 
 namespace uwr::mem {
 
 using std::true_type;
 using std::false_type;
-
-// TODO: remove
-#ifdef UWR_TRACK
-
-struct counters {
-    static accumulator_set<int,
-        features<tag::count,
-                 tag::sum,
-                 tag::mean>> mremaps;
-    static accumulator_set<double,
-        features<tag::mean>> grows;
-    static accumulator_set<size_t,
-        features<tag::sum>> objects;
-
-    static void print() {
-        std::cout << "\n==== hybrid_allocator_alt::print() ====\n"
-                  << "total mremaps    = " << count(mremaps) << "\n"
-                  << "success mremaps  = " << sum(mremaps) << "\n"
-                  << "failed mremaps   = " << count(mremaps) - sum(mremaps) << "\n"
-                  << "objects mremaped = " << sum(objects) << "\n"
-                  << "mean success     = " << mean(mremaps) << "\n"
-                  << "mean grow        = " << mean(grows) << "\n"
-                  << std::endl;
-    }
-
-    static void reset() {
-        mremaps = {};
-        grows = {};
-    }
-};
-
-accumulator_set<int,
-    features<tag::count,
-             tag::sum,
-             tag::mean>> counters::mremaps;
-accumulator_set<double,
-    features<tag::mean>> counters::grows;
-accumulator_set<size_t,
-    features<tag::sum>> counters::objects;
-
-#endif // UWR_TRACK
 
 template<class T>
 class hybrid_allocator_alt : public allocator_base<hybrid_allocator_alt<T>, T> {
@@ -102,7 +55,17 @@ private:
 
     constexpr bool do_expand_or_dealloc_and_alloc_raw(size_type req, true_type);
     constexpr bool do_expand_or_dealloc_and_alloc_raw(size_type req, false_type);
+
+#ifdef UWR_TRACK
+public:
+    static alloc_counter counter;
+#endif
 };
+
+#ifdef UWR_TRACK
+template<class T>
+alloc_counter hybrid_allocator_alt<T>::counter("hybrid_allocator_alt");
+#endif
 
 template<class T>
 constexpr
@@ -216,7 +179,7 @@ hybrid_allocator_alt<T>::realloc(size_type req) {
     // TODO: remove
     #ifdef UWR_TRACK
     if (this->m_capacity)
-        counters::grows(double(req) / this->m_capacity);
+        counter.grows(double(req) / this->m_capacity);
     #endif
 
     if (UWR_LIKELY(!!this->m_capacity)) {
@@ -259,9 +222,9 @@ hybrid_allocator_alt<T>::do_realloc(size_type req, true_type) {
                     this->m_capacity * sizeof(T),
                     req * sizeof(T),
                     MREMAP_MAYMOVE);
-            counters::mremaps(this->m_data == ret);
+            counter.mremaps(this->m_data == ret);
             if (this->m_data == ret) {
-                counters::objects(this->m_capacity);
+                counter.objects(this->m_capacity);
             }
             return ret;
             #else
@@ -311,9 +274,9 @@ hybrid_allocator_alt<T>::do_realloc(size_type req, false_type) {
 
             // TODO: remove
             #ifdef UWR_TRACK
-            counters::mremaps(this->m_data == new_data);
+            counter.mremaps(this->m_data == new_data);
             if (this->m_data == new_data) {
-                counters::objects(this->m_capacity);
+                counter.objects(this->m_capacity);
             }
             #endif
 
@@ -381,7 +344,7 @@ hybrid_allocator_alt<T>::expand_or_dealloc_and_alloc_raw(size_type req) {
    // TODO: remove
    #ifdef UWR_TRACK
    if (this->m_capacity)
-        counters::grows(double(req) / this->m_capacity);
+        counter.grows(double(req) / this->m_capacity);
    #endif
 
     if (UWR_LIKELY(!!this->m_capacity)) {
@@ -433,9 +396,9 @@ hybrid_allocator_alt<T>::do_expand_or_dealloc_and_alloc_raw(size_type req, true_
 
             // TODO: remove
             #ifdef UWR_TRACK
-            counters::mremaps(save == this->m_data);
+            counter.mremaps(save == this->m_data);
             if (save == this->m_data) {
-                counters::objects(this->m_capacity);
+                counter.objects(this->m_capacity);
             }
             #endif
 
@@ -489,9 +452,9 @@ hybrid_allocator_alt<T>::do_expand_or_dealloc_and_alloc_raw(size_type req, false
 
             // TODO: remove
             #ifdef UWR_TRACK
-            counters::mremaps(this->m_data == (pointer)new_data);
+            counter.mremaps(this->m_data == (pointer)new_data);
             if (this->m_data == (pointer)new_data) {
-                counters::objects(this->m_capacity);
+                counter.objects(this->m_capacity);
             }
             #endif
 

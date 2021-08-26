@@ -147,6 +147,15 @@ private:
     size_type capacity_;
 public:
     constexpr static size_t map_threshold = 4096 / sizeof(T);
+
+// TODO: remove
+#ifdef RVECTOR_TRACK
+public:
+    static void print_stats() {
+        mm::counter.print();
+        mm::counter.reset();
+    }
+#endif
 };
 
 template<typename T>

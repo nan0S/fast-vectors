@@ -5,6 +5,11 @@
 #include <memory>
 #include <linux/mman.h>
 
+// TODO: remove
+#ifdef RVECTOR_TRACK
+#include "../common/alloc_counter.hpp"
+#endif
+
 #define LIKELY(x)       __builtin_expect((x),1)
 #define UNLIKELY(x)     __builtin_expect((x),0)
 
@@ -12,52 +17,14 @@ template<class T>
 class rvector;
 
 // TODO: remove
-// #define RVECTOR_TRACK
 // #define RVECTOR_VERBOSE_PRINTING
-
-#ifdef RVECTOR_TRACK
-#include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics.hpp>
-#include <iostream>
-using namespace boost::accumulators;
-#endif
 
 namespace mm
 {
 	// TODO: remove
 	#ifdef RVECTOR_TRACK
-
-	struct counters {
-	    static accumulator_set<int,
-	        features<tag::count,
-	                 tag::sum,
-	                 tag::mean>> mremaps;
-	    static accumulator_set<double,
-	        features<tag::mean>> grows;
-
-	    static void print() {
-	    	std::cout << "\n==== rvector::allocator::print() ====\n"
-	        		  << "total mremaps   = " << count(mremaps) << "\n"
-	                  << "success mremaps = " << sum(mremaps) << "\n"
-	                  << "mean success    = " << mean(mremaps) << "\n"
-	                  << "mean grow       = " << mean(grows) << "\n"
-	                  << std::endl;
-	    }
-
-	    static void reset() {
-			mremaps = {};
-			grows = {};
-		}
-	};
-
-	accumulator_set<int,
-	    features<tag::count,
-	             tag::sum,
-	             tag::mean>> counters::mremaps;
-	accumulator_set<double,
-	    features<tag::mean>> counters::grows;
-
-	#endif // RVECTOR_TRACK
+	uwr::mem::alloc_counter counter("rvector");
+	#endif
 
 	// Policies
 	template<typename T>
@@ -180,7 +147,7 @@ namespace mm
 	        	#ifdef RVECTOR_TRACK
 	        	T* ret = (T*) mremap(data, capacity*sizeof(T), 
                         		n*sizeof(T), MREMAP_MAYMOVE);
-	        	counters::mremaps(ret == data);
+	        	counter.mremaps(ret == data);
 	        	return ret;
 	        	#else
             	return (T*) mremap(data, capacity*sizeof(T), 
@@ -205,7 +172,7 @@ namespace mm
 
             // TODO: remove
             #ifdef RVECTOR_TRACK
-            counters::mremaps(data == (T*)new_data);
+            counter.mremaps(data == (T*)new_data);
             #endif
 
             #ifdef RVECTOR_VERBOSE_PRINTING
@@ -243,7 +210,7 @@ namespace mm
 		// TODO: remove
 		#ifdef RVECTOR_TRACK
 		if (capacity)
-			counters::grows(double(new_capacity) / capacity);
+			counter.grows(double(new_capacity) / capacity);
 		#endif
 
 	    if(data)
