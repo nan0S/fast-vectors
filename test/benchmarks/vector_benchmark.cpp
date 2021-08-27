@@ -66,7 +66,7 @@ static  bool  DO_C_VECTOR_BENCH        =  1;
 #define TURN_ON_RVECTOR_BENCH
 #define TURN_ON_UWR_VECTOR_BENCH
 #define TURN_ON_UWR_VECTOR_ALT_BENCH
-// #define TURN_ON_UWR_VECTOR_ALT2_BENCH
+#define TURN_ON_UWR_VECTOR_ALT2_BENCH
 // #define TURN_ON_UWR_STD_VECTOR_BENCH
 // #define TURN_ON_BIG_VECTOR_BENCH
 #define TURN_ON_C_VECTOR_BENCH
@@ -383,5 +383,12 @@ int main(int argc, char** argv) {
     RunSpecifiedBenchmarks();
     Shutdown();
     
+    // for (const auto& [k, v] : succ) {
+    //     std::cout << k << ": ";
+    //     for (const auto& x : v)
+    //         std::cout << x << " ";
+    //     std::cout << std::endl;
+    // }
+
     return 0;
 }

@@ -9,6 +9,9 @@
 #include "../common/alloc_counter.hpp"
 #endif
 
+// #include <map>
+// std::map<void*, std::vector<double>> succ;
+
 // TODO: remove
 // #define UWR_VERBOSE_PRINTING
 
@@ -42,14 +45,16 @@ private:
     UWR_FORCEINLINE constexpr int is_big(size_type n, true_type) const;
     UWR_FORCEINLINE constexpr int is_big(size_type n, false_type) const;
 
+    UWR_FORCEINLINE constexpr size_type fix_big_capacity(size_type n) const;
+    UWR_FORCEINLINE constexpr size_type fix_small_capacity(size_type n) const;
+
     UWR_FORCEINLINE constexpr pointer big_alloc(size_type n) const;
     UWR_FORCEINLINE constexpr pointer small_alloc(size_type n) const;
     UWR_FORCEINLINE constexpr void big_dealloc(pointer data, size_type n) const;
     UWR_FORCEINLINE constexpr void small_dealloc(pointer data, size_type n) const;
 
-    UWR_FORCEINLINE constexpr size_type next_capacity(size_type req) const;
-    UWR_FORCEINLINE constexpr size_type next_capacity(size_type req, true_type) const;
-    UWR_FORCEINLINE constexpr size_type next_capacity(size_type req, false_type) const;
+    UWR_FORCEINLINE constexpr void do_grow(size_type req, true_type);
+    constexpr void do_grow(size_type req, false_type);
 
     constexpr pointer do_realloc(size_type req, true_type);
     constexpr pointer do_realloc(size_type req, false_type);
@@ -86,13 +91,25 @@ hybrid_allocator_alt2<T>::fix_capacity(size_type n) const {
 #ifndef NDEBUG
     if (!n) return 0;
 #endif
-    if (this->is_big(n)) {
-        return ((n * sizeof(T) + page_size - 1) / page_size)
-            * page_size / sizeof(T);
-    }
-    else {
-        return std::max((64 + sizeof(T) - 1) / sizeof(T), n);
-    }
+    if (this->is_big(n))
+        return this->fix_big_capacity(n);
+    else
+        return this->fix_small_capacity(n);
+}
+
+template<class T>
+constexpr typename hybrid_allocator_alt2<T>::size_type
+hybrid_allocator_alt2<T>::fix_big_capacity(size_type n) const {
+    UWR_ASSERT(this->is_big(n));
+    return ((n * sizeof(T) + page_size - 1) / page_size)
+        * page_size / sizeof(T);
+}
+
+template<class T>
+constexpr typename hybrid_allocator_alt2<T>::size_type
+hybrid_allocator_alt2<T>::fix_small_capacity(size_type n) const {
+    UWR_ASSERT(!this->is_big(n));
+    return std::max((64 + sizeof(T) - 1) / sizeof(T), n);
 }
 
 template<class T>
@@ -313,28 +330,111 @@ template<class T>
 constexpr void
 hybrid_allocator_alt2<T>::grow(size_type req) {
     UWR_ASSERT(req > this->m_capacity);
-    this->realloc(this->next_capacity(req));
+
+    req = std::max(2 * this->m_capacity, req);
+    req = this->fix_capacity(req);
+
+    if (UWR_LIKELY(!!this->m_capacity)) {
+        this->do_grow(req, is_trivially_relocatable<T>());
+    }
+    else {
+        this->m_data = this->alloc(req);
+        this->m_capacity = req;
+    }
 }
 
 template<class T>
-constexpr typename hybrid_allocator_alt2<T>::size_type
-hybrid_allocator_alt2<T>::next_capacity(size_type req) const {
-    return this->next_capacity(req, is_trivially_relocatable<T>());
+constexpr void
+hybrid_allocator_alt2<T>::do_grow(size_type req, true_type) {
+    this->m_data = this->do_realloc(req, true_type());
+    this->m_capacity = req;
 }
 
 template<class T>
-constexpr typename hybrid_allocator_alt2<T>::size_type
-hybrid_allocator_alt2<T>::next_capacity(size_type req, true_type) const {
-    return std::max(2 * this->m_capacity, req);
-}
+constexpr void
+hybrid_allocator_alt2<T>::do_grow(size_type req, false_type) {
+    UWR_ASSERT(req > this->m_capacity);
+    UWR_ASSERT(req == this->fix_capacity(req));
 
-template<class T>
-constexpr typename hybrid_allocator_alt2<T>::size_type
-hybrid_allocator_alt2<T>::next_capacity(size_type req, false_type) const {
-    if (this->is_big(this->m_capacity))
-        return std::max(2 * this->m_capacity, req);
-    else
-        return std::max(8 * this->m_capacity / 5, req);
+    uint8_t cond = this->is_big(this->m_capacity) |
+                   this->is_big(req) << 1;
+
+    switch (cond) {
+        case 0b00: { /* both are small sizes */
+            pointer new_data = this->small_alloc(req);
+            umove_and_destroy(new_data, this->m_data, this->m_size);
+            this->small_dealloc(this->m_data, this->m_capacity);
+            this->m_data = new_data;
+            this->m_capacity = req;
+
+            break;
+        }
+        case 0b10: { /* new size is big, old is small */
+            pointer new_data = this->big_alloc(req);
+            umove_and_destroy(new_data, this->m_data, this->m_size);
+            this->small_dealloc(this->m_data, this->m_capacity);
+            this->m_data = new_data;
+            this->m_capacity = req;
+
+            break;
+        }
+        case 0b11: { /* both are big sizes */
+            size_type cur_req = req;
+            size_type step = req / 20;
+            for (int i = 0; i < 10; ++i, cur_req -= step) {
+                pointer new_data = (pointer)mremap(
+                    this->m_data,
+                    this->m_capacity * sizeof(T),
+                    cur_req * sizeof(T), 0);
+                
+                if (new_data != (pointer)-1) {
+                    // TODO: remove
+                    #ifdef UWR_TRACK
+                    counter.mremaps(1);
+                    counter.objects(this->m_capacity);
+                    counter.grows(double(this->fix_big_capacity(cur_req)) / this->m_capacity);
+                    // succ[(void*)this].push_back(double(cur_req) / this->m_capacity);
+                    #endif
+
+                    // std::cout << this << ": " << (double(cur_req) / this->m_capacity) << std::endl;
+                    // TODO: remove
+                    #ifdef UWR_VERBOSE_PRINTING
+                    std::cout << "ha: "
+                        << npages(this->m_capacity)
+                        << " -> " << npages(req) << " "
+                        << (new_data == this->m_data)
+                        << std::endl;
+                    #endif
+
+                    this->m_data = new_data;
+                    this->m_capacity = this->fix_big_capacity(cur_req);
+
+                    return;
+                }
+            }
+
+            // succ[(void*)this].push_back(-1);
+            // std::cout << this << "Fail: " << std::endl;
+
+            // TODO: remove
+            #ifdef UWR_TRACK
+            counter.mremaps(0);
+            counter.grows(double(req) / this->m_capacity);
+            #endif
+
+            pointer new_data = this->big_alloc(req);
+            umove_and_destroy(new_data, this->m_data, this->m_size);
+            this->big_dealloc(this->m_data, this->m_capacity);
+            this->m_data = new_data;
+            this->m_capacity = req;
+
+            break;
+        }
+        default: { /* impossible */
+            UWR_ASSERT(false);
+            break;
+        }
+    }
 }
 
 template<class T>
