@@ -1,6 +1,17 @@
 #!/bin/sh
 
-./run-current vector_benchmark \
-    --all \
-    --common_iters=1 \
-    $@
+if [ "$1" = "static" ]; then
+    arg="static"
+    shift
+fi
+
+if [ "$arg" = "static" ]; then
+    ./run-current static_vector_benchmark \
+        --all \
+        $@
+else
+    ./run-current vector_benchmark \
+        --all \
+        --common_iters=1 \
+        $@
+fi
