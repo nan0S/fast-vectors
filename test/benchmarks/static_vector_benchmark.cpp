@@ -18,18 +18,14 @@ static  int  INT_ARG               =  1000;
 static  int  STRING_ARG            =  900;
 static  int  TEST_TYPE_ARG         =  1000;
 static  int  ARRAY_ARG             =  900;
-static  int  INT_STRING_ARG        =  900;
-static  int  INT_STRING_ARRAY_ARG  =  700;
 
 /* use the same number of iterations in all benchmarks */
 static  int  COMMON_ITERS = 0;
 
-static  int  INT_ITERS               (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS);
-static  int  STRING_ITERS            (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS);
-static  int  TEST_TYPE_ITERS         (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS);
-static  int  ARRAY_ITERS             (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS);
-static  int  INT_STRING_ITERS        (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS);
-static  int  INT_STRING_ARRAY_ITERS  (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS);
+static  int  INT_ITERS              = (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS);
+static  int  STRING_ITERS           = (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS);
+static  int  TEST_TYPE_ITERS        = (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS);
+static  int  ARRAY_ITERS            = (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS);
 
 /* turn on/off bencharmsk for specific vectors */
 static  bool  DO_BOOST_STATIC_VECTOR_BENCH    =  1;
@@ -43,6 +39,9 @@ static  bool  DO_UWR_STATIC_VECTOR_ALT_BENCH  =  1;
 
 /* default benchmark type to run */
 static int benchmark_type = bench_type::ALL;
+
+/* number of vector in environment in PUSH_ONLY case */
+static int num_env_vectors = 1;
 
 /* verbose level:
     - 0: nothing
@@ -92,14 +91,11 @@ static void ParseCustomOptions(int argc, char** argv) {
         {  "test_type_iters",           required_argument,  0,  9    },
         {  "array_arg",                 required_argument,  0,  10   },
         {  "array_iters",               required_argument,  0,  11   },
-        {  "int_string_arg",            required_argument,  0,  12   },
-        {  "int_string_iters",          required_argument,  0,  13   },
-        {  "int_string_array_arg",      required_argument,  0,  14   },
-        {  "int_string_array_iters",    required_argument,  0,  15   },
         {  "push_only",                 no_argument,        0,  16   },
         {  "push_cons_dest",            no_argument,        0,  17   },
         {  "all",                       no_argument,        0,  18   },
         {  "verbose",                   required_argument,  0,  19   },
+        {  "num_env_vectors",           required_argument,  0,  20   },
         {  "help",                      no_argument,        0,  'h'  },
     };
     static const char* shortopts = "h";
@@ -117,13 +113,10 @@ static void ParseCustomOptions(int argc, char** argv) {
         "\t--test_type_iters=VALUE\n"
         "\t--array_arg=VALUE\n"
         "\t--array_iters=VALUE\n"
-        "\t--int_string_arg=VALUE\n"
-        "\t--int_string_iters=VALUE\n"
-        "\t--int_string_array_arg=VALUE\n"
-        "\t--int_string_array_iters=VALUE\n"
         "\t--push_only\n"
         "\t--push_cons_dest\n"
         "\t--all\n"
+        "\t--num_env_vectors=VALUE\n"
         "\t--verbose=VALUE\n"
         "\t-h,--help\n";
 
@@ -149,14 +142,11 @@ static void ParseCustomOptions(int argc, char** argv) {
             case 9: SetReqVar(TEST_TYPE_ITERS); break;
             case 10: SetReqVar(ARRAY_ARG); break;
             case 11: SetReqVar(ARRAY_ITERS); break;
-            case 12: SetReqVar(INT_STRING_ARG); break;
-            case 13: SetReqVar(INT_STRING_ITERS); break;
-            case 14: SetReqVar(INT_STRING_ARRAY_ARG); break;
-            case 15: SetReqVar(INT_STRING_ARRAY_ITERS); break;
             case 16: benchmark_type |= bench_type::PUSH_ONLY; break;
             case 17: benchmark_type |= bench_type::PUSH_CONS_DEST; break;
             case 18: benchmark_type |= bench_type::ALL; break;
             case 19: SetReqVar(verbose); break;
+            case 20: SetReqVar(num_env_vectors); break;
             case 'h': printf("%s", helpstr); break;
             default: break;
         }
@@ -164,6 +154,13 @@ static void ParseCustomOptions(int argc, char** argv) {
 
     if (!benchmark_type)
         benchmark_type = bench_type::PUSH_ONLY;
+
+    if (COMMON_ITERS) {
+        INT_ITERS = COMMON_ITERS;
+        STRING_ITERS = COMMON_ITERS;
+        TEST_TYPE_ITERS = COMMON_ITERS;
+        ARRAY_ITERS = COMMON_ITERS;
+    }
 }
 
 /*
@@ -173,7 +170,7 @@ static void ParseCustomOptions(int argc, char** argv) {
 #define CONCAT_INNER(a, b) a ## b
 
 #define REGISTER_BENCHMARK_FOR_VECTOR(unit, varname, counter, type, vector, ...) \
-    RegisterBenchmark("BM_environment<" #vector ", " #__VA_ARGS__ ">", BM_environment<vector, __VA_ARGS__>, type, verbose) \
+    RegisterBenchmark("BM_environment<" #vector ", " #__VA_ARGS__ ">", BM_environment<vector, __VA_ARGS__>, type, verbose, num_env_vectors) \
         ->Unit(unit) \
         ->Iterations(CONCAT(varname, _ITERS)) \
         ->Args({CONCAT(varname, _ARG), counter})
@@ -214,8 +211,6 @@ static void RegisterBenchmarkForType(bench_type type) {
     REGISTER_BENCHMARK(kMillisecond,  STRING,            2,  type, std::string);
     REGISTER_BENCHMARK(kMillisecond,  TEST_TYPE,         3,  type, test_type);
     REGISTER_BENCHMARK(kMillisecond,  ARRAY,             4,  type, std::array<int, N>);
-    REGISTER_BENCHMARK(kMillisecond,  INT_STRING,        5,  type, int, std::string);
-    REGISTER_BENCHMARK(kMillisecond,  INT_STRING_ARRAY,  6,  type, int, std::string, std::array<int, N>);
 }
 
 int main(int argc, char** argv) {

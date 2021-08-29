@@ -37,7 +37,7 @@ public:
         for (int i = 0; i < iters; ++i) {
             (dispatch_action<Ts>(i), ...);
         }
-        if (verbose > 1)
+        if (verbose > 2)
             print_stats();
     }
 
@@ -151,8 +151,8 @@ private:
 
         auto& typed_env = this->get_env_of_type<T>();
         int q = random(1, type == bench_type::PUSH_ONLY ? 1 : 3);
-        // std::uniform_int_distribution<> size_dist(1, i + 10);
-        std::uniform_int_distribution<> size_dist(0, 0);
+        std::uniform_int_distribution<> size_dist(0, i / 10 + 10);
+        // std::uniform_int_distribution<> size_dist(0, 0);
         bench_timer timer("construct");
 
         while (q--) {
@@ -395,7 +395,7 @@ void BM_environment(State& s, bench_type type, int verbose,
             test_type::print_stats();
 
     /* bench timer stats printing */
-    if (verbose > 2) {
+    if (verbose > 1) {
         bench_timer::print();
         bench_timer::reset();
     }
