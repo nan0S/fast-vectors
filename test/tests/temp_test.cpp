@@ -1,6 +1,7 @@
 #include <bits/stdc++.h>
 #include <static_vector.hpp>
 #include <boost/container/vector.hpp>
+#include <boost/container/static_vector.hpp>
 #include <vector.hpp>
 #include <test_type/test_type.hpp>
 #include <utils/utils.hpp>
@@ -9,13 +10,18 @@
 
 using namespace std;
 
-constexpr static int C = 10;
-
 using boost_gf = boost::container::growth_factor_100;
 using boost_options = boost::container::vector_options_t<boost::container::growth_factor<boost_gf>>;
 template<class T>
 using boost_vector = boost::container::vector<T, boost::container::new_allocator<T>, boost_options>;
 // using boost_vector = boost::container::vector<T>;
+
+constexpr static int C = 10;
+
+template<class T>
+using uwr_static_vector = uwr::static_vector<T, C>;
+template<class T>
+using boost_static_vector = boost::container::static_vector<T, C>;
 
 template<class Container>
 void print(const Container& c) {
@@ -52,6 +58,7 @@ using uwr_vector = uwr::vector<T>;
 using rvector_t = rvector<T>;
 using uwr_std_vector = uwr::std_vector<T>;
 
+
 constexpr long ps = 4096;
 
 long npages(long x) {
@@ -73,12 +80,12 @@ void show_capacity() {
 }
 
 int main() {
-    show_capacity<uwr_vector>();
-    show_capacity<rvector_t>();
-    show_capacity<boost_vector_t>();
-    show_capacity<uwr_std_vector>();
+    // show_capacity<uwr_vector>();
+    // show_capacity<rvector_t>();
+    // show_capacity<boost_vector_t>();
+    // show_capacity<uwr_std_vector>();
 
-    using Vector = std_vector;
+    // using Vector = std_vector;
     // using Vector = uwr_std_vector;
     // using Vector = boost_vector_t;
 
@@ -94,10 +101,23 @@ int main() {
     // v.clear();
     // cout << v.capacity() << endl;
 
-    Random::seed(1231);
-    cout << Random::rand(10) << Random::rand(200) << endl;
-    Random::seed(1231);
-    cout << Random::rand(10) << Random::rand(200) << endl;
+    using T = test_type;
+    // using Vector = uwr_static_vector<T>;
+    using Vector = boost_static_vector<T>;
+
+    test_type::start_recording();
+
+    Vector v1(5);
+    Vector v2(5 * 5 / 3);
+
+    ON;
+    
+    std::reverse(v1.begin(), v1.end());
+    std::swap(v1, v2);
+
+    OFF;
+
+    test_type::print_stats();
 
     return 0;
 }
