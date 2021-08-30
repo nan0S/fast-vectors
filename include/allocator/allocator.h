@@ -10,8 +10,8 @@
 #include "../common/alloc_counter.hpp"
 #endif
 
-#define LIKELY(x)       __builtin_expect((x),1)
-#define UNLIKELY(x)     __builtin_expect((x),0)
+#define RVECTOR_LIKELY(x)       __builtin_expect((x),1)
+#define RVECTOR_UNLIKELY(x)     __builtin_expect((x),0)
 
 template<class T>
 class rvector;
@@ -204,7 +204,7 @@ namespace mm
 						size_type n)
 	{
 		size_type new_capacity = fix_capacity<T>(n);
-		if(UNLIKELY(new_capacity < map_threshold<T> and capacity > map_threshold<T>))
+		if(RVECTOR_UNLIKELY(new_capacity < map_threshold<T> and capacity > map_threshold<T>))
 			return;
 
 		// TODO: remove
@@ -225,7 +225,7 @@ namespace mm
 	template<typename T>
 	void grow(T*& data, size_type length, size_type& capacity)
 	{
-		if(LIKELY(length < capacity)) return;
+		if(RVECTOR_LIKELY(length < capacity)) return;
 		change_capacity(data, length, capacity, capacity*2 + !capacity);
 	}
 
@@ -242,7 +242,7 @@ namespace mm
 	NT_Move_a<T> 
 	shiftr_data(T* begin, size_type end)
 	{
-        if (UNLIKELY(!end))
+        if (RVECTOR_UNLIKELY(!end))
             return;
 		auto end_p = begin + end;
 		new (end_p) T(std::move(*(end_p - 1)));

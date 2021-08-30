@@ -338,7 +338,7 @@ rvector<T>::crend() const noexcept
 template <typename T>
 rvector<T>& rvector<T>::operator=(const rvector<T>& other)
 {
-    if(UNLIKELY(this == std::addressof(other))) return *this;
+    if(RVECTOR_UNLIKELY(this == std::addressof(other))) return *this;
     if(other.length_ > capacity_)
         mm::change_capacity(data_, length_, capacity_, other.length_);
 
@@ -491,7 +491,7 @@ template <typename T>
 typename rvector<T>::reference 
 rvector<T>::at(rvector<T>::size_type n)
 {
-    if(UNLIKELY(n >= length_))
+    if(RVECTOR_UNLIKELY(n >= length_))
         throw std::out_of_range("Index out of range: " + std::to_string(n));
     return data_[n];
 }
@@ -500,7 +500,7 @@ template <typename T>
 typename rvector<T>::const_reference 
 rvector<T>::at(rvector<T>::size_type n) const
 {
-    if(UNLIKELY(n >= length_))
+    if(RVECTOR_UNLIKELY(n >= length_))
         throw std::out_of_range("Index out of range: " + std::to_string(n));
     return data_[n];
 }
