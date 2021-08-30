@@ -64,8 +64,8 @@ public:
 
     UWR_FORCEINLINE void assign_to_long(T* begin, size_type len) {
         mem::destroy(
-                mem::copy(begin, this->first, this->last),
-                begin + len);
+            mem::copy(begin, this->first, this->last),
+            begin + len);
     }
 
 private:
@@ -99,8 +99,8 @@ public:
 
     UWR_FORCEINLINE void assign_to_long(T* begin, size_type len) {
         mem::destroy(
-                mem::move(begin, this->first, this->last),
-                begin + len);
+            mem::move(begin, this->first, this->last),
+            begin + len);
     }
 
 private:
@@ -130,8 +130,8 @@ public:
 
     UWR_FORCEINLINE void assign_to_long(T* begin, size_type len) {
         mem::destroy(
-                mem::fill(begin, this->n, this->value),
-                begin + len);
+            mem::fill(begin, this->n, this->value),
+            begin + len);
     }
 
 private:
