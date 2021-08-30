@@ -4,6 +4,8 @@
 #include <static_vector.hpp>
 #include <static_vector_alt.hpp>
 #include <test_type/test_type.hpp>
+#include <EASTL/fixed_vector.h>
+#include <folly/small_vector.h>
 
 #include "vector_benchmark_base.hpp"
 
@@ -29,11 +31,15 @@ static  int  ARRAY_ITERS            = (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITER
 
 /* turn on/off bencharmsk for specific vectors */
 static  bool  DO_BOOST_STATIC_VECTOR_BENCH    =  1;
+static  bool  DO_EASTL_STATIC_VECTOR_BENCH    =  1;
+static  bool  DO_FOLLY_STATIC_VECTOR_BENCH    =  1;
 static  bool  DO_UWR_STATIC_VECTOR_BENCH      =  1;
 static  bool  DO_UWR_STATIC_VECTOR_ALT_BENCH  =  1;
 
 /* turn off some vectors from even compiling */
 #define TURN_ON_BOOST_STATIC_VECTOR_BENCH
+#define TURN_ON_EASTL_STATIC_VECTOR_BENCH
+#define TURN_ON_FOLLY_STATIC_VECTOR_BENCH
 #define TURN_ON_UWR_STATIC_VECTOR_BENCH
 #define TURN_ON_UWR_STATIC_VECTOR_ALT_BENCH
 
@@ -60,9 +66,23 @@ static constexpr int N = 10;     // used in std::array<int, N>
 template<class T>
 using boost_static_vector = boost::container::static_vector<T, C>;
 template<class T>
+using eastl_static_vector = eastl::fixed_vector<T, C, false>;
+template<class T>
+using folly_static_vector = folly::small_vector<T, C, folly::small_vector_policy::NoHeap>;
+template<class T>
 using uwr_static_vector = uwr::static_vector<T, C>;
 template<class T>
 using uwr_static_vector_alt = uwr::static_vector_alt<T, C>;
+
+/*
+ * seems that eastl vector needs it
+ */
+void* operator new[](size_t size, const char*, int, unsigned, const char*, int) {
+	return malloc(size);
+}
+void* operator new[](size_t size, size_t, size_t, const char*, int, unsigned, const char*, int) {
+    return malloc(size);
+}
 
 /*
  * option parsing functions
@@ -80,28 +100,32 @@ static void SetReqVar(int& var) {
 static void ParseCustomOptions(int argc, char** argv) {
     static struct option longopts[] = {
         {  "do_boost_static_vector",    optional_argument,  0,  0    },
-        {  "do_uwr_static_vector",      optional_argument,  0,  1    },
-        {  "do_uwr_static_vector_alt",  optional_argument,  0,  2    },
-        {  "common_iters",              required_argument,  0,  3    },
-        {  "int_arg",                   required_argument,  0,  4    },
-        {  "int_iters",                 required_argument,  0,  5    },
-        {  "string_arg",                required_argument,  0,  6    },
-        {  "string_iters",              required_argument,  0,  7    },
-        {  "test_type_arg",             required_argument,  0,  8    },
-        {  "test_type_iters",           required_argument,  0,  9    },
-        {  "array_arg",                 required_argument,  0,  10   },
-        {  "array_iters",               required_argument,  0,  11   },
-        {  "push_only",                 no_argument,        0,  16   },
-        {  "push_cons_dest",            no_argument,        0,  17   },
-        {  "all",                       no_argument,        0,  18   },
-        {  "verbose",                   required_argument,  0,  19   },
-        {  "num_env_vectors",           required_argument,  0,  20   },
+        {  "do_eastl_static_vector",    optional_argument,  0,  1    },
+        {  "do_folly_static_vector",    optional_argument,  0,  2    },
+        {  "do_uwr_static_vector",      optional_argument,  0,  3    },
+        {  "do_uwr_static_vector_alt",  optional_argument,  0,  4    },
+        {  "common_iters",              required_argument,  0,  5    },
+        {  "int_arg",                   required_argument,  0,  6    },
+        {  "int_iters",                 required_argument,  0,  7    },
+        {  "string_arg",                required_argument,  0,  8    },
+        {  "string_iters",              required_argument,  0,  9    },
+        {  "test_type_arg",             required_argument,  0,  10   },
+        {  "test_type_iters",           required_argument,  0,  11   },
+        {  "array_arg",                 required_argument,  0,  12   },
+        {  "array_iters",               required_argument,  0,  13   },
+        {  "push_only",                 no_argument,        0,  14   },
+        {  "push_cons_dest",            no_argument,        0,  15   },
+        {  "all",                       no_argument,        0,  16   },
+        {  "verbose",                   required_argument,  0,  17   },
+        {  "num_env_vectors",           required_argument,  0,  18   },
         {  "help",                      no_argument,        0,  'h'  },
     };
     static const char* shortopts = "h";
     static const char* helpstr =
         "List of possible options:\n"
         "\t--do_boost_static_vector[=0/1]\n"
+        "\t--do_eastl_static_vector[=0/1]\n"
+        "\t--do_folly_static_vector[=0/1]\n"
         "\t--do_uwr_static_vector[=0/1]\n"
         "\t--do_uwr_static_vector_alt[=0/1]\n"
         "\t--common_iters=VALUE\n"
@@ -131,22 +155,24 @@ static void ParseCustomOptions(int argc, char** argv) {
 
         switch (opt) {
             case 0: SetOptVar(DO_BOOST_STATIC_VECTOR_BENCH); break;
-            case 1: SetOptVar(DO_UWR_STATIC_VECTOR_BENCH); break;
-            case 2: SetOptVar(DO_UWR_STATIC_VECTOR_ALT_BENCH); break;
-            case 3: SetReqVar(COMMON_ITERS); break;
-            case 4: SetReqVar(INT_ARG); break;
-            case 5: SetReqVar(INT_ITERS); break;
-            case 6: SetReqVar(STRING_ARG); break;
-            case 7: SetReqVar(STRING_ITERS); break;
-            case 8: SetReqVar(TEST_TYPE_ARG); break;
-            case 9: SetReqVar(TEST_TYPE_ITERS); break;
-            case 10: SetReqVar(ARRAY_ARG); break;
-            case 11: SetReqVar(ARRAY_ITERS); break;
-            case 16: benchmark_type |= bench_type::PUSH_ONLY; break;
-            case 17: benchmark_type |= bench_type::PUSH_CONS_DEST; break;
-            case 18: benchmark_type |= bench_type::ALL; break;
-            case 19: SetReqVar(verbose); break;
-            case 20: SetReqVar(num_env_vectors); break;
+            case 1: SetOptVar(DO_EASTL_STATIC_VECTOR_BENCH); break;
+            case 2: SetOptVar(DO_FOLLY_STATIC_VECTOR_BENCH); break;
+            case 3: SetOptVar(DO_UWR_STATIC_VECTOR_BENCH); break;
+            case 4: SetOptVar(DO_UWR_STATIC_VECTOR_ALT_BENCH); break;
+            case 5: SetReqVar(COMMON_ITERS); break;
+            case 6: SetReqVar(INT_ARG); break;
+            case 7: SetReqVar(INT_ITERS); break;
+            case 8: SetReqVar(STRING_ARG); break;
+            case 9: SetReqVar(STRING_ITERS); break;
+            case 10: SetReqVar(TEST_TYPE_ARG); break;
+            case 11: SetReqVar(TEST_TYPE_ITERS); break;
+            case 12: SetReqVar(ARRAY_ARG); break;
+            case 13: SetReqVar(ARRAY_ITERS); break;
+            case 14: benchmark_type |= bench_type::PUSH_ONLY; break;
+            case 15: benchmark_type |= bench_type::PUSH_CONS_DEST; break;
+            case 16: benchmark_type |= bench_type::ALL; break;
+            case 17: SetReqVar(verbose); break;
+            case 18: SetReqVar(num_env_vectors); break;
             case 'h': printf("%s", helpstr); break;
             default: break;
         }
@@ -186,6 +212,20 @@ static void ParseCustomOptions(int argc, char** argv) {
 #define REREGISTER_BENCHMARK_FOR_BOOST_STATIC_VECTOR(unit, varname, counter, type, ...)
 #endif
 
+#ifdef TURN_ON_EASTL_STATIC_VECTOR_BENCH
+#define REGISTER_BENCHMARK_FOR_EASTL_STATIC_VECTOR(unit, varname, counter, type, ...) \
+    COND_REGISTER_BENCHMARK_FOR_VECTOR(DO_EASTL_STATIC_VECTOR_BENCH, unit, varname, counter, type, eastl_static_vector, __VA_ARGS__)
+#else
+#define REGISTER_BENCHMARK_FOR_EASTL_STATIC_VECTOR(unit, varname, counter, type, ...)
+#endif
+
+#ifdef TURN_ON_FOLLY_STATIC_VECTOR_BENCH
+#define REGISTER_BENCHMARK_FOR_FOLLY_STATIC_VECTOR(unit, varname, counter, type, ...) \
+    COND_REGISTER_BENCHMARK_FOR_VECTOR(DO_FOLLY_STATIC_VECTOR_BENCH, unit, varname, counter, type, folly_static_vector, __VA_ARGS__)
+#else
+#define REGISTER_BENCHMARK_FOR_FOLLY_STATIC_VECTOR(unit, varname, counter, type, ...)
+#endif
+
 #ifdef TURN_ON_UWR_STATIC_VECTOR_BENCH
 #define REGISTER_BENCHMARK_FOR_UWR_STATIC_VECTOR(unit, varname, counter, type, ...) \
     COND_REGISTER_BENCHMARK_FOR_VECTOR(DO_UWR_STATIC_VECTOR_BENCH, unit, varname, counter, type, uwr_static_vector, __VA_ARGS__)
@@ -202,6 +242,8 @@ static void ParseCustomOptions(int argc, char** argv) {
 
 #define REGISTER_BENCHMARK(unit, varname, counter, type, ...) \
     REGISTER_BENCHMARK_FOR_BOOST_STATIC_VECTOR(unit, varname, counter, type, __VA_ARGS__); \
+    REGISTER_BENCHMARK_FOR_EASTL_STATIC_VECTOR(unit, varname, counter, type, __VA_ARGS__); \
+    REGISTER_BENCHMARK_FOR_FOLLY_STATIC_VECTOR(unit, varname, counter, type, __VA_ARGS__); \
     REGISTER_BENCHMARK_FOR_UWR_STATIC_VECTOR(unit, varname, counter, type, __VA_ARGS__); \
     REGISTER_BENCHMARK_FOR_UWR_STATIC_VECTOR_ALT(unit, varname, counter, type, __VA_ARGS__)
 
