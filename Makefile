@@ -1,7 +1,7 @@
 CXX := g++
-# VERSION := -std=c++17
+VERSION := -std=c++17
 # check c++20, but write for at least c++17 compatibility
-VERSION := -std=c++20
+# VERSION := -std=c++20
 
 # OFLAGS := -Ofast -march=native -flto -fomit-frame-pointer -s -DNDEBUG
 OFLAGS := -Ofast -march=native -flto -DNDEBUG
@@ -9,6 +9,7 @@ TFLAGS := -O0 -march=native
 WFLAGS := -Wall -Wextra
 IFLAGS := -I include -I src -I include/container
 DFLAGS := -g -fno-omit-frame-pointer
+LDFLAGS = -pthread -lgtest -lbenchmark -lEASTL
 CXXFLAGS := $(VERSION) $(WFLAGS) $(IFLAGS) $(DFLAGS)
 
 SRC_DIR := src
@@ -57,11 +58,11 @@ run-%: $(BIN_DIR)/tests/%
 
 $(BIN_DIR)/tests/%: $(BUILD_DIR)/$(TEST_DIR)/tests/%.o $(OBJECTS)
 	@mkdir -p $(shell dirname $@)
-	$(CXX) $(CXXFLAGS) $(TFLAGS) -MMD -MP $< $(OBJECTS) -o $@ -lgtest
+	$(CXX) $(CXXFLAGS) $(TFLAGS) -MMD -MP $< $(OBJECTS) -o $@ $(LDFLAGS)
 
 $(BIN_DIR)/benchmarks/%: $(BUILD_DIR)/$(TEST_DIR)/benchmarks/%.o $(OBJECTS)
 	@mkdir -p $(shell dirname $@)
-	$(CXX) $(CXXFLAGS) $(OFLAGS) -MMD -MP $< $(OBJECTS) -o $@ -lbenchmark -pthread
+	$(CXX) $(CXXFLAGS) $(OFLAGS) -MMD -MP $< $(OBJECTS) -o $@ $(LDFLAGS)
 
 $(BUILD_DIR)/%.o: %.cpp
 	@mkdir -p $(shell dirname $@)
