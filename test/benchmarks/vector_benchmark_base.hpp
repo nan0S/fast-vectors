@@ -178,7 +178,7 @@ private:
         while (q--) {
             int pick = random(0, --typed_env_size);
 
-            std::swap(typed_env[pick], typed_env.back());
+            typed_env[pick].swap(typed_env.back());
             typed_env.pop_back();
         }
     }
