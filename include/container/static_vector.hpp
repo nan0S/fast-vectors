@@ -3,10 +3,23 @@
 #include <iterator>
 
 #include "../common/memory.hpp"
+#include "../common/minimal_size_type.hpp"
 #include "../common/define.hpp"
 #include "../common/proxy.hpp"
 #if CPP_ABOVE_17
 #include "../common/synth_three_way.hpp"
+#endif
+
+/* 
+* push_back    = fast_push_back
+* emplace_back = fast_emplace_back
+* by default
+*  
+* #define UWR_STATIC_VECTOR_OPTIM_ENABLE 0
+* to disable this behaviour
+*/
+#ifndef UWR_STATIC_VECTOR_OPTIM_ENABLE
+#define UWR_STATIC_VECTOR_OPTIM_ENABLE 1
 #endif
 
 namespace uwr {
@@ -17,7 +30,7 @@ template<class T, len_t C>
 class static_vector {
 public:
     using value_type = T;
-    using size_type = len_t;
+    using size_type = typename mem::minimal_size_type<C>::type;
     using difference_type = std::ptrdiff_t;
     using reference = T&;
     using const_reference = const T&;
@@ -596,10 +609,14 @@ template<class T, len_t C>
 template<class... Args>
 constexpr typename static_vector<T, C>::reference
 static_vector<T, C>::emplace_back(Args&&... args) {
+    #if UWR_STATIC_VECTOR_OPTIM_ENABLE
+    return this->fast_emplace_back(std::forward<Args>(args)...);
+    #else
     if (UWR_LIKELY(this->m_size != C))
         return this->fast_emplace_back(std::forward<Args>(args)...);
     else
         throw std::out_of_range("Out of bounds");
+    #endif
 }
 
 template<class T, len_t C>
