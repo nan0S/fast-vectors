@@ -5,6 +5,8 @@
 #include <common/define.hpp>
 #include <wrapper/wrapper.hpp>
 #include <common/type_traits.hpp>
+#include <folly/Traits.h>
+#include <boost/type_traits.hpp>
 
 #define ON test_type::do_print = true
 #define OFF test_type::do_print = false
@@ -91,4 +93,9 @@ namespace uwr::mem {
     template<>
     inline constexpr bool
         is_trivially_relocatable_v<T_test_type> = true;
+}
+
+namespace folly {
+    template<>
+    struct IsRelocatable<T_test_type> : boost::true_type {};
 }
