@@ -189,6 +189,10 @@ static void ParseCustomOptions(int argc, char** argv) {
     }
 }
 
+std::string get_benchmark_name(const char* insides, bench_type type) {
+    return "BM_environment_" + std::to_string(type) + "<" + insides + ">";
+}
+
 /*
  * some macro magic
  */
@@ -196,7 +200,7 @@ static void ParseCustomOptions(int argc, char** argv) {
 #define CONCAT_INNER(a, b) a ## b
 
 #define REGISTER_BENCHMARK_FOR_VECTOR(unit, varname, counter, type, vector, ...) \
-    RegisterBenchmark("BM_environment<" #vector ", " #__VA_ARGS__ ">", BM_environment<vector, __VA_ARGS__>, type, verbose, num_env_vectors) \
+    RegisterBenchmark(get_benchmark_name(#vector ", " #__VA_ARGS__).c_str(), BM_environment<vector, __VA_ARGS__>, type, verbose, num_env_vectors) \
         ->Unit(unit) \
         ->Iterations(CONCAT(varname, _ITERS)) \
         ->Args({CONCAT(varname, _ARG), counter})
