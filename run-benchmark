@@ -62,6 +62,18 @@ else
 
     ./run-push-only \
         $COMMON_OPTS \
+        --int_arg=1800 \
+        --string_arg=700 \
+        --array_arg=700 \
+        --test_type_arg=900 \
+        --T_test_type_arg=900 \
+        --num_env_vectors=50 \
+        --benchmark_out=./logs/vector_benchmark_push_only_50.json \
+        $@ \
+        | tee ./logs/vector_benchmark_push_only_50.log
+
+    ./run-push-only \
+        $COMMON_OPTS \
         --int_arg=1200 \
         --string_arg=400 \
         --array_arg=500 \
