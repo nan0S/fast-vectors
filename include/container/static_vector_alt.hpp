@@ -9,6 +9,19 @@
 #include "../common/synth_three_way.hpp"
 #endif
 
+/* 
+* push_back    = fast_push_back
+* emplace_back = fast_emplace_back
+* by default
+*  
+* #define UWR_STATIC_VECTOR_ALT_OPTIM_ENABLE 0
+* to disable this behaviour
+*/
+#ifndef UWR_STATIC_VECTOR_ALT_OPTIM_ENABLE
+// TODO: toggle
+#define UWR_STATIC_VECTOR_ALT_OPTIM_ENABLE 0
+#endif
+
 namespace uwr {
 
 using len_t = mem::len_t;
@@ -582,10 +595,14 @@ template<class T, len_t C>
 template<class... Args>
 constexpr typename static_vector_alt<T, C>::reference
 static_vector_alt<T, C>::emplace_back(Args&&... args) {
+    #if UWR_STATIC_VECTOR_ALT_OPTIM_ENABLE
+    return this->fast_emplace_back(std::forward<Args>(args)...);
+    #else
     if (UWR_LIKELY(this->m_end != this->data_at(C)))
         return this->fast_emplace_back(std::forward<Args>(args)...);
     else
         throw std::out_of_range("Out of bounds");
+    #endif
 }
 
 template<class T, len_t C>

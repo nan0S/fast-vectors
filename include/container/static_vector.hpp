@@ -19,7 +19,8 @@
 * to disable this behaviour
 */
 #ifndef UWR_STATIC_VECTOR_OPTIM_ENABLE
-#define UWR_STATIC_VECTOR_OPTIM_ENABLE 1
+//TODO: toggle
+#define UWR_STATIC_VECTOR_OPTIM_ENABLE 0
 #endif
 
 namespace uwr {
