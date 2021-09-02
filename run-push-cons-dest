@@ -8,6 +8,10 @@ fi
 if [ "$arg" = "static" ]; then
     ./run-current static_vector_benchmark \
         --push_cons_dest \
+        --int_arg=2000 \
+        --string_arg=1500 \
+        --array_arg=1500 \
+        --test_type_arg=1500 \
         $@
 else
     ./run-current vector_benchmark \

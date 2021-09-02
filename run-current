@@ -4,7 +4,6 @@ COMMON_OPTS="
     --benchmark_color=true
     --benchmark_counters_tabular=true
     --benchmark_display_aggregates_only=true
-    --benchmark_report_aggregates_only=true
 "
 
 BIN_PATH="bin/benchmarks"
@@ -17,9 +16,10 @@ run_test() {
     mkdir -p "./logs"
 
     make -j2 "$test_path" && \
-        "$test_path" $COMMON_OPTS $opts \
-            --benchmark_out="./logs/$test_exe.log" \
-            --benchmark_out_format="console"
+        "$test_path" $COMMON_OPTS \
+            --benchmark_out="./logs/$test_exe.json" \
+            --benchmark_out_format="json" \
+            $opts
 }
 
 run_bench() {
