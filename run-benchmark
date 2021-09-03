@@ -25,9 +25,9 @@ if [ "$arg" = "static" ]; then
 
     ./run-all static \
         $COMMON_OPTS \
-        --benchmark_out=./logs/static_vector_benchmark_push_cons_dest.json \
+        --benchmark_out=./logs/static_vector_benchmark_all.json \
         $@ \
-        | tee ./logs/static_vector_benchmark_push_cons_dest.log
+        | tee ./logs/static_vector_benchmark_all.log
 else
     ./run-push-only \
         $COMMON_OPTS \
@@ -39,10 +39,10 @@ else
     ./run-push-only \
         $COMMON_OPTS \
         --int_arg=4000 \
-        --string_arg=1400 \
+        --string_arg=1500 \
         --array_arg=1500 \
-        --test_type_arg=3000 \
-        --T_test_type_arg=3000 \
+        --test_type_arg=2500 \
+        --T_test_type_arg=2500 \
         --num_env_vectors=3 \
         --benchmark_out=./logs/vector_benchmark_push_only_3.json \
         $@ \
@@ -51,10 +51,10 @@ else
     ./run-push-only \
         $COMMON_OPTS \
         --int_arg=3500 \
-        --string_arg=1200 \
+        --string_arg=1100 \
         --array_arg=1300 \
-        --test_type_arg=2000 \
-        --T_test_type_arg=2000 \
+        --test_type_arg=1800 \
+        --T_test_type_arg=1800 \
         --num_env_vectors=10 \
         --benchmark_out=./logs/vector_benchmark_push_only_10.json \
         $@ \
@@ -65,8 +65,8 @@ else
         --int_arg=1800 \
         --string_arg=700 \
         --array_arg=700 \
-        --test_type_arg=900 \
-        --T_test_type_arg=900 \
+        --test_type_arg=1000 \
+        --T_test_type_arg=1000 \
         --num_env_vectors=50 \
         --benchmark_out=./logs/vector_benchmark_push_only_50.json \
         $@ \
@@ -77,8 +77,8 @@ else
         --int_arg=1200 \
         --string_arg=400 \
         --array_arg=500 \
-        --test_type_arg=600 \
-        --T_test_type_arg=600 \
+        --test_type_arg=500 \
+        --T_test_type_arg=500 \
         --num_env_vectors=100 \
         --benchmark_out=./logs/vector_benchmark_push_only_100.json \
         $@ \

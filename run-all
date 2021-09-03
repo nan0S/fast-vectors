@@ -19,7 +19,7 @@ else
         --int_arg=2000 \
         --string_arg=1000 \
         --array_arg=1100 \
-        --test_type_arg=1500 \
-        --T_test_type_arg=1500 \
+        --test_type_arg=1300 \
+        --T_test_type_arg=1300 \
         $@
 fi

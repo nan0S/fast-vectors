@@ -17,9 +17,9 @@ else
     ./run-current vector_benchmark \
         --push_cons_dest \
         --int_arg=2500 \
-        --string_arg=1000 \
+        --string_arg=800 \
         --array_arg=1000 \
-        --test_type_arg=1500 \
-        --T_test_type_arg=1500 \
+        --test_type_arg=1300 \
+        --T_test_type_arg=1300 \
         $@
 fi
