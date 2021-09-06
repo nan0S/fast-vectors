@@ -3,7 +3,7 @@
 COMMON_OPTS="
     --verbose=3
     --benchmark_repetitions=10
-"k
+"
 
 if [ "$1" = "static" ]; then
     arg="static"
@@ -39,7 +39,7 @@ else
     ./run-push-only \
         $COMMON_OPTS \
         --int_arg=4000 \
-        --string_arg=1500 \
+        --string_arg=1700 \
         --array_arg=1500 \
         --test_type_arg=2500 \
         --T_test_type_arg=2500 \
@@ -51,7 +51,7 @@ else
     ./run-push-only \
         $COMMON_OPTS \
         --int_arg=3500 \
-        --string_arg=1100 \
+        --string_arg=1300 \
         --array_arg=1300 \
         --test_type_arg=1800 \
         --T_test_type_arg=1800 \
@@ -65,7 +65,7 @@ else
         --int_arg=1800 \
         --string_arg=700 \
         --array_arg=700 \
-        --test_type_arg=1000 \
+        --test_type_arg=1300 \
         --T_test_type_arg=1000 \
         --num_env_vectors=50 \
         --benchmark_out=./logs/vector_benchmark_push_only_50.json \
