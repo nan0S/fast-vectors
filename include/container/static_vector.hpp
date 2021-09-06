@@ -20,7 +20,7 @@
 */
 #ifndef UWR_STATIC_VECTOR_OPTIM_ENABLE
 //TODO: toggle
-#define UWR_STATIC_VECTOR_OPTIM_ENABLE 0
+#define UWR_STATIC_VECTOR_OPTIM_ENABLE 1
 #endif
 
 namespace uwr {

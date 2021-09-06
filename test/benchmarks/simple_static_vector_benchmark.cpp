@@ -23,7 +23,7 @@ static  const  args_t  PUSH_BACK_ARGS           =  { 100'000 };
 // number of push_back/pop_back rounds in iteration 
 static  const  args_t  PUSH_BACK_POP_BACK_ARGS  =  { 10 };
 // sizes of swapped vectors
-static  const  args_t  SWAP_ARGS                =  { 1000 };
+static  const  args_t  SWAP_ARGS                =  { 100'000 };
 // number of resizes in one iteration
 static  const  args_t  RESIZE_ARGS              =  { 10 };
 // initial vector size and number of erases in one iteration
@@ -42,7 +42,7 @@ static  const  args_t  INSERT_ARGS              =  { 100'000, 1 };
 #define  INSERT_ITERS              (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 
 #define DO_STATIC_VECTOR_BENCH
-#define DO_STATIC_VECTOR_ALT_BENCH
+// #define DO_STATIC_VECTOR_ALT_BENCH
 
 static constexpr int C = 500'000; // static_vector capacity
 
@@ -135,7 +135,7 @@ void BM_swap(State& s) {
     Random::seed(3213121);
 
     size_type size1 = s.range(0);
-    size_type size2 = size1 * 3 / 4;
+    size_type size2 = size1 * 1 / 4;
     if (Random::rand(2))
         std::swap(size1, size2);
 

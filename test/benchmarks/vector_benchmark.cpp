@@ -7,10 +7,12 @@
 #include <boost/container/vector.hpp>
 #include <vector>
 #include <rvector.h>
-#include <vector.hpp>
-#include <vector_alt.hpp>
-#include <vector_alt2.hpp>
 #include <vector_orig.hpp>
+#include <vector_orig_imp.hpp>
+#include <vector_switch.hpp>
+#include <vector_lin.hpp>
+#include <vector_bs.hpp>
+#include <vector_exp.hpp>
 #include <std_vector.hpp>
 #include <big_vector.hpp>
 #include <c_vector.hpp>
@@ -53,18 +55,20 @@ static  int  INT_STRING_ARRAY_ITERS  =  COMMON_ITERS  ==  0  ?  0  :  COMMON_ITE
 #endif
 
 /* turn on/off benchamarks for specific vectors */
-static  bool  DO_STD_VECTOR_BENCH      =  1;
-static  bool  DO_BOOST_VECTOR_BENCH    =  1;
-static  bool  DO_EASTL_VECTOR_BENCH    =  1;
-static  bool  DO_FOLLY_VECTOR_BENCH    =  1;
-static  bool  DO_RVECTOR_BENCH         =  1;
-static  bool  DO_UWR_VECTOR_ORIG_BENCH =  1;
-static  bool  DO_UWR_VECTOR_BENCH      =  1;
-static  bool  DO_UWR_VECTOR_ALT_BENCH  =  1;
-static  bool  DO_UWR_VECTOR_ALT2_BENCH =  1;
-static  bool  DO_UWR_STD_VECTOR_BENCH  =  0;
-static  bool  DO_BIG_VECTOR_BENCH      =  1;
-static  bool  DO_C_VECTOR_BENCH        =  1;
+static  bool  DO_STD_VECTOR_BENCH           =  1;
+static  bool  DO_BOOST_VECTOR_BENCH         =  1;
+static  bool  DO_EASTL_VECTOR_BENCH         =  1;
+static  bool  DO_FOLLY_VECTOR_BENCH         =  1;
+static  bool  DO_RVECTOR_BENCH              =  1;
+static  bool  DO_UWR_VECTOR_ORIG_BENCH      =  1;
+static  bool  DO_UWR_VECTOR_ORIG_IMP_BENCH  =  1;
+static  bool  DO_UWR_VECTOR_SWITCH_BENCH    =  1;
+static  bool  DO_UWR_VECTOR_LIN_BENCH       =  1;
+static  bool  DO_UWR_VECTOR_BS_BENCH        =  1;
+static  bool  DO_UWR_VECTOR_EXP_BENCH       =  1;
+static  bool  DO_UWR_STD_VECTOR_BENCH       =  1;
+static  bool  DO_BIG_VECTOR_BENCH           =  1;
+static  bool  DO_C_VECTOR_BENCH             =  1;
 
 /* turn off some vectors from even compiling */
 #define TURN_ON_STD_VECTOR_BENCH
@@ -73,9 +77,11 @@ static  bool  DO_C_VECTOR_BENCH        =  1;
 #define TURN_ON_FOLLY_VECTOR_BENCH
 #define TURN_ON_RVECTOR_BENCH
 #define TURN_ON_UWR_VECTOR_ORIG_BENCH
-#define TURN_ON_UWR_VECTOR_BENCH
-#define TURN_ON_UWR_VECTOR_ALT_BENCH
-#define TURN_ON_UWR_VECTOR_ALT2_BENCH
+#define TURN_ON_UWR_VECTOR_ORIG_IMP_BENCH
+#define TURN_ON_UWR_VECTOR_SWITCH_BENCH
+#define TURN_ON_UWR_VECTOR_LIN_BENCH
+#define TURN_ON_UWR_VECTOR_BS_BENCH
+#define TURN_ON_UWR_VECTOR_EXP_BENCH
 // #define TURN_ON_UWR_STD_VECTOR_BENCH
 // #define TURN_ON_BIG_VECTOR_BENCH
 #define TURN_ON_C_VECTOR_BENCH
@@ -118,11 +124,15 @@ using folly_vector = folly::fbvector<T>;
 template<class T>
 using uwr_vector_orig = uwr::vector_orig<T>;
 template<class T>
-using uwr_vector = uwr::vector<T>;
+using uwr_vector_orig_imp = uwr::vector_orig_imp<T>;
 template<class T>
-using uwr_vector_alt = uwr::vector_alt<T>;
+using uwr_vector_switch = uwr::vector_switch<T>;
 template<class T>
-using uwr_vector_alt2 = uwr::vector_alt2<T>;
+using uwr_vector_lin = uwr::vector_lin<T>;
+template<class T>
+using uwr_vector_bs = uwr::vector_bs<T>;
+template<class T>
+using uwr_vector_exp = uwr::vector_exp<T>;
 template<class T>
 using uwr_std_vector = uwr::std_vector<T>;
 template<class T>
@@ -162,35 +172,37 @@ static void ParseCustomOptions(int argc, char** argv) {
         {  "do_folly_vector",         optional_argument,  0,  3    },
         {  "do_rvector",              optional_argument,  0,  4    },
         {  "do_uwr_vector_orig",      optional_argument,  0,  5    },
-        {  "do_uwr_vector",           optional_argument,  0,  6    },
-        {  "do_uwr_vector_alt",       optional_argument,  0,  7    },
-        {  "do_uwr_vector_alt2",      optional_argument,  0,  8    },
-        {  "do_uwr_std_vector",       optional_argument,  0,  9    },
-        {  "do_big_vector",           optional_argument,  0,  10   },
-        {  "do_c_vector",             optional_argument,  0,  11   },
-        {  "common_iters",            required_argument,  0,  12   },
-        {  "int_arg",                 required_argument,  0,  13   },
-        {  "int_iters",               required_argument,  0,  14   },
-        {  "string_arg",              required_argument,  0,  15   },
-        {  "string_iters",            required_argument,  0,  16   },
-        {  "test_type_arg",           required_argument,  0,  17   },
-        {  "test_type_iters",         required_argument,  0,  18   },
-        {  "array_arg",               required_argument,  0,  19   },
-        {  "array_iters",             required_argument,  0,  20   },
-        {  "T_test_type_arg",         required_argument,  0,  21   },
-        {  "T_test_type_iters",       required_argument,  0,  22   },
+        {  "do_uwr_vector_orig_imp",  optional_argument,  0,  6    },
+        {  "do_uwr_vector_switch",    optional_argument,  0,  7    },
+        {  "do_uwr_vector_lin",       optional_argument,  0,  8    },
+        {  "do_uwr_vector_bs",        optional_argument,  0,  9    },
+        {  "do_uwr_vector_exp",       optional_argument,  0,  10   },
+        {  "do_uwr_std_vector",       optional_argument,  0,  11   },
+        {  "do_big_vector",           optional_argument,  0,  12   },
+        {  "do_c_vector",             optional_argument,  0,  13   },
+        {  "common_iters",            required_argument,  0,  14   },
+        {  "int_arg",                 required_argument,  0,  15   },
+        {  "int_iters",               required_argument,  0,  16   },
+        {  "string_arg",              required_argument,  0,  17   },
+        {  "string_iters",            required_argument,  0,  18   },
+        {  "test_type_arg",           required_argument,  0,  19   },
+        {  "test_type_iters",         required_argument,  0,  20   },
+        {  "array_arg",               required_argument,  0,  21   },
+        {  "array_iters",             required_argument,  0,  22   },
+        {  "T_test_type_arg",         required_argument,  0,  23   },
+        {  "T_test_type_iters",       required_argument,  0,  24   },
 #ifdef MIXED_TESTS
-        {  "int_string_arg",          required_argument,  0,  23   },
-        {  "int_string_iters",        required_argument,  0,  24   },
-        {  "int_string_array_arg",    required_argument,  0,  25   },
-        {  "int_string_array_iters",  required_argument,  0,  26   },
+        {  "int_string_arg",          required_argument,  0,  25   },
+        {  "int_string_iters",        required_argument,  0,  26   },
+        {  "int_string_array_arg",    required_argument,  0,  27   },
+        {  "int_string_array_iters",  required_argument,  0,  28   },
 #endif
-        {  "push_only",               no_argument,        0,  27   },
-        {  "push_cons_dest",          no_argument,        0,  28   },
-        {  "all",                     no_argument,        0,  29   },
-        {  "num_env_vectors",         required_argument,  0,  30   },
-        {  "malloc_mult",             required_argument,  0,  31   },
-        {  "verbose",                 required_argument,  0,  32   },
+        {  "push_only",               no_argument,        0,  29   },
+        {  "push_cons_dest",          no_argument,        0,  30   },
+        {  "all",                     no_argument,        0,  31   },
+        {  "num_env_vectors",         required_argument,  0,  32   },
+        {  "malloc_mult",             required_argument,  0,  33   },
+        {  "verbose",                 required_argument,  0,  34   },
         {  "help",                    no_argument,        0,  'h'  },
     };
     static const char* shortopts = "h";
@@ -202,9 +214,11 @@ static void ParseCustomOptions(int argc, char** argv) {
         "\t--do_folly_vector[=0/1]\n"
         "\t--do_rvector[=0/1]\n"
         "\t--do_uwr_vector_orig[=0/1]\n"
-        "\t--do_uwr_vector[=0/1]\n"
-        "\t--do_uwr_vector_alt[=0/1]\n"
-        "\t--do_uwr_vector_alt2[=0/1]\n"
+        "\t--do_uwr_vector_orig_imp[=0/1]\n"
+        "\t--do_uwr_vector_switch[=0/1]\n"
+        "\t--do_uwr_vector_lin[=0/1]\n"
+        "\t--do_uwr_vector_bs[=0/1]\n"
+        "\t--do_uwr_vector_exp[=0/1]\n"
         "\t--do_uwr_std_vector[=0/1]\n"
         "\t--do_big_vector[=0/1]\n"
         "\t--do_c_vector[=0/1]\n"
@@ -249,35 +263,37 @@ static void ParseCustomOptions(int argc, char** argv) {
             case 3: SetOptVar(DO_FOLLY_VECTOR_BENCH); break;
             case 4: SetOptVar(DO_RVECTOR_BENCH); break;
             case 5: SetOptVar(DO_UWR_VECTOR_ORIG_BENCH); break;
-            case 6: SetOptVar(DO_UWR_VECTOR_BENCH); break;
-            case 7: SetOptVar(DO_UWR_VECTOR_ALT_BENCH); break;
-            case 8: SetOptVar(DO_UWR_VECTOR_ALT2_BENCH); break;
-            case 9: SetOptVar(DO_UWR_STD_VECTOR_BENCH); break;
-            case 10: SetOptVar(DO_BIG_VECTOR_BENCH); break;
-            case 11: SetOptVar(DO_C_VECTOR_BENCH); break;
-            case 12: SetReqVar(COMMON_ITERS); break;
-            case 13: SetReqVar(INT_ARG); break;
-            case 14: SetReqVar(INT_ITERS); break;
-            case 15: SetReqVar(STRING_ARG); break;
-            case 16: SetReqVar(STRING_ITERS); break;
-            case 17: SetReqVar(TEST_TYPE_ARG); break;
-            case 18: SetReqVar(TEST_TYPE_ITERS); break;
-            case 19: SetReqVar(ARRAY_ARG); break;
-            case 20: SetReqVar(ARRAY_ITERS); break;
-            case 21: SetReqVar(T_TEST_TYPE_ARG); break;
-            case 22: SetReqVar(T_TEST_TYPE_ITERS); break;
+            case 6: SetOptVar(DO_UWR_VECTOR_ORIG_IMP_BENCH); break;
+            case 7: SetOptVar(DO_UWR_VECTOR_SWITCH_BENCH); break;
+            case 8: SetOptVar(DO_UWR_VECTOR_LIN_BENCH); break;
+            case 9: SetOptVar(DO_UWR_VECTOR_BS_BENCH); break;
+            case 10: SetOptVar(DO_UWR_VECTOR_EXP_BENCH); break;
+            case 11: SetOptVar(DO_UWR_STD_VECTOR_BENCH); break;
+            case 12: SetOptVar(DO_BIG_VECTOR_BENCH); break;
+            case 13: SetOptVar(DO_C_VECTOR_BENCH); break;
+            case 14: SetReqVar(COMMON_ITERS); break;
+            case 15: SetReqVar(INT_ARG); break;
+            case 16: SetReqVar(INT_ITERS); break;
+            case 17: SetReqVar(STRING_ARG); break;
+            case 18: SetReqVar(STRING_ITERS); break;
+            case 19: SetReqVar(TEST_TYPE_ARG); break;
+            case 20: SetReqVar(TEST_TYPE_ITERS); break;
+            case 21: SetReqVar(ARRAY_ARG); break;
+            case 22: SetReqVar(ARRAY_ITERS); break;
+            case 23: SetReqVar(T_TEST_TYPE_ARG); break;
+            case 24: SetReqVar(T_TEST_TYPE_ITERS); break;
 #ifdef MIXED_TESTS
-            case 23: SetReqVar(INT_STRING_ARG); break;
-            case 24: SetReqVar(INT_STRING_ITERS); break;
-            case 25: SetReqVar(INT_STRING_ARRAY_ARG); break;
-            case 26: SetReqVar(INT_STRING_ARRAY_ITERS); break;
+            case 25: SetReqVar(INT_STRING_ARG); break;
+            case 26: SetReqVar(INT_STRING_ITERS); break;
+            case 27: SetReqVar(INT_STRING_ARRAY_ARG); break;
+            case 28: SetReqVar(INT_STRING_ARRAY_ITERS); break;
 #endif
-            case 27: benchmark_type |= bench_type::PUSH_ONLY; break;
-            case 28: benchmark_type |= bench_type::PUSH_CONS_DEST; break;
-            case 29: benchmark_type |= bench_type::ALL; break;
-            case 30: SetReqVar(num_env_vectors); break;
-            case 31: SetReqVar(malloc_mult); break;
-            case 32: SetReqVar(verbose); break;
+            case 29: benchmark_type |= bench_type::PUSH_ONLY; break;
+            case 30: benchmark_type |= bench_type::PUSH_CONS_DEST; break;
+            case 31: benchmark_type |= bench_type::ALL; break;
+            case 32: SetReqVar(num_env_vectors); break;
+            case 33: SetReqVar(malloc_mult); break;
+            case 34: SetReqVar(verbose); break;
             case 'h': printf("%s", helpstr); break;
             default: break;
         }
@@ -357,25 +373,39 @@ std::string get_benchmark_name(const char* insides, bench_type type) {
 #define REGISTER_BENCHMARK_FOR_UWR_VECTOR_ORIG(unit, varname, counter, type, ...)
 #endif
 
-#ifdef TURN_ON_UWR_VECTOR_BENCH
-#define REGISTER_BENCHMARK_FOR_UWR_VECTOR(unit, varname, counter, type, ...) \
-    COND_REGISTER_BENCHMARK_FOR_VECTOR(DO_UWR_VECTOR_BENCH, unit, varname, counter, type, uwr_vector, __VA_ARGS__)
+#ifdef TURN_ON_UWR_VECTOR_ORIG_IMP_BENCH
+#define REGISTER_BENCHMARK_FOR_UWR_VECTOR_ORIG_IMP(unit, varname, counter, type, ...) \
+    COND_REGISTER_BENCHMARK_FOR_VECTOR(DO_UWR_VECTOR_ORIG_IMP_BENCH, unit, varname, counter, type, uwr_vector_orig_imp, __VA_ARGS__)
 #else
-#define REGISTER_BENCHMARK_FOR_UWR_VECTOR(unit, varname, counter, type, ...)
+#define REGISTER_BENCHMARK_FOR_UWR_VECTOR_ORIG_IMP(unit, varname, counter, type, ...)
 #endif
 
-#ifdef TURN_ON_UWR_VECTOR_ALT_BENCH
-#define REGISTER_BENCHMARK_FOR_UWR_VECTOR_ALT(unit, varname, counter, type, ...) \
-    COND_REGISTER_BENCHMARK_FOR_VECTOR(DO_UWR_VECTOR_ALT_BENCH, unit, varname, counter, type, uwr_vector_alt, __VA_ARGS__)
+#ifdef TURN_ON_UWR_VECTOR_SWITCH_BENCH
+#define REGISTER_BENCHMARK_FOR_UWR_VECTOR_SWITCH(unit, varname, counter, type, ...) \
+    COND_REGISTER_BENCHMARK_FOR_VECTOR(DO_UWR_VECTOR_SWITCH_BENCH, unit, varname, counter, type, uwr_vector_switch, __VA_ARGS__)
 #else
-#define REGISTER_BENCHMARK_FOR_UWR_VECTOR_ALT(unit, varname, counter, type, ...)
+#define REGISTER_BENCHMARK_FOR_UWR_VECTOR_SWITCH(unit, varname, counter, type, ...)
 #endif
 
-#ifdef TURN_ON_UWR_VECTOR_ALT2_BENCH
-#define REGISTER_BENCHMARK_FOR_UWR_VECTOR_ALT2(unit, varname, counter, type, ...) \
-    COND_REGISTER_BENCHMARK_FOR_VECTOR(DO_UWR_VECTOR_ALT2_BENCH, unit, varname, counter, type, uwr_vector_alt2, __VA_ARGS__)
+#ifdef TURN_ON_UWR_VECTOR_LIN_BENCH
+#define REGISTER_BENCHMARK_FOR_UWR_VECTOR_LIN(unit, varname, counter, type, ...) \
+    COND_REGISTER_BENCHMARK_FOR_VECTOR(DO_UWR_VECTOR_LIN_BENCH, unit, varname, counter, type, uwr_vector_lin, __VA_ARGS__)
 #else
-#define REGISTER_BENCHMARK_FOR_UWR_VECTOR_ALT2(unit, varname, counter, type, ...)
+#define REGISTER_BENCHMARK_FOR_UWR_VECTOR_LIN(unit, varname, counter, type, ...)
+#endif
+
+#ifdef TURN_ON_UWR_VECTOR_BS_BENCH
+#define REGISTER_BENCHMARK_FOR_UWR_VECTOR_BS(unit, varname, counter, type, ...) \
+    COND_REGISTER_BENCHMARK_FOR_VECTOR(DO_UWR_VECTOR_BS_BENCH, unit, varname, counter, type, uwr_vector_bs, __VA_ARGS__)
+#else
+#define REGISTER_BENCHMARK_FOR_UWR_VECTOR_BS(unit, varname, counter, type, ...)
+#endif
+
+#ifdef TURN_ON_UWR_VECTOR_EXP_BENCH
+#define REGISTER_BENCHMARK_FOR_UWR_VECTOR_EXP(unit, varname, counter, type, ...) \
+    COND_REGISTER_BENCHMARK_FOR_VECTOR(DO_UWR_VECTOR_EXP_BENCH, unit, varname, counter, type, uwr_vector_exp, __VA_ARGS__)
+#else
+#define REGISTER_BENCHMARK_FOR_UWR_VECTOR_EXP(unit, varname, counter, type, ...)
 #endif
 
 #ifdef TURN_ON_UWR_STD_VECTOR_BENCH
@@ -406,9 +436,11 @@ std::string get_benchmark_name(const char* insides, bench_type type) {
     REGISTER_BENCHMARK_FOR_FOLLY_VECTOR(unit, varname, counter, type, __VA_ARGS__); \
     REGISTER_BENCHMARK_FOR_RVECTOR(unit, varname, counter, type, __VA_ARGS__); \
     REGISTER_BENCHMARK_FOR_UWR_VECTOR_ORIG(unit, varname, counter, type, __VA_ARGS__); \
-    REGISTER_BENCHMARK_FOR_UWR_VECTOR(unit, varname, counter, type, __VA_ARGS__); \
-    REGISTER_BENCHMARK_FOR_UWR_VECTOR_ALT(unit, varname, counter, type, __VA_ARGS__); \
-    REGISTER_BENCHMARK_FOR_UWR_VECTOR_ALT2(unit, varname, counter, type, __VA_ARGS__); \
+    REGISTER_BENCHMARK_FOR_UWR_VECTOR_ORIG_IMP(unit, varname, counter, type, __VA_ARGS__); \
+    REGISTER_BENCHMARK_FOR_UWR_VECTOR_SWITCH(unit, varname, counter, type, __VA_ARGS__); \
+    REGISTER_BENCHMARK_FOR_UWR_VECTOR_LIN(unit, varname, counter, type, __VA_ARGS__); \
+    REGISTER_BENCHMARK_FOR_UWR_VECTOR_BS(unit, varname, counter, type, __VA_ARGS__); \
+    REGISTER_BENCHMARK_FOR_UWR_VECTOR_EXP(unit, varname, counter, type, __VA_ARGS__); \
     REGISTER_BENCHMARK_FOR_UWR_STD_VECTOR(unit, varname, counter, type, __VA_ARGS__); \
     REGISTER_BENCHMARK_FOR_BIG_VECTOR(unit, varname, counter, type, __VA_ARGS__); \
     REGISTER_BENCHMARK_FOR_C_VECTOR(unit, varname, counter, type, __VA_ARGS__)

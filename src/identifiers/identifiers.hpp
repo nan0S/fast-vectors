@@ -1,8 +1,11 @@
 #pragma once
 
-#include <vector.hpp>
-#include <vector_alt.hpp>
-#include <vector_alt2.hpp>
+#include <vector_orig.hpp>
+#include <vector_orig_imp.hpp>
+#include <vector_switch.hpp>
+#include <vector_lin.hpp>
+#include <vector_bs.hpp>
+#include <vector_exp.hpp>
 #include <rvector.h>
 
 namespace uwr {
@@ -13,17 +16,32 @@ struct is_uwr_vector {
 };
 
 template<class T>
-struct is_uwr_vector<vector<T>> {
+struct is_uwr_vector<vector_orig<T>> {
     static constexpr bool value = true;
 };
 
 template<class T>
-struct is_uwr_vector<vector_alt<T>> {
+struct is_uwr_vector<vector_orig_imp<T>> {
     static constexpr bool value = true;
 };
 
 template<class T>
-struct is_uwr_vector<vector_alt2<T>> {
+struct is_uwr_vector<vector_switch<T>> {
+    static constexpr bool value = true;
+};
+
+template<class T>
+struct is_uwr_vector<vector_lin<T>> {
+    static constexpr bool value = true;
+};
+
+template<class T>
+struct is_uwr_vector<vector_bs<T>> {
+    static constexpr bool value = true;
+};
+
+template<class T>
+struct is_uwr_vector<vector_exp<T>> {
     static constexpr bool value = true;
 };
 

@@ -2,8 +2,8 @@
 
 COMMON_OPTS="
     --verbose=3
-    --benchmark_repetitions=20
-"
+    --benchmark_repetitions=10
+"k
 
 if [ "$1" = "static" ]; then
     arg="static"

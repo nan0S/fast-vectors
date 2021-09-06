@@ -41,7 +41,7 @@ static  bool  DO_UWR_STATIC_VECTOR_ALT_BENCH  =  1;
 #define TURN_ON_EASTL_STATIC_VECTOR_BENCH
 #define TURN_ON_FOLLY_STATIC_VECTOR_BENCH
 #define TURN_ON_UWR_STATIC_VECTOR_BENCH
-#define TURN_ON_UWR_STATIC_VECTOR_ALT_BENCH
+// #define TURN_ON_UWR_STATIC_VECTOR_ALT_BENCH
 
 /* default benchmark type to run */
 static int benchmark_type = bench_type::ALL;

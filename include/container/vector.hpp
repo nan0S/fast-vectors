@@ -13,7 +13,7 @@
 
 namespace uwr {
 
-template<class T, class A = mem::hybrid_allocator_orig<T>>
+template<class T, class A>
 class vector {
 public:
     using value_type = T;

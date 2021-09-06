@@ -151,7 +151,8 @@ private:
 
         auto& typed_env = this->get_env_of_type<T>();
         int q = random(1, type == bench_type::PUSH_ONLY ? 1 : 3);
-        std::uniform_int_distribution<> size_dist(0, i / 10 + 10);
+        // std::uniform_int_distribution<> size_dist(0, i / 10 + 10);
+        std::uniform_int_distribution<> size_dist(0, i + 10);
         // std::uniform_int_distribution<> size_dist(0, 0);
         bench_timer timer("construct");
 
@@ -177,7 +178,7 @@ private:
 
         while (q--) {
             int pick = random(0, --typed_env_size);
-
+            
             typed_env[pick].swap(typed_env.back());
             typed_env.pop_back();
         }
@@ -378,6 +379,7 @@ void BM_environment(State& s, bench_type type, int verbose,
     if constexpr (is_test_type)
         if (verbose > 3)
             test_type::start_recording();
+
 
     for (auto _ : s) {
         vector_bench_env<V, Ts...> v_env(
