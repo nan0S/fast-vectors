@@ -42,7 +42,7 @@ static  const  args_t  INSERT_ARGS              =  { 100'000, 1 };
 #define  INSERT_ITERS              (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 
 #define DO_STATIC_VECTOR_BENCH
-// #define DO_STATIC_VECTOR_ALT_BENCH
+#define DO_STATIC_VECTOR_ALT_BENCH
 
 static constexpr int C = 500'000; // static_vector capacity
 

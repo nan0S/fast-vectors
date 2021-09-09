@@ -1,0 +1,93 @@
+#!/bin/sh
+
+
+# ./run-push-only \
+    # --int_arg=3500 \
+    # --string_arg=1100 \
+    # --array_arg=1300 \
+    # --test_type_arg=1800 \
+    # --T_test_type_arg=1800 \
+    # --num_env_vectors=10
+
+# ./run-push-only \
+    # --int_arg=1800 \
+    # --string_arg=700 \
+    # --array_arg=700 \
+    # --test_type_arg=1000 \
+    # --T_test_type_arg=1000 \
+    # --num_env_vectors=50
+
+# ./run-push-only \
+    # --int_arg=1200 \
+    # --string_arg=400 \
+    # --array_arg=500 \
+    # --test_type_arg=500 \
+    # --T_test_type_arg=500 \
+    # --num_env_vectors=100
+
+COMMON_OPTS="
+    --do_uwr_vector_orig=0
+    --do_uwr_vector_orig_imp=0
+    --do_uwr_vector_switch=0
+    --do_uwr_vector_exp=0
+    --verbose=3
+"
+
+# ./run-all \
+    # "$COMMON_OPTS" \
+    # $@
+
+# ./run-push-cons-dest \
+#     "$COMMON_OPTS" \
+#     $@
+
+# ./run-push-cons-dest \
+    # $COMMON_OPTS \
+    # --benchmark_out=./logs/vector_benchmark_push_cons_dest.json \
+    # $@ \
+    # | tee ./logs/vector_benchmark_push_cons_dest.log
+
+# ./run-push-only \
+    # "$COMMON_OPTS" \
+    # $@
+
+# ./run-push-only \
+    # $COMMON_OPTS \
+    # --int_arg=2000 \
+    # --string_arg=1700 \
+    # --array_arg=1500 \
+    # --test_type_arg=2500 \
+    # --T_test_type_arg=2500 \
+    # --num_env_vectors=100 \
+    # $@
+
+# ./run-push-only \
+    # $COMMON_OPTS \
+    # --int_arg=3500 \
+    # --string_arg=1300 \
+    # --array_arg=1300 \
+    # --test_type_arg=1800 \
+    # --T_test_type_arg=1800 \
+    # --num_env_vectors=10 \
+    # $@
+
+./run-push-only \
+    $COMMON_OPTS \
+    --int_arg=1800 \
+    --string_arg=700 \
+    --array_arg=700 \
+    --test_type_arg=1300 \
+    --T_test_type_arg=1000 \
+    --num_env_vectors=50 \
+    --benchmark_filter="std::string" \
+    $@
+
+# ./run-push-only \
+    # $COMMON_OPTS \
+    # --int_arg=1200 \
+    # --string_arg=400 \
+    # --array_arg=500 \
+    # --test_type_arg=500 \
+    # --T_test_type_arg=500 \
+    # --num_env_vectors=100 \
+    # $@

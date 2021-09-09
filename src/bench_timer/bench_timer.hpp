@@ -12,7 +12,10 @@ public:
 	bench_timer(const std::string& name);
 	~bench_timer();
 
+	void save_epoch(int iter);
+
 	static void print();
+	static void print_epoch(const std::string& type, int vecs);
 	static void reset();
 
 private:
@@ -21,4 +24,6 @@ private:
 
 private:
 	static std::map<std::string, delta_t> m_acc_records;
+	static std::map<int, delta_t> m_iters;
+    static int m_time;
 };

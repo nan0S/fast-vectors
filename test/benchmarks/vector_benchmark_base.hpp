@@ -33,10 +33,15 @@ public:
         : type(type), gen(seed), verbose(verbose), num_vectors(num_vectors) {}
 
     void run_simulation(int iters=1000) {
+        bench_timer timer("special");
         this->iters = iters;
         for (int i = 0; i < iters; ++i) {
             (dispatch_action<Ts>(i), ...);
+            if ((i + 1) % 100 == 0)
+                timer.save_epoch(i + 1);
         }
+        if (iters % 100 != 0)
+            timer.save_epoch(iters);
         if (verbose > 2)
             print_stats();
     }
@@ -399,8 +404,9 @@ void BM_environment(State& s, bench_type type, int verbose,
     /* bench timer stats printing */
     if (verbose > 1) {
         bench_timer::print();
-        bench_timer::reset();
     }
+    bench_timer::print_epoch(std::to_string(type), num_vectors);
+    bench_timer::reset();
 
     /* uwr vector allocator statistics */
     #ifdef UWR_TRACK

@@ -56,3 +56,4 @@ struct is_rvector<rvector<T>> {
 };
 
 }
+
