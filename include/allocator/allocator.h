@@ -173,6 +173,9 @@ namespace mm
             // TODO: remove
             #ifdef RVECTOR_TRACK
             counter.mremaps(data == (T*)new_data);
+			if (data == (T*)new_data) {
+				counter.objects(capacity);
+			}
             #endif
 
             #ifdef RVECTOR_VERBOSE_PRINTING
