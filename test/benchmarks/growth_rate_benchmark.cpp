@@ -5,10 +5,10 @@
 #include <identifiers/identifiers.hpp>
 #include <boost/container/vector.hpp>
 #include <rvector.h>
-#include <vector.hpp>
 #include <std_vector.hpp>
 #include <big_vector.hpp>
 #include <c_vector.hpp>
+#include <vector_orig_imp.hpp>
 #include <malloc.h>
 
 #include "vector_benchmark_base.hpp"
@@ -58,7 +58,7 @@ static  bool  DO_C_VECTOR_BENCH        =  1;
 #define TURN_ON_UWR_VECTOR_BENCH
 // #define TURN_ON_UWR_STD_VECTOR_BENCH
 // #define TURN_ON_BIG_VECTOR_BENCH
-#define TURN_ON_C_VECTOR_BENCH
+// #define TURN_ON_C_VECTOR_BENCH
 
 /* default benchmark type to run */
 static int benchmark_type = bench_type::PUSH_ONLY;
@@ -86,7 +86,7 @@ static constexpr int N = 10;
  * tested vectors
  */
 template<class T>
-using uwr_vector = uwr::vector<T>;
+using uwr_vector = uwr::vector_orig_imp<T>;
 template<class T>
 using uwr_std_vector = uwr::std_vector<T>;
 template<class T>

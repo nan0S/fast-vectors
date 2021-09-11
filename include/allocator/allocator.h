@@ -192,10 +192,20 @@ namespace mm
                 return (T*) new_data;
             }
         }
-	    T* new_data = allocate<T>(n);
-	    std::uninitialized_move_n(data, length, new_data);
-	    destruct(data, data + length);
-	    deallocate(data, capacity);
+		T* new_data;
+		{
+			bench_timer timer("allocate");
+	    	new_data = allocate<T>(n);
+		}
+		{
+			bench_timer timer("umove_and_destroy");
+			std::uninitialized_move_n(data, length, new_data);
+			destruct(data, data + length);
+		}
+		{
+			bench_timer timer("deallocate");
+	    	deallocate(data, capacity);
+		}
 	    return new_data;
 	}
 
