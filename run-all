@@ -6,20 +6,24 @@ if [ "$1" = "static" ]; then
 fi
 
 if [ "$arg" = "static" ]; then
-    ./run-current static_vector_benchmark \
-        --all \
-        --int_arg=2000 \
-        --string_arg=1000 \
-        --test_type_arg=1500 \
-        --array_arg=1000 \
-        $@
+    ./run-with-saving \
+        static_vector_benchmark_all \
+        ./run-current static_vector_benchmark \
+            --all \
+            --int_arg=2000 \
+            --string_arg=1000 \
+            --test_type_arg=1500 \
+            --array_arg=1000 \
+            $@
 else
-    ./run-current vector_benchmark \
-        --all \
-        --int_arg=2000 \
-        --string_arg=1000 \
-        --array_arg=1300 \
-        --test_type_arg=1300 \
-        --T_test_type_arg=1300 \
-        $@
+    ./run-with-saving \
+        vector_benchmark_all \
+        ./run-current vector_benchmark \
+            --all \
+            --int_arg=2000 \
+            --string_arg=1000 \
+            --array_arg=1300 \
+            --test_type_arg=1300 \
+            --T_test_type_arg=1300 \
+            $@
 fi

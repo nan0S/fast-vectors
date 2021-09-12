@@ -10,88 +10,15 @@ if [ "$1" = "static" ]; then
 fi
 
 if [ "$arg" = "static" ]; then
-    ./run-push-only static \
-        $COMMON_OPTS \
-        --benchmark_out=./logs/static_vector_benchmark_push_only.json \
-        $@ \
-        | tee ./logs/static_vector_benchmark_push_only.log
-
-    ./run-push-cons-dest static \
-        $COMMON_OPTS \
-        --benchmark_out=./logs/static_vector_benchmark_push_cons_dest.json \
-        $@ \
-        | tee ./logs/static_vector_benchmark_push_cons_dest.log
-
-    ./run-all static \
-        $COMMON_OPTS \
-        --benchmark_out=./logs/static_vector_benchmark_all.json \
-        $@ \
-        | tee ./logs/static_vector_benchmark_all.log
+    ./run-push-only static $COMMON_OPTS $@
+    ./run-push-cons-dest static $COMMON_OPTS $@
+    ./run-all static $COMMON_OPTS $@
 else
-    ./run-push-only \
-        $COMMON_OPTS \
-        --num_env_vectors=1 \
-        --benchmark_out=./logs/vector_benchmark_push_only_1.json \
-        $@ \
-        | tee ./logs/vector_benchmark_push_only_1.log
-
-    ./run-push-only \
-        $COMMON_OPTS \
-        --int_arg=4000 \
-        --string_arg=1700 \
-        --array_arg=1500 \
-        --test_type_arg=2500 \
-        --T_test_type_arg=2500 \
-        --num_env_vectors=3 \
-        --benchmark_out=./logs/vector_benchmark_push_only_3.json \
-        $@ \
-        | tee ./logs/vector_benchmark_push_only_3.log
-
-    ./run-push-only \
-        $COMMON_OPTS \
-        --int_arg=3500 \
-        --string_arg=1300 \
-        --array_arg=1300 \
-        --test_type_arg=1800 \
-        --T_test_type_arg=1800 \
-        --num_env_vectors=10 \
-        --benchmark_out=./logs/vector_benchmark_push_only_10.json \
-        $@ \
-        | tee ./logs/vector_benchmark_push_only_10.log
-
-    ./run-push-only \
-        $COMMON_OPTS \
-        --int_arg=1800 \
-        --string_arg=700 \
-        --array_arg=700 \
-        --test_type_arg=1300 \
-        --T_test_type_arg=1000 \
-        --num_env_vectors=50 \
-        --benchmark_out=./logs/vector_benchmark_push_only_50.json \
-        $@ \
-        | tee ./logs/vector_benchmark_push_only_50.log
-
-    ./run-push-only \
-        $COMMON_OPTS \
-        --int_arg=1200 \
-        --string_arg=400 \
-        --array_arg=500 \
-        --test_type_arg=500 \
-        --T_test_type_arg=500 \
-        --num_env_vectors=100 \
-        --benchmark_out=./logs/vector_benchmark_push_only_100.json \
-        $@ \
-        | tee ./logs/vector_benchmark_push_only_100.log
-
-    ./run-push-cons-dest \
-        $COMMON_OPTS \
-        --benchmark_out=./logs/vector_benchmark_push_cons_dest.json \
-        $@ \
-        | tee ./logs/vector_benchmark_push_cons_dest.log
-
-    ./run-all \
-        $COMMON_OPTS \
-        --benchmark_out=./logs/vector_benchmark_all.json \
-        $@ \
-        | tee ./logs/vector_benchmark_all.log
+    # ./run-push-only-1 $COMMON_OPTS $@
+    # ./run-push-only-3 $COMMON_OPTS $@
+    # ./run-push-only-10 $COMMON_OPTS $@
+    ./run-push-only-50 $COMMON_OPTS $@
+    ./run-push-only-100 $COMMON_OPTS $@
+    # ./run-push-cons-dest $COMMON_OPTS $@
+    # ./run-all $COMMON_OPTS $@
 fi

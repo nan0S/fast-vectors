@@ -1,0 +1,13 @@
+#!/bin/sh
+
+./run-with-saving \
+    vector_benchmark_push_only_10 \
+    ./run-current vector_benchmark \
+        --push_only \
+        --num_env_vectors=10 \
+        --int_arg=3500 \
+        --string_arg=1300 \
+        --array_arg=1300 \
+        --test_type_arg=1800 \
+        --T_test_type_arg=1800 \
+        $@
