@@ -1,6 +1,7 @@
 #include <getopt.h>
 #include <unistd.h>
 #include <malloc.h>
+#include <jemalloc/jemalloc.h>
 #include <bits/getopt_ext.h>
 #include <test_type/test_type.hpp>
 #include <identifiers/identifiers.hpp>
@@ -76,12 +77,12 @@ static  bool  DO_C_VECTOR_BENCH             =  1;
 #define TURN_ON_EASTL_VECTOR_BENCH
 #define TURN_ON_FOLLY_VECTOR_BENCH
 #define TURN_ON_RVECTOR_BENCH
-#define TURN_ON_UWR_VECTOR_ORIG_BENCH
-#define TURN_ON_UWR_VECTOR_ORIG_IMP_BENCH
-#define TURN_ON_UWR_VECTOR_SWITCH_BENCH
-#define TURN_ON_UWR_VECTOR_LIN_BENCH
+// #define TURN_ON_UWR_VECTOR_ORIG_BENCH
+// #define TURN_ON_UWR_VECTOR_ORIG_IMP_BENCH
+// #define TURN_ON_UWR_VECTOR_SWITCH_BENCH
+// #define TURN_ON_UWR_VECTOR_LIN_BENCH
 #define TURN_ON_UWR_VECTOR_BS_BENCH
-#define TURN_ON_UWR_VECTOR_EXP_BENCH
+// #define TURN_ON_UWR_VECTOR_EXP_BENCH
 // #define TURN_ON_UWR_STD_VECTOR_BENCH
 // #define TURN_ON_BIG_VECTOR_BENCH
 #define TURN_ON_C_VECTOR_BENCH
@@ -465,8 +466,13 @@ int main(int argc, char** argv) {
     ParseCustomOptions(argc, argv);
     Initialize(&argc, argv);
 
-    if (malloc_mult)
-        mallopt(M_MMAP_THRESHOLD, malloc_mult * 1024 * 1024);
+    if (!folly::usingJEMalloc()) {
+        std::cout << "not using JEMalloc! Exiting!";
+        std::exit(1);
+    }
+
+    // if (malloc_mult)
+        // mallopt(M_MMAP_THRESHOLD, malloc_mult * 1024 * 1024);
 
     if (benchmark_type & bench_type::PUSH_ONLY)
         RegisterBenchmarkForType(bench_type::PUSH_ONLY);

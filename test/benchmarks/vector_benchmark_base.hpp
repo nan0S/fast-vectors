@@ -4,6 +4,7 @@
 #include <boost/format.hpp>
 #include <bench_timer/bench_timer.hpp>
 #include <identifiers/identifiers.hpp>
+#include <malloc.h>
 
 using namespace benchmark;
 
@@ -37,7 +38,7 @@ public:
         this->iters = iters;
         for (int i = 0; i < iters; ++i) {
             (dispatch_action<Ts>(i), ...);
-            if ((i + 1) % 100 == 0)
+            if ((i + 1) % 20 == 0)
                 timer.save_epoch(i + 1);
         }
         if (iters % 100 != 0)
@@ -376,6 +377,7 @@ void BM_push_back(State& s) {
 template<template<class> class V, class... Ts>
 void BM_environment(State& s, bench_type type, int verbose,
         int num_vectors) {
+    malloc_trim(0);
     constexpr int seed = 12345512;
     int iters = s.range(0);
     int r = 0;
@@ -404,9 +406,9 @@ void BM_environment(State& s, bench_type type, int verbose,
     /* bench timer stats printing */
     if (verbose > 1) {
         bench_timer::print();
+        bench_timer::print_epoch(std::to_string(type), num_vectors);
+        bench_timer::reset();
     }
-    bench_timer::print_epoch(std::to_string(type), num_vectors);
-    bench_timer::reset();
 
     /* uwr vector allocator statistics */
     #ifdef UWR_TRACK

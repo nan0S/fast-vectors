@@ -47,9 +47,10 @@ void bench_timer::print_epoch(const std::string& type, int vecs) {
     std::ofstream fs("./logs/" + full_name + ".csv",
 		m_time == 0 ? std::ios_base::trunc : std::ios_base::app);
 
-	std::cout << "id;iter;time\n";
-    if (m_time == 0)
+    if (m_time == 0) {
+		std::cout << "id;iter;time\n";
         fs << "id;iter;time\n";
+	}
     for (const auto& [iter, time] : m_iters) {
 		std::cout << m_time << ";" << iter << ";" << time << "\n"; 
         fs << m_time << ";" << iter << ";" << time << "\n";

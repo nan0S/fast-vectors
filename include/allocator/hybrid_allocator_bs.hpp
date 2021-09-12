@@ -4,33 +4,17 @@
 
 #include "../common/memory.hpp"
 #include "allocator_base.hpp"
+#include <jemalloc/jemalloc.h>
+
 // TODO: remove
 #ifdef UWR_TRACK
 #include "../common/alloc_counter.hpp"
 #endif
-
 // #include <map>
 // std::map<void*, std::vector<double>> succ;
-
 // TODO: remove
 // #define UWR_VERBOSE_PRINTING
-
-#include<iostream>
-#include <chrono>
 #include "../../src/bench_timer/bench_timer.hpp"
-class bbench_timer {
-public:
-    using clock_t = std::chrono::high_resolution_clock;
-    bbench_timer(std::string name) : name(name), begin(clock_t::now()) {}
-    ~bbench_timer() {
-        auto end = clock_t::now();
-        auto delta = std::chrono::duration<double>(end - begin).count() * 1000;
-        std::cout << name << ": " << delta << "ms\n";
-    }
-    std::string name;
-    clock_t::time_point begin;
-};
-
 
 namespace uwr::mem {
 
@@ -378,6 +362,13 @@ hybrid_allocator_bs<T>::do_grow(size_type req, false_type) {
     switch (cond) {
         case 0b00: { /* both are small sizes */
             next = this->fix_small_capacity(next);
+            // size_t extra = (next - this->m_capacity) * sizeof(T);
+            // size_t lower = req * sizeof(T);
+            // size_t actual;
+            // if ((actual = xallocx(this->m_data, this->m_capacity * sizeof(T), extra, 0)) >= lower) {
+            //     this->m_capacity = actual / sizeof(T);
+            //     return;
+            // }
             pointer new_data = this->small_alloc(next);
             umove_and_destroy(new_data, this->m_data, this->m_size);
             this->small_dealloc(this->m_data, this->m_capacity);
@@ -422,115 +413,25 @@ hybrid_allocator_bs<T>::do_grow(size_type req, false_type) {
             
             if (success) {
                 #ifdef UWR_TRACK
-                counter.mremaps(1);
-                counter.objects(this->m_capacity);
-                counter.grows(double(cur_pages * page_size / sizeof(T)) / this->m_capacity);
+                    counter.mremaps(1);
+                    counter.objects(this->m_capacity);
+                    counter.grows(double(cur_pages * page_size / sizeof(T)) / this->m_capacity);
                 #endif
                 this->m_capacity = cur_pages * page_size / sizeof(T);
             }
             else {
                 next = this->fix_big_capacity(next);
                 #ifdef UWR_TRACK
-                counter.mremaps(0);
-                counter.grows(double(next) / this->m_capacity);
+                    counter.mremaps(0);
+                    counter.grows(double(next) / this->m_capacity);
                 #endif
                 this->m_capacity = cur_pages * page_size / sizeof(T);
-                pointer new_data;
-                {
-                    bench_timer timer("alloc");
-                    new_data = this->big_alloc(next);
-                }
-                {
-                    bench_timer timer("move");
-                    umove_and_destroy(new_data, this->m_data, this->m_size);
-                }
-                {
-                    bench_timer timer("dealloc");
-                    this->big_dealloc(this->m_data, this->m_capacity);
-                }
-                // pointer new_data = this->big_alloc(next);
-                // umove_and_destroy(new_data, this->m_data, this->m_size);
-                // this->big_dealloc(this->m_data, this->m_capacity);
+                pointer new_data = this->big_alloc(next);
+                umove_and_destroy(new_data, this->m_data, this->m_size);
+                this->big_dealloc(this->m_data, this->m_capacity);
                 this->m_data = new_data;
                 this->m_capacity = next;
             }
-
-            // size_type min_pages = this->npages(req);
-            // size_type max_pages = this->npages(next) + 1;
-            // size_type cur_pages = this->npages(this->m_capacity);
-            // bool success = false;
-
-            // for (int i = 0; i < 3; ++i) {
-            //     size_type mid_pages = (min_pages + max_pages) / 2;
-            //     pointer new_data = (pointer)mremap(
-            //         this->m_data,
-            //         cur_pages * page_size,
-            //         mid_pages * page_size,
-            //         0);
-            //     if (new_data != (pointer)-1) {
-            //         UWR_ASSERT(new_data == this->m_data);
-            //         min_pages = mid_pages;
-            //         cur_pages = mid_pages;
-            //         success = true;
-            //     }
-            //     else {
-            //         max_pages = mid_pages;
-            //     }
-            // }
-            
-            // if (success) {
-            //     #ifdef UWR_TRACK
-            //     counter.mremaps(1);
-            //     counter.objects(this->m_capacity);
-            //     counter.grows(double(cur_pages * page_size / sizeof(T)) / this->m_capacity);
-            //     #endif
-            //     this->m_capacity = cur_pages * page_size / sizeof(T);
-            // }
-            // else {
-            //     next = this->fix_big_capacity(next);
-            //     #ifdef UWR_TRACK
-            //     counter.mremaps(0);
-            //     counter.grows(double(next) / this->m_capacity);
-            //     #endif
-            //     this->m_capacity = cur_pages * page_size / sizeof(T);
-            //     pointer new_data = this->big_alloc(next);
-            //     umove_and_destroy(new_data, this->m_data, this->m_size);
-            //     this->big_dealloc(this->m_data, this->m_capacity);
-            //     this->m_data = new_data;
-            //     this->m_capacity = next;
-            // }
-
-            // size_type min_pages = this->npages(req);
-            // size_type delta = this->npages(next) - min_pages;
-
-            // while (delta) {
-            //     pointer new_data = (pointer)mremap(
-            //         this->m_data,
-            //         this->m_capacity * sizeof(T),
-            //         (min_pages + delta) * page_size,
-            //         0);
-            //     if (new_data != (pointer)-1) {
-            //         #ifdef UWR_TRACK
-            //         counter.mremaps(1);
-            //         counter.objects(this->m_capacity);
-            //         counter.grows(double((min_pages + delta) * page_size / sizeof(T)) / this->m_capacity);
-            //         #endif
-            //         this->m_capacity = (min_pages + delta) * page_size / sizeof(T);
-            //         return;
-            //     }
-            //     delta = delta * 2 / 3;
-            // }
-
-            // next = this->fix_big_capacity(next);
-            // #ifdef UWR_TRACK
-            // counter.mremaps(0);
-            // counter.grows(double(next) / this->m_capacity);
-            // #endif
-            // pointer new_data = this->big_alloc(next);
-            // umove_and_destroy(new_data, this->m_data, this->m_size);
-            // this->big_dealloc(this->m_data, this->m_capacity);
-            // this->m_data = new_data;
-            // this->m_capacity = next;
 
             break;
         }
