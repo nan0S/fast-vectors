@@ -64,15 +64,15 @@ build/test/tests/%.o: test/tests/%.cpp Makefile
 	$(CXX) $(CXXFLAGS) $(TEST_FLAGS) -MMD -MP -c $< -o $@ $(INC)
 
 install:
-	@echo Installing ...
+	@echo Installing to $(INSTALL_DIR)/uwr.
 	@rm -rf $(INSTALL_DIR)/uwr
-	@cp -r include $(INSTALL_DIR)/uwr
-	@echo Done
+	@cp -r include/uwr $(INSTALL_DIR)
+	@echo Done.
 
 uninstall:
-	@echo Uninstalling ...
+	@echo Uninstalling from $(INSTALL_DIR)/uwr.
 	@rm -rf $(INSTALL_DIR)/uwr
-	@echo Done
+	@echo Done.
 
 format:
 	@(shopt -s nullglob; \

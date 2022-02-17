@@ -715,6 +715,12 @@ static_vector<T, C>::priv_swap(static_vector<T, C>& shorter, static_vector<T, C>
     std::swap(shorter.m_size, longer.m_size);
 }
 
+// static_vector is trivially relocatable iff it's value type is trivially relocatable
+template<class T, uwr::len_t C>
+inline constexpr bool
+uwr::mem::is_trivially_relocatable_v<uwr::static_vector<T, C>> =
+   is_trivially_relocatable_v<T>;
+
 
 /*
  * non-member operators 
@@ -812,9 +818,4 @@ erase_if(uwr::static_vector<T, C>& c, Pred pred) {
 #endif // CPP_ABOVE_17
 
 } // namespace std
-
-template<class T, uwr::len_t C>
-inline constexpr bool
-uwr::mem::is_trivially_relocatable_v<uwr::static_vector<T, C>> =
-   is_trivially_relocatable_v<T>;
 

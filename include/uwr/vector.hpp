@@ -675,6 +675,12 @@ vector<T, A>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
     return m_pos;
 }
 
+// uwr::vector is trivially relocatable
+template<class T, class A>
+inline constexpr bool
+uwr::mem::is_trivially_relocatable_v<uwr::vector<T, A>> =
+   true;
+
 
 /*
  * non-member operators 
@@ -768,9 +774,4 @@ erase_if(uwr::vector<T, A>& c, Pred pred) {
 #endif // CPP_ABOVE_17
 
 } // namespace std
-
-template<class T, class A>
-inline constexpr bool
-uwr::mem::is_trivially_relocatable_v<uwr::vector<T, A>> =
-   true;
 
