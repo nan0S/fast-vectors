@@ -1,12 +1,12 @@
 INSTALL_DIR := /usr/local/include
 
 CXX      := g++
-VERSION  := -std=c++17
+# VERSION  := -std=c++17
 # check c++20, but write for at least c++17 compatibility
-# VERSION  := -std=c++20
+VERSION  := -std=c++20
 CXXFLAGS    := $(VERSION) -Wall -Wextra
-# BENCH_FLAGS := -Ofast -march=native -flto -DNDEBUG
-BENCH_FLAGS := -O0
+BENCH_FLAGS := -O3 -DNDEBUG
+# BENCH_FLAGS := -O0
 TEST_FLAGS  := -O0
 
 INC := -Isrc -Iinclude
@@ -55,11 +55,11 @@ bin/benchmarks/%: build/test/benchmarks/%.o $(OBJ)
 	@mkdir -p $(shell dirname $@)
 	$(CXX) $(CXXFLAGS) $(BENCH_FLAGS) -MMD -MP $< $(OBJ) -o $@ $(LIB)
 
-build/%.o: %.cpp
+build/%.o: %.cpp Makefile
 	@mkdir -p $(shell dirname $@)
 	$(CXX) $(CXXFLAGS) $(BENCH_FLAGS) -MMD -MP -c $< -o $@ $(INC)
 
-build/test/tests/%.o: test/tests/%.cpp
+build/test/tests/%.o: test/tests/%.cpp Makefile
 	@mkdir -p $(shell dirname $@)
 	$(CXX) $(CXXFLAGS) $(TEST_FLAGS) -MMD -MP -c $< -o $@ $(INC)
 
