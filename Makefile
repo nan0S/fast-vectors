@@ -35,7 +35,7 @@ run-benchmarks: $(BENCH)
 		echo; \
 	done
 	
-run-test: $(TEST)
+run-tests: $(TEST)
 	@for test in $(TEST); do \
 		./$$test --gtest_color=yes; \
 	done
