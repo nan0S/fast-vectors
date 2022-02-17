@@ -11,7 +11,3 @@
 #define UWR_ASSERT(expr) assert(expr)
 
 #define UWR_UNUSED __attribute__((unused))
-
-// TODO: remove
-#define UWR_TRACK
-#define RVECTOR_TRACK

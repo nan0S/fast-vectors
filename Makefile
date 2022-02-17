@@ -10,7 +10,7 @@ BENCH_FLAGS := -O0
 TEST_FLAGS  := -O0
 
 INC := -Isrc -Iinclude
-LIB := -pthread -lgtest -lbenchmark -lEASTL -lfolly -ldl -lfmt
+LIB := -pthread -lgtest -lbenchmark -lEASTL -lfolly -ldl -lfmt -ljemalloc
 
 SRC  	  := $(shell find src -name '*.cpp')
 OBJ 	  := $(patsubst %.cpp, build/%.o, $(SRC))

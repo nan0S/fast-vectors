@@ -1,8 +1,9 @@
 #pragma once
 
-#include <cstddef>
-#include <sys/mman.h>
 #include <algorithm>
+#include <cstddef>
+#include <cassert>
+#include <sys/mman.h>
 
 inline constexpr size_t pagesize = 4096;
 

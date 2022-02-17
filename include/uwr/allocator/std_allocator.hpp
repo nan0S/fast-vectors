@@ -43,32 +43,31 @@ std_allocator<T>::fix_capacity(size_type n) const {
 #ifndef NDEBUG
     if (!n) return 0;
 #endif
-    return n;
-    // return std::max((64 + sizeof(T) - 1) / sizeof(T), n);
+    return std::max((64 + sizeof(T) - 1) / sizeof(T), n);
 }
 
 template<class T>
 constexpr typename std_allocator<T>::pointer
 std_allocator<T>::alloc(size_type n) const {
-    UWR_ASSERT(n == this->fix_capacity(n));
+    UWR_ASSERT(n == fix_capacity(n));
     return static_cast<T*>(operator new (n * sizeof(T)));
 }
 
 template<class T>
 constexpr void
 std_allocator<T>::dealloc(pointer data, UWR_UNUSED size_type n) const {
-    UWR_ASSERT(n == this->fix_capacity(n));
+    UWR_ASSERT(n == fix_capacity(n));
     operator delete (data);
 }
 
 template<class T>
 constexpr void
 std_allocator<T>::realloc(size_type req) {
-    req = this->fix_capacity(req);
+    req = fix_capacity(req);
 
-    pointer new_data = this->alloc(req);
+    pointer new_data = alloc(req);
     umove_and_destroy(new_data, this->m_data, this->m_size);
-    this->dealloc(this->m_data, this->m_capacity);
+    dealloc(this->m_data, this->m_capacity);
 
     this->m_data = new_data;
     this->m_capacity = req;
@@ -77,7 +76,7 @@ std_allocator<T>::realloc(size_type req) {
 template<class T>
 constexpr void
 std_allocator<T>::grow(size_type req) {
-    this->realloc(this->next_capacity(req));
+    realloc(next_capacity(req));
 }
 
 template<class T>
@@ -92,10 +91,10 @@ std_allocator<T>::expand_or_dealloc_and_alloc_raw(size_type req) {
     UWR_ASSERT(req > this->m_capacity);
 
     destroy(this->m_data, this->m_size);
-    this->dealloc(this->m_data, this->m_capacity);
+    dealloc(this->m_data, this->m_capacity);
 
-    this->m_capacity = this->fix_capacity(req);
-    this->m_data = this->alloc(this->m_capacity);
+    this->m_capacity = fix_capacity(req);
+    this->m_data = alloc(this->m_capacity);
 
     return false;
 }

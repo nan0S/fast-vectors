@@ -9,8 +9,8 @@
 #include "uwr/common/type_traits.hpp"
 #include "utils/wrapper.hpp"
 
-#define ON test_type::do_print = true
-#define OFF test_type::do_print = false
+#define PRINT_ON test_type::do_print = true
+#define PRINT_OFF test_type::do_print = false
 
 class test_type {
 public:

@@ -7,7 +7,6 @@
 #include <boost/container/static_vector.hpp>
 
 #include "uwr/static_vector.hpp"
-#include "uwr/static_vector_alt.hpp"
 
 #include "utils/value.hpp"
 #include "utils/random.hpp"
@@ -46,7 +45,6 @@ static  const  args_t  INSERT_ARGS              =  { 100'000, 1 };
 #define  INSERT_ITERS              (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 
 #define DO_STATIC_VECTOR_BENCH
-#define DO_STATIC_VECTOR_ALT_BENCH
 
 static constexpr int C = 500'000; // static_vector capacity
 
@@ -57,8 +55,6 @@ template<class T>
 using boost_static_vector = boost::container::static_vector<T, C>;
 template<class T>
 using uwr_static_vector = uwr::static_vector<T, C>;
-template<class T>
-using uwr_static_vector_alt = uwr::static_vector_alt<T, C>;
 
 /*
  * benchmark push_back
@@ -307,17 +303,9 @@ void BM_insert_range(State& s) {
 #define REGISTER_BENCHMARK_FOR_STATIC_VECTOR(func, unit, varname, type)
 #endif
 
-#ifdef DO_STATIC_VECTOR_ALT_BENCH
-#define REGISTER_BENCHMARK_FOR_STATIC_VECTOR_ALT(func, unit, varname, type) \
-    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, uwr_static_vector_alt, type)
-#else
-#define REGISTER_BENCHMARK_FOR_STATIC_VECTOR_ALT(func, unit, varname, type)
-#endif
-
 #define REGISTER_BENCHMARK_FOR_TYPE(func, unit, varname, type) \
     REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, boost_static_vector, type); \
-    REGISTER_BENCHMARK_FOR_STATIC_VECTOR(func, unit, varname, type); \
-    REGISTER_BENCHMARK_FOR_STATIC_VECTOR_ALT(func, unit, varname, type)
+    REGISTER_BENCHMARK_FOR_STATIC_VECTOR(func, unit, varname, type)
 
 #define REGISTER_BENCHMARK(func, unit, varname) \
     REGISTER_BENCHMARK_FOR_TYPE(func, unit, varname, T_t); \

@@ -3,11 +3,9 @@
 #include <boost/container/vector.hpp>
 #include <boost/container/static_vector.hpp>
 
-#include "uwr/static_vector.hpp"
 #include "uwr/vector.hpp"
-#include "uwr/rvector.h"
-#include "uwr/std_vector.hpp"
-#include "uwr/vector_bs.hpp"
+#include "uwr/static_vector.hpp"
+#include "uwr/allocator/malloc_allocator.hpp"
 
 #include "test_type/test_type.hpp"
 #include "utils/value.hpp"
@@ -18,7 +16,6 @@ using boost_gf = boost::container::growth_factor_100;
 using boost_options = boost::container::vector_options_t<boost::container::growth_factor<boost_gf>>;
 template<class T>
 using boost_vector = boost::container::vector<T, boost::container::new_allocator<T>, boost_options>;
-// using boost_vector = boost::container::vector<T>;
 
 constexpr static int C = 10;
 
@@ -58,9 +55,8 @@ using T = int;
 // using Vector = rvector<T>;
 using std_vector = std::vector<T>;
 using boost_vector_t = boost_vector<T>;
-using uwr_vector = uwr::vector_bs<T>;
-using rvector_t = rvector<T>;
-using uwr_std_vector = uwr::std_vector<T>;
+using uwr_vector = uwr::vector<T>;
+using uwr_c_vector = uwr::vector<T, uwr::mem::malloc_allocator<T>>;
 
 
 constexpr long ps = 4096;
@@ -114,12 +110,12 @@ int main() {
     Vector v1(5);
     Vector v2(5 * 5 / 3);
 
-    ON;
+    PRINT_ON;
     
     std::reverse(v1.begin(), v1.end());
     std::swap(v1, v2);
 
-    OFF;
+    PRINT_OFF;
 
     test_type::print_stats();
 

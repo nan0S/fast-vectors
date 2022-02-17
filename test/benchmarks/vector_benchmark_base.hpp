@@ -3,6 +3,7 @@
 
 #include <benchmark/benchmark.h>
 #include <boost/format.hpp>
+#include <EASTL/vector.h>
 
 #include "test_type/test_type.hpp"
 #include "utils/bench_timer.hpp"
@@ -33,12 +34,15 @@ namespace std {
 template<template<class> class V, class... Ts>
 class vector_bench_env {
 public:
+    template<class T>
+    using size_type = typename V<T>::size_type;
+
     vector_bench_env(bench_type type, int seed, int verbose, int num_vectors)
         : type(type), gen(seed), verbose(verbose), num_vectors(num_vectors) {}
 
     void run_simulation(int iters=1000) {
         bench_timer timer("special");
-        this->iters = iters;
+        iters = iters;
         for (int i = 0; i < iters; ++i) {
             (dispatch_action<Ts>(i), ...);
             if ((i + 1) % 20 == 0)
@@ -81,7 +85,7 @@ private:
 
     template<class T>
     size_t get_typed_vector_size_sum() {
-        auto& typed_env = this->get_env_of_type<T>();
+        auto& typed_env = get_env_of_type<T>();
         size_t length_sum = 0;
 
         for (const auto& v : typed_env)
@@ -96,7 +100,7 @@ private:
 
     template<class T>
     size_t get_typed_min_vector_size() {
-        auto& typed_env = this->get_env_of_type<T>();
+        auto& typed_env = get_env_of_type<T>();
         size_t min_size = std::numeric_limits<size_t>::max();
 
         for (const auto& v : typed_env)
@@ -112,7 +116,7 @@ private:
 
     template<class T>
     size_t get_typed_max_vector_size() {
-        auto& typed_env = this->get_env_of_type<T>();
+        auto& typed_env = get_env_of_type<T>();
         size_t max_size = std::numeric_limits<size_t>::min();
 
         for (const auto& v : typed_env)
@@ -124,9 +128,8 @@ private:
 
     template<class T>
     void dispatch_action(int i) {
-        // TODO: maybe add probability distribution other than uniform
         int chosen;
-        switch (this->type) {
+        switch (type) {
             case PUSH_ONLY:
                 chosen = 3;
                 break;
@@ -158,7 +161,7 @@ private:
         if (verbose > 4)
             std::cout << boost::format("construct_action(%d)\n") % i;
 
-        auto& typed_env = this->get_env_of_type<T>();
+        auto& typed_env = get_env_of_type<T>();
         int q = random(1, type == bench_type::PUSH_ONLY ? 1 : 3);
         // std::uniform_int_distribution<> size_dist(0, i / 10 + 10);
         std::uniform_int_distribution<> size_dist(0, i + 10);
@@ -166,7 +169,7 @@ private:
         bench_timer timer("construct");
 
         while (q--) {
-            typed_env.emplace_back(size_dist(this->gen));
+            typed_env.emplace_back(size_dist(gen));
         }
     }
 
@@ -175,7 +178,7 @@ private:
         if (verbose > 4)
             std::cout << boost::format("destroy_action(%d)\n") % i;
 
-        auto& typed_env = this->get_env_of_type<T>();
+        auto& typed_env = get_env_of_type<T>();
         int typed_env_size = typed_env.size();
         if (typed_env_size == 0) {
             construct_action<T>(i);
@@ -198,22 +201,21 @@ private:
         if (verbose > 4)
             std::cout << boost::format("push_back_action(%d)\n") % i;
 
-        auto& typed_env = this->get_env_of_type<T>();
+        auto& typed_env = get_env_of_type<T>();
         int typed_env_size = typed_env.size();
         if (typed_env_size < num_vectors) {
             construct_action<T>(i);
             return;
         }
 
-        // TODO: maybe sth more complex (?)
         int q = random(1, typed_env_size / 3 + 1);
         std::uniform_int_distribution<> pick_dist(0, typed_env_size - 1);
         size_type<T> max_size = i * 100 + 1;
         bench_timer timer("push_back");
 
         while (q--) {
-            auto& picked = typed_env[pick_dist(this->gen)];
-            auto can_put_in = picked.max_size() - picked.size();
+            auto& picked = typed_env[pick_dist(gen)];
+            auto can_put_in = get_max_size(picked) - picked.size();
             auto put_in = random<size_type<T>>(0, std::min(max_size, can_put_in));
 
             while (put_in--) {
@@ -227,7 +229,7 @@ private:
         if (verbose > 4)
             std::cout << boost::format("pop_back_action(%d)\n") % i;
 
-        auto& typed_env = this->get_env_of_type<T>();
+        auto& typed_env = get_env_of_type<T>();
         int typed_env_size = typed_env.size();
         if (typed_env_size == 0) {
             construct_action<T>(i);
@@ -239,7 +241,7 @@ private:
         bench_timer timer("pop_back");
 
         while (q--) {
-            auto& picked = typed_env[pick_dist(this->gen)];
+            auto& picked = typed_env[pick_dist(gen)];
             auto cnt = random<size_type<T>>(0, picked.size());
 
             while (cnt--) {
@@ -253,7 +255,7 @@ private:
         if (verbose > 4)
             std::cout << boost::format("copy_action(%d)\n") % i;
 
-        auto& typed_env = this->get_env_of_type<T>();
+        auto& typed_env = get_env_of_type<T>();
         int typed_env_size = typed_env.size();
         if (typed_env_size == 0) {
             construct_action<T>(i);
@@ -265,7 +267,7 @@ private:
         bench_timer timer("copy");
 
         while (q--) {
-            auto pick = pick_dist(this->gen);
+            auto pick = pick_dist(gen);
 
             typed_env.emplace_back();
             typed_env.back() = typed_env[pick];
@@ -277,7 +279,7 @@ private:
         if (verbose > 4)
             std::cout << boost::format("insert_action(%d)\n") % i;
 
-        auto& typed_env = this->get_env_of_type<T>();
+        auto& typed_env = get_env_of_type<T>();
         int typed_env_size = typed_env.size();
         if (typed_env_size == 0) {
             construct_action<T>(i);
@@ -290,8 +292,8 @@ private:
         bench_timer timer("insert");
 
         while (q--) {
-            auto& picked = typed_env[pick_dist(this->gen)];
-            auto can_insert = picked.max_size() - picked.size();
+            auto& picked = typed_env[pick_dist(gen)];
+            auto can_insert = get_max_size(picked) - picked.size();
             auto cnt = random<size_type<T>>(0, std::min(can_insert, max_insert));
             auto pos = random<size_type<T>>(0, picked.size());
 
@@ -304,7 +306,7 @@ private:
         if (verbose > 4)
             std::cout << boost::format("erase_action(%d)\n") % i;
 
-        auto& typed_env = this->get_env_of_type<T>();
+        auto& typed_env = get_env_of_type<T>();
         int typed_env_size = typed_env.size();
         if (typed_env_size == 0) {
             construct_action<T>(i);
@@ -316,7 +318,7 @@ private:
         bench_timer timer("erase");
 
         while (q--) {
-            auto& picked = typed_env[pick_dist(this->gen)];
+            auto& picked = typed_env[pick_dist(gen)];
             auto picked_size = picked.size();
             if (picked_size == 0)
                 continue;
@@ -330,12 +332,20 @@ private:
 
     template<class T>
     T random(T a, T b) {
-        return std::uniform_int_distribution<T>{a, b}(this->gen);
+        return std::uniform_int_distribution<T>{a, b}(gen);
     }
 
     template<class T>
     inline auto& get_env_of_type() {
         return std::get<env_type<T>>(env);
+    }
+
+    template<class T>
+    size_type<T> get_max_size(const V<T>& vec) {
+        if constexpr (std::is_same_v<V<T>, eastl::vector<T>>)
+            return std::numeric_limits<size_type<T>>::max();
+        else
+           return vec.max_size();
     }
 
 private:
@@ -344,9 +354,6 @@ private:
 
     template<class T>
     using env_type = env_container<V<T>>;
-
-    template<class T>
-    using size_type = typename V<T>::size_type;
 
 private:
     bench_type type;
@@ -412,21 +419,6 @@ void BM_environment(State& s, bench_type type, int verbose,
         bench_timer::print_epoch(std::to_string(type), num_vectors);
         bench_timer::reset();
     }
-
-    /* uwr vector allocator statistics */
-    #ifdef UWR_TRACK
-    if constexpr (uwr::is_uwr_vector<V<int>>::value)
-        if (verbose > 0) {
-            (V<Ts>::print_stats(), ...);
-        }
-    #endif
-    /* rvector allocator statistics */
-    #ifdef RVECTOR_TRACK
-    if constexpr (uwr::is_rvector<V<int>>::value)
-        if (verbose > 0) {
-            (V<Ts>::print_stats(), ...);
-        }
-    #endif
 
     int id = s.range(1);
     s.counters["t" + std::to_string(id)];

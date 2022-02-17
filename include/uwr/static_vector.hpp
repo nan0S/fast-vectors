@@ -11,9 +11,9 @@
 #endif
 
 /* 
+* by default:
 * push_back    = fast_push_back
 * emplace_back = fast_emplace_back
-* by default
 *  
 * #define UWR_STATIC_VECTOR_OPTIM_ENABLE 0
 * to disable this behaviour
@@ -152,14 +152,14 @@ template<class T, len_t C>
 constexpr
 static_vector<T, C>::static_vector(size_type n)
     : m_size(n) {
-    mem::construct(this->data(), n);
+    mem::construct(data(), n);
 }
 
 template<class T, len_t C>
 constexpr
 static_vector<T, C>::static_vector(size_type n, const T& val)
     : m_size(n) {
-    mem::ufill(this->data(), n, val);
+    mem::ufill(data(), n, val);
 }
 
 template<class T, len_t C>
@@ -167,28 +167,28 @@ template<class InIt, class>
 constexpr
 static_vector<T, C>::static_vector(InIt first, InIt last)
     : m_size(std::distance(first, last)) {
-    mem::ucopy(this->data(), first, last);
+    mem::ucopy(data(), first, last);
 }
 
 template<class T, len_t C>
 constexpr
 static_vector<T, C>::static_vector(const static_vector& x)
     : m_size(x.m_size) {
-    mem::ucopy(this->data(), x.begin(), x.size());
+    mem::ucopy(data(), x.begin(), x.size());
 }
 
 template<class T, len_t C>
 constexpr
 static_vector<T, C>::static_vector(static_vector&& x) noexcept
     : m_size(x.m_size) {
-    mem::umove(this->data(), x.begin(), x.size());
+    mem::umove(data(), x.begin(), x.size());
 }
 
 template<class T, len_t C>
 constexpr
 static_vector<T, C>::static_vector(std::initializer_list<T> ilist)
     : m_size(ilist.size()) {
-    mem::ucopy(this->data(), ilist.begin(), ilist.size());
+    mem::ucopy(data(), ilist.begin(), ilist.size());
 }
 
 template<class T, len_t C>
@@ -196,14 +196,14 @@ template<class T, len_t C>
 constexpr
 #endif
 static_vector<T, C>::~static_vector() {
-    mem::destroy(this->data(), this->m_size);
+    mem::destroy(data(), m_size);
 }
 
 template<class T, len_t C>
 constexpr static_vector<T, C>&
 static_vector<T, C>::operator=(const static_vector<T, C>& other) noexcept {
     if (UWR_LIKELY(this != &other))
-        this->priv_copy_assign(other.begin(), other.end(), other.m_size);
+        priv_copy_assign(other.begin(), other.end(), other.m_size);
     return *this;
 }
 
@@ -211,93 +211,93 @@ template<class T, len_t C>
 constexpr static_vector<T, C>&
 static_vector<T, C>::operator=(static_vector<T, C>&& other) noexcept {
     if (UWR_LIKELY(this != &other))
-        this->priv_move_assign(other.begin(), other.end(), other.m_size);
+        priv_move_assign(other.begin(), other.end(), other.m_size);
     return *this;
 }
 
 template<class T, len_t C>
 constexpr static_vector<T, C>&
 static_vector<T, C>::operator=(std::initializer_list<T> ilist) noexcept {
-    this->priv_copy_assign(ilist.begin(), ilist.end(), ilist.size());
+    priv_copy_assign(ilist.begin(), ilist.end(), ilist.size());
     return *this;
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::begin() noexcept {
-    return iterator(this->data());
+    return iterator(data());
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::const_iterator
 static_vector<T, C>::begin() const noexcept {
-    return this->cbegin();
+    return cbegin();
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::end() noexcept {
-    return iterator(this->data() + this->m_size);
+    return iterator(data() + m_size);
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::const_iterator
 static_vector<T, C>::end() const noexcept {
-    return this->cend();
+    return cend();
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::reverse_iterator
 static_vector<T, C>::rbegin() noexcept {
-    return reverse_iterator(this->end());
+    return reverse_iterator(end());
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::const_reverse_iterator
 static_vector<T, C>::rbegin() const noexcept {
-    return this->crbegin();
+    return crbegin();
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::reverse_iterator
 static_vector<T, C>::rend() noexcept {
-    return reverse_iterator(this->begin());
+    return reverse_iterator(begin());
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::const_reverse_iterator
 static_vector<T, C>::rend() const noexcept {
-    return this->crend();
+    return crend();
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::const_iterator
 static_vector<T, C>::cbegin() const noexcept {
-    return const_iterator(this->data());
+    return const_iterator(data());
 }
 
 template<class T, len_t C>
 typename static_vector<T, C>::const_iterator
 constexpr static_vector<T, C>::cend() const noexcept {
-    return const_iterator(this->data() + this->m_size);
+    return const_iterator(data() + m_size);
 }
 
 template<class T, len_t C>
 typename static_vector<T, C>::const_reverse_iterator
 constexpr static_vector<T, C>::crbegin() const noexcept {
-    return const_reverse_iterator(this->end());
+    return const_reverse_iterator(end());
 }
 
 template<class T, len_t C>
 typename static_vector<T, C>::const_reverse_iterator
 constexpr static_vector<T, C>::crend() const noexcept {
-    return const_reverse_iterator(this->begin());
+    return const_reverse_iterator(begin());
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::size_type
 static_vector<T, C>::size() const noexcept {
-    return this->m_size;
+    return m_size;
 }
 
 template<class T, len_t C>
@@ -309,13 +309,13 @@ static_vector<T, C>::max_size() const noexcept {
 template<class T, len_t C>
 constexpr void
 static_vector<T, C>::resize(size_type n) {
-    this->priv_resize(default_construct_proxy<T>(n));
+    priv_resize(default_construct_proxy<T>(n));
 }
 
 template<class T, len_t C>
 constexpr void
 static_vector<T, C>::resize(size_type n, const T& val) {
-    this->priv_resize(uninitialized_fill_proxy(n, val));
+    priv_resize(uninitialized_fill_proxy(n, val));
 }
 
 template<class T, len_t C>
@@ -327,7 +327,7 @@ static_vector<T, C>::capacity() const noexcept {
 template<class T, len_t C>
 constexpr bool
 static_vector<T, C>::empty() const noexcept {
-    return this->m_size == 0;
+    return m_size == 0;
 }
 
 template<class T, len_t C>
@@ -343,20 +343,20 @@ static_vector<T, C>::shrink_to_fit() noexcept {
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::reference
 static_vector<T, C>::operator[](size_type n) {
-    return *this->data_at(n);
+    return *data_at(n);
 }
 
 template<class T, len_t C>
 typename static_vector<T, C>::const_reference
 constexpr static_vector<T, C>::operator[](size_type n) const {
-    return *this->data_at(n);
+    return *data_at(n);
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::reference
 static_vector<T, C>::at(size_type n) {
-    if (n < this->m_size)
-        return *this->data_at(n);
+    if (n < m_size)
+        return *data_at(n);
     else
         throw std::out_of_range("Index out of range: " + std::to_string(n));
 }
@@ -364,8 +364,8 @@ static_vector<T, C>::at(size_type n) {
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::const_reference
 static_vector<T, C>::at(size_type n) const {
-    if (n < this->m_size)
-        return *this->data_at(n);
+    if (n < m_size)
+        return *data_at(n);
     else
         throw std::out_of_range("Index out of range: " + std::to_string(n));
 }
@@ -373,88 +373,88 @@ static_vector<T, C>::at(size_type n) const {
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::reference
 static_vector<T, C>::front() {
-    return *this->data_at(0);
+    return *data_at(0);
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::const_reference
 static_vector<T, C>::front() const {
-    return *this->data_at(0);
+    return *data_at(0);
 }
 
 template<class T, len_t C>
 typename static_vector<T, C>::reference
 constexpr static_vector<T, C>::back() {
-    return *this->data_at(this->m_size - 1);
+    return *data_at(m_size - 1);
 }
 
 template<class T, len_t C>
 typename static_vector<T, C>::const_reference
 constexpr static_vector<T, C>::back() const {
-    return *this->data_at(this->m_size - 1);
+    return *data_at(m_size - 1);
 }
 
 template<class T, len_t C>
 constexpr T*
 static_vector<T, C>::data() noexcept {
-    return this->data_at(0);
+    return data_at(0);
 }
 
 template<class T, len_t C>
 constexpr const T*
 static_vector<T, C>::data() const noexcept {
-    return this->data_at(0);
+    return data_at(0);
 }
 
 template<class T, len_t C>
 template<class InIt, class>
 constexpr void
 static_vector<T, C>::assign(InIt first, InIt last) {
-    this->priv_copy_assign(first, last,
+    priv_copy_assign(first, last,
             static_cast<size_type>(std::distance(first, last)));
 }
 
 template<class T, len_t C>
 constexpr void
 static_vector<T, C>::assign(size_type n, const T& val) {
-    this->priv_assign(assign_fill_proxy(n, val));
+    priv_assign(assign_fill_proxy(n, val));
 }
 
 template<class T, len_t C>
 constexpr void
 static_vector<T, C>::assign(std::initializer_list<T> ilist) {
-    this->priv_copy_assign(ilist.begin(), ilist.end(), ilist.size());
+    priv_copy_assign(ilist.begin(), ilist.end(), ilist.size());
 }
 
 template<class T, len_t C>
 constexpr void
 static_vector<T, C>::push_back(const_reference value) {
-    this->emplace_back(value);
+    emplace_back(value);
 }
 
 template<class T, len_t C>
 constexpr void
 static_vector<T, C>::push_back(T&& value) {
-    this->emplace_back(std::move(value));
+    emplace_back(std::move(value));
 }
 
 template<class T, len_t C>
 constexpr void
 static_vector<T, C>::fast_push_back(T&& value) noexcept {
-    this->fast_emplace_back(std::forward<T>(value));
+    fast_emplace_back(std::forward<T>(value));
 }
 
 template<class T, len_t C>
 constexpr void
 static_vector<T, C>::pop_back() {
-    mem::destroy_at(this->data() + --this->m_size);
+    mem::destroy_at(data() + --m_size);
 }
 
 template<class T, len_t C>
 constexpr bool
 static_vector<T, C>::safe_pop_back() noexcept {
-    if (UWR_LIKELY(this->m_size != 0)) {
-        this->pop_back();
+    if (UWR_LIKELY(m_size != 0)) {
+        pop_back();
         return true;
     }
     else {
@@ -465,41 +465,41 @@ static_vector<T, C>::safe_pop_back() noexcept {
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, const T& value) {
-    return this->emplace(pos, value);
+    return emplace(pos, value);
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, T&& value) {
-    return this->emplace(pos, std::move(value));
+    return emplace(pos, std::move(value));
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, size_type count, const T& value) {
-    return this->priv_insert(pos, insert_fill_proxy(count, value));
+    return priv_insert(pos, insert_fill_proxy(count, value));
 }
 
 template<class T, len_t C>
 template<class InIt, class>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, InIt first, InIt last) {
-    return this->priv_copy_insert(pos, first, last,
+    return priv_copy_insert(pos, first, last,
             static_cast<size_type>(std::distance(first, last)));
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::insert(const_iterator pos, std::initializer_list<T> ilist) {
-    return this->priv_copy_insert(pos, ilist.begin(), ilist.end(), ilist.size());
+    return priv_copy_insert(pos, ilist.begin(), ilist.end(), ilist.size());
 }
 
 template<class T, len_t C>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::erase(const_iterator pos) {
     T* const m_pos = const_cast<T* const>(pos);
-    mem::shiftl(m_pos, m_pos + 1, this->end());
-    this->pop_back();
+    mem::shiftl(m_pos, m_pos + 1, end());
+    pop_back();
 
     return m_pos;
 }
@@ -512,13 +512,13 @@ static_vector<T, C>::erase(const_iterator first, const_iterator last) {
     T* const m_last = const_cast<T* const>(last);
 
     if (UWR_LIKELY(m_first != m_last)) {
-        T* const m_end = this->end();
+        T* const m_end = end();
 
         mem::destroy(
                 mem::shiftl(m_first, m_last, m_end),
                 m_end);
 
-        this->m_size -= static_cast<size_type>(
+        m_size -= static_cast<size_type>(
                 std::distance(m_first, m_last));
     }
 
@@ -530,9 +530,8 @@ constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::erase(const_iterator first, const_iterator last) {
     T* const m_first = const_cast<T* const>(first);
     T* const m_last = const_cast<T* const>(last);
-
     if (UWR_LIKELY(m_first != m_last)) {
-        T* const m_end = this->end();
+        T* const m_end = end();
         size_type count = static_cast<size_type>(
                 std::distance(m_first, m_last));
         T* const new_end = m_end - count;
@@ -548,7 +547,7 @@ static_vector<T, C>::erase(const_iterator first, const_iterator last) {
                 m_end); 
         };
 
-        this->m_size -= count;
+        m_size -= count;
     }
 
     return m_first;
@@ -558,17 +557,17 @@ static_vector<T, C>::erase(const_iterator first, const_iterator last) {
 template<class T, len_t C>
 constexpr void
 static_vector<T, C>::swap(static_vector<T, C>& other) {
-    if (this->m_size < other.m_size)
-        this->priv_swap(*this, other);
+    if (m_size < other.m_size)
+        priv_swap(*this, other);
     else
-        this->priv_swap(other, *this);
+        priv_swap(other, *this);
 }
 
 template<class T, len_t C>
 constexpr void
 static_vector<T, C>::clear() noexcept {
-    mem::destroy(this->data(), this->m_size);
-    this->m_size = 0;
+    mem::destroy(data(), m_size);
+    m_size = 0;
 }
 
 template<class T, len_t C>
@@ -576,8 +575,7 @@ template<class... Args>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::emplace(const_iterator pos, Args&&... args) {
     T* const m_pos = const_cast<T* const>(pos);
-    T* const m_end = this->end();
-
+    T* const m_end = end();
     if (m_pos != m_end) {
         mem::shiftr(m_pos + 1, m_pos, m_end);
         // this strange construction is caused by the fact that
@@ -595,7 +593,7 @@ static_vector<T, C>::emplace(const_iterator pos, Args&&... args) {
         new (m_pos) T(std::forward<Args>(args)...);
     }
     
-    ++this->m_size;
+    ++m_size;
 
     return m_pos;
 }
@@ -605,10 +603,10 @@ template<class... Args>
 constexpr typename static_vector<T, C>::reference
 static_vector<T, C>::emplace_back(Args&&... args) {
     #if UWR_STATIC_VECTOR_OPTIM_ENABLE
-    return this->fast_emplace_back(std::forward<Args>(args)...);
+    return fast_emplace_back(std::forward<Args>(args)...);
     #else
-    if (UWR_LIKELY(this->m_size != C))
-        return this->fast_emplace_back(std::forward<Args>(args)...);
+    if (UWR_LIKELY(m_size != C))
+        return fast_emplace_back(std::forward<Args>(args)...);
     else
         throw std::out_of_range("Out of bounds");
     #endif
@@ -618,7 +616,7 @@ template<class T, len_t C>
 template<class... Args>
 constexpr typename static_vector<T, C>::reference
 static_vector<T, C>::fast_emplace_back(Args&&... args) noexcept {
-    T* const last_end = this->data() + this->m_size++;
+    T* const last_end = data() + m_size++;
     new (last_end) T(std::forward<Args>(args)...);
     return *last_end;
 }
@@ -626,63 +624,59 @@ static_vector<T, C>::fast_emplace_back(Args&&... args) noexcept {
 template<class T, len_t C>
 constexpr T*
 static_vector<T, C>::data_at(size_type n) noexcept {
-    return reinterpret_cast<T*>(&this->m_data[n]);
+    return reinterpret_cast<T*>(&m_data[n]);
 }
 
 template<class T, len_t C>
 constexpr const T*
 static_vector<T, C>::data_at(size_type n) const noexcept {
-    return reinterpret_cast<const T*>(&this->m_data[n]);
+    return reinterpret_cast<const T*>(&m_data[n]);
 }
 
 template<class T, len_t C>
 template<class ResizeProxy>
 constexpr void
 static_vector<T, C>::priv_resize(ResizeProxy&& proxy) {
-    T* const m_end = this->end();
-    T* const new_end = this->data() + proxy.n;
-
-    if (proxy.n > this->m_size)
+    T* const m_end = end();
+    T* const new_end = data() + proxy.n;
+    if (proxy.n > m_size)
         proxy.construct(m_end, new_end);
     else
         mem::destroy(new_end, m_end);
-
-    this->m_size = proxy.n;
+    m_size = proxy.n;
 }
 
 template<class T, len_t C>
 template<class InIt>
 constexpr void
 static_vector<T, C>::priv_copy_assign(InIt first, InIt last, size_type n) {
-    this->priv_assign(copy_assign_range_proxy<T, InIt>(first, last, n));
+    priv_assign(copy_assign_range_proxy<T, InIt>(first, last, n));
 }
 
 template<class T, len_t C>
 template<class InIt>
 constexpr void
 static_vector<T, C>::priv_move_assign(InIt first, InIt last, size_type n) {
-    this->priv_assign(move_assign_range_proxy<T, InIt>(first, last, n));
+    priv_assign(move_assign_range_proxy<T, InIt>(first, last, n));
 }
 
 template<class T, len_t C>
 template<class AssignProxy>
 constexpr void
 static_vector<T, C>::priv_assign(AssignProxy&& proxy) {
-    T* const m_data = this->data();
-
-    if (proxy.n > this->m_size)
-        proxy.assign_to_short(m_data, this->m_size);
+    T* const m_data = data();
+    if (proxy.n > m_size)
+        proxy.assign_to_short(m_data, m_size);
     else
-        proxy.assign_to_long(m_data, this->m_size);
-
-    this->m_size = proxy.n;
+        proxy.assign_to_long(m_data, m_size);
+    m_size = proxy.n;
 }
 
 template<class T, len_t C>
 template<class InIt>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::priv_copy_insert(const_iterator pos, InIt first, InIt last, size_type n) {
-    return this->priv_insert(pos, insert_copy_range_proxy<T, InIt>(first, last, n));
+    return priv_insert(pos, insert_copy_range_proxy<T, InIt>(first, last, n));
 }
 
 template<class T, len_t C>
@@ -690,13 +684,11 @@ template<class InsertProxy>
 constexpr typename static_vector<T, C>::iterator
 static_vector<T, C>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
     T* const m_pos = const_cast<T* const>(pos);
-
     if (UWR_UNLIKELY(!proxy.count))
         return m_pos;
 
-    T* const m_end = this->end();
+    T* const m_end = end();
     T* const spill = m_pos + proxy.count;
-
     if (spill < m_end) {
         mem::shiftr(spill, m_pos, m_end);
         proxy.insert_without_spill(m_pos, spill);
@@ -705,7 +697,7 @@ static_vector<T, C>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
         proxy.insert_with_spill(m_pos, m_end, spill);
     }
 
-    this->m_size += proxy.count;
+    m_size += proxy.count;
 
     return m_pos;
 }
@@ -717,10 +709,8 @@ static_vector<T, C>::priv_swap(static_vector<T, C>& shorter, static_vector<T, C>
     T* const s_end = shorter.end();
     T* const l_begin = longer.begin();
     T* const l_end = longer.end();
-
     T* const l_split = std::swap_ranges(s_begin, s_end, l_begin);
     mem::umove_and_destroy(s_end, l_split, l_end);
-
     std::swap(shorter.m_size, longer.m_size);
 }
 

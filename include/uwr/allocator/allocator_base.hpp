@@ -23,8 +23,8 @@ protected:
     constexpr explicit
     allocator_base(size_type n)
         : m_size(n),
-          m_capacity(deriv()->fix_capacity(this->m_size)),
-          m_data(deriv()->alloc(this->m_capacity)) {}
+          m_capacity(deriv()->fix_capacity(m_size)),
+          m_data(deriv()->alloc(m_capacity)) {}
 
     constexpr
     allocator_base(allocator_base&& x)
@@ -40,21 +40,21 @@ protected:
     constexpr
 #endif
     ~allocator_base() {
-        deriv()->dealloc(this->m_data, this->m_capacity);
+        deriv()->dealloc(m_data, m_capacity);
     }
 
     UWR_FORCEINLINE constexpr
     allocator_base& operator=(allocator_base&& other) {
-        this->swap(other);
+        swap(other);
         return *this;
     }
 
 public:
     UWR_FORCEINLINE constexpr
     void swap(allocator_base& other) {
-        std::swap(this->m_size, other.m_size);
-        std::swap(this->m_capacity, other.m_capacity);
-        std::swap(this->m_data, other.m_data);
+        std::swap(m_size, other.m_size);
+        std::swap(m_capacity, other.m_capacity);
+        std::swap(m_data, other.m_data);
     }
 
     /*

@@ -6,6 +6,7 @@
 
 #include "uwr/common/define.hpp"
 #include "uwr/common/types.hpp"
+
 #include "test_type/test_type.hpp"
 #include "utils/value.hpp"
 
@@ -17,7 +18,6 @@ public:
     using size_type = typename vector::size_type;
 
     static constexpr uwr::u64 C = 10;
-
     static constexpr uwr::u64 SMALL_SIZE = 5;
     static constexpr uwr::u64 MEDIUM_SIZE = 100;
     static constexpr uwr::u64 BIG_SIZE = 5000;
@@ -107,7 +107,7 @@ template<class V>
 std::vector<typename VectorTestBaseFixture<V>::size_type>
 VectorTestBaseFixture<V>::GetAllSizes() {
     std::vector<size_type> all_sizes;
-    size_type max_size = this->GetMaxVectorSize();
+    size_type max_size = GetMaxVectorSize();
 
     for (const auto& size : ALL_SIZES)
         if (size <= max_size)
@@ -129,7 +129,7 @@ typename VectorTestBaseFixture<V>::vector
 VectorTestBaseFixture<V>::GetVectorOfSize(size_type size) {
     vector v(size);
     for (size_type i = 0; i < size; ++i)
-        v[i] = this->GetValue(i);
+        v[i] = GetValue(i);
 
     return v;
 }
@@ -139,7 +139,7 @@ std::unique_ptr<typename VectorTestBaseFixture<V>::value_type[]>
 VectorTestBaseFixture<V>::GetInitializedArrayOfSize(size_type size) {
     auto arr = std::make_unique<value_type[]>(size);
     for (size_type i = 0; i < size; ++i)
-        arr[i] = this->GetValue(i);
+        arr[i] = GetValue(i);
 
     return arr;
 }
@@ -151,7 +151,7 @@ VectorTestBaseFixture<V>::GetInitializedVectorOfSize(size_type size) {
     v.reserve(size);
 
     for (size_type i = 0; i < size; ++i)
-        v.push_back(this->GetValue(i));
+        v.push_back(GetValue(i));
 
     return v;
 }
@@ -161,7 +161,7 @@ std::list<typename VectorTestBaseFixture<V>::value_type>
 VectorTestBaseFixture<V>::GetInitializedListOfSize(size_type size) {
     std::list<value_type> l;
     for (size_type i = 0; i < size; ++i)
-        l.push_back(this->GetValue(i));
+        l.push_back(GetValue(i));
 
     return l;
 }
@@ -196,7 +196,7 @@ VectorTestBaseFixture<V>::InsertOneElementByCopy(vector& v, size_type pos, int i
     
     auto it = v.insert(v.begin() + pos, val);
 
-    this->ExpectInsertedInAt(v, pos, 1, save);
+    ExpectInsertedInAt(v, pos, 1, save);
     EXPECT_EQ(it, v.begin() + pos);
     EXPECT_EQ(*it, val);
 }
@@ -208,7 +208,7 @@ VectorTestBaseFixture<V>::InsertOneElementByMove(vector& v, size_type pos, int i
     
     auto it = v.insert(v.begin() + pos, get_value<value_type>(id));
 
-    this->ExpectInsertedInAt(v, pos, 1, save);
+    ExpectInsertedInAt(v, pos, 1, save);
     EXPECT_EQ(it, v.begin() + pos);
     EXPECT_EQ(*it, get_value<value_type>(id));
 }
@@ -221,7 +221,7 @@ VectorTestBaseFixture<V>::InsertMultipleElementsByFill(vector& v, size_type pos,
 
     auto it = v.insert(v.begin() + pos, count, val);
 
-    this->ExpectInsertedInAt(v, pos, count, save);
+    ExpectInsertedInAt(v, pos, count, save);
     EXPECT_EQ(it, v.begin() + pos);
     for (size_type i = 0; i < count; ++i)
         EXPECT_EQ(v[pos + i], val);
@@ -239,7 +239,7 @@ VectorTestBaseFixture<V>::InsertMultipleElementsByRange(vector& v, size_type pos
 
     auto it = v.insert(v.begin() + pos, begin, end);
 
-    this->ExpectInsertedInAt(v, pos, count, save);
+    ExpectInsertedInAt(v, pos, count, save);
     EXPECT_EQ(it, v.begin() + pos);
     for (size_type i = 0; i < count; ++i, ++begin) {
         EXPECT_EQ(*begin, save_range[i]);
@@ -258,7 +258,7 @@ VectorTestBaseFixture<V>::InsertMultipleElementsByInitializerList(vector& v, siz
 
     auto it = v.insert(v.begin() + pos, ilist);
 
-    this->ExpectInsertedInAt(v, pos, count, save);
+    ExpectInsertedInAt(v, pos, count, save);
     EXPECT_EQ(it, v.begin() + pos);
     for (size_type i = 0; i < count; ++i) {
         EXPECT_EQ(ilist.begin()[i], save_range[i]);
@@ -273,7 +273,7 @@ VectorTestBaseFixture<V>::EmplaceAt(vector& v, size_type pos, int id) {
     
     auto it = v.emplace(v.begin() + pos, get_value<value_type>(id));
 
-    this->ExpectInsertedInAt(v, pos, 1, save);
+    ExpectInsertedInAt(v, pos, 1, save);
     EXPECT_EQ(it, v.begin() + pos);
     EXPECT_EQ(*it, get_value<value_type>(id));
 }
@@ -286,7 +286,7 @@ VectorTestBaseFixture<V>::EraseOneElement(vector& v, size_type pos) {
 
     auto it = v.erase(v.begin() + pos);
 
-    this->ExpectErasedInAt(v, pos, pos == initial_size ? 0 : 1, save);
+    ExpectErasedInAt(v, pos, pos == initial_size ? 0 : 1, save);
     EXPECT_EQ(it, v.begin() + pos);
 }
 
@@ -299,7 +299,7 @@ VectorTestBaseFixture<V>::EraseMultipleElements(vector& v, size_type pos, size_t
 
     auto it = v.erase(v.begin() + pos, v.begin() + pos + count);
 
-    this->ExpectErasedInAt(v, pos, count, save);
+    ExpectErasedInAt(v, pos, count, save);
     EXPECT_EQ(it, v.begin() + pos);
 }
 

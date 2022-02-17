@@ -59,18 +59,18 @@ big_allocator<T>::fix_capacity(size_type n) const {
 template<class T>
 constexpr typename big_allocator<T>::pointer
 big_allocator<T>::alloc(size_type n) const {
-    UWR_ASSERT(n == this->fix_capacity(n));
+    UWR_ASSERT(n == fix_capacity(n));
 
     return (pointer)mmap(NULL, n * sizeof(T),
-                    PROT_READ | PROT_WRITE,
-                    MAP_PRIVATE | MAP_ANONYMOUS,
-                    -1, 0);
+                         PROT_READ | PROT_WRITE,
+                         MAP_PRIVATE | MAP_ANONYMOUS,
+                         -1, 0);
 }
 
 template<class T>
 constexpr void
 big_allocator<T>::dealloc(pointer data, size_type n) const {
-    UWR_ASSERT(n == this->fix_capacity(n));
+    UWR_ASSERT(n == fix_capacity(n));
     
     munmap(data, n * sizeof(T));
 }
@@ -78,16 +78,14 @@ big_allocator<T>::dealloc(pointer data, size_type n) const {
 template<class T>
 constexpr void
 big_allocator<T>::realloc(size_type req) {
-    req = this->fix_capacity(req);
-
+    req = fix_capacity(req);
     if (UWR_LIKELY(!!this->m_capacity)) {
-        this->do_realloc(req,
+        do_realloc(req,
                 is_trivially_relocatable<T>());
     }
     else {
-        this->m_data = this->alloc(req);
+        this->m_data = alloc(req);
     }
-
     this->m_capacity = req;
 }
 
@@ -95,30 +93,27 @@ template<class T>
 constexpr void
 big_allocator<T>::do_realloc(size_type req, true_type) {
     UWR_ASSERT(req > this->m_capacity);
-    UWR_ASSERT(req == this->fix_capacity(req));
+    UWR_ASSERT(req == fix_capacity(req));
 
-    this->m_data = (pointer)mremap(
-            (void*)this->m_data,
-            this->m_capacity * sizeof(T),
-            req * sizeof(T),
-            MREMAP_MAYMOVE);
+    this->m_data = (pointer)mremap((void*)this->m_data,
+                                   this->m_capacity * sizeof(T),
+                                   req * sizeof(T),
+                                   MREMAP_MAYMOVE);
 }
 
 template<class T>
 constexpr void
 big_allocator<T>::do_realloc(size_type req, false_type) {
     UWR_ASSERT(req > this->m_capacity);
-    UWR_ASSERT(req == this->fix_capacity(req));
+    UWR_ASSERT(req == fix_capacity(req));
 
-    pointer new_data = (pointer)mremap(
-            this->m_data,
-            this->m_capacity * sizeof(T),
-            req * sizeof(T), 0);
-
+    pointer new_data = (pointer)mremap(this->m_data,
+                                       this->m_capacity * sizeof(T),
+                                       req * sizeof(T), 0);
     if (new_data == (pointer)-1) {
-        new_data = this->alloc(req);
+        new_data = alloc(req);
         umove_and_destroy(new_data, this->m_data, this->m_size);
-        this->dealloc(this->m_data, this->m_capacity);
+        dealloc(this->m_data, this->m_capacity);
     }
 
     this->m_data = new_data;
@@ -127,7 +122,7 @@ big_allocator<T>::do_realloc(size_type req, false_type) {
 template<class T>
 constexpr void
 big_allocator<T>::grow(size_type req) {
-    this->realloc(this->next_capacity(req));
+    realloc(next_capacity(req));
 }
 
 template<class T>
@@ -141,16 +136,14 @@ constexpr bool
 big_allocator<T>::expand_or_dealloc_and_alloc_raw(size_type req) {
     UWR_ASSERT(req > this->m_capacity);
 
-    req = this->fix_capacity(req);
-
+    req = fix_capacity(req);
     if (UWR_LIKELY(!!this->m_data)) {
-        return this->do_expand_or_dealloc_and_alloc_raw(req,
+        return do_expand_or_dealloc_and_alloc_raw(req,
                 is_trivially_relocatable<T>());
     }
     else {
-        this->m_data = this->alloc(req);
+        this->m_data = alloc(req);
         this->m_capacity = req;
-
         return false;
     }
 }
@@ -159,16 +152,13 @@ template<class T>
 constexpr bool
 big_allocator<T>::do_expand_or_dealloc_and_alloc_raw(size_type req, true_type) {
     UWR_ASSERT(req > this->m_capacity);
-    UWR_ASSERT(req == this->fix_capacity(req));
+    UWR_ASSERT(req == fix_capacity(req));
 
     destroy(this->m_data, this->m_size);
-
-    this->m_data = (pointer)mremap(
-            (void*)this->m_data,
-            this->m_capacity * sizeof(T),
-            req * sizeof(T),
-            MREMAP_MAYMOVE);
-
+    this->m_data = (pointer)mremap((void*)this->m_data,
+                                   this->m_capacity * sizeof(T),
+                                   req * sizeof(T),
+                                   MREMAP_MAYMOVE);
     this->m_capacity = req;
 
     // always return false as these objects are trivial
@@ -183,18 +173,15 @@ template<class T>
 constexpr bool
 big_allocator<T>::do_expand_or_dealloc_and_alloc_raw(size_type req, false_type) {
     UWR_ASSERT(req > this->m_capacity);
-    UWR_ASSERT(req == this->fix_capacity(req));
+    UWR_ASSERT(req == fix_capacity(req));
 
-    void* new_data = mremap(
-            this->m_data,
-            this->m_capacity * sizeof(T),
-            req * sizeof(T), 0);
-
+    void* new_data = mremap(this->m_data, this->m_capacity * sizeof(T),
+                            req * sizeof(T), 0);
     if (new_data == (void*)-1) {
         destroy(this->m_data, this->m_size);
-        this->dealloc(this->m_data, this->m_capacity);
+        dealloc(this->m_data, this->m_capacity);
 
-        this->m_data = this->alloc(req);
+        this->m_data = alloc(req);
         this->m_capacity = req;
 
         return false;

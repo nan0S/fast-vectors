@@ -1,11 +1,12 @@
-#include "uwr/c_vector.hpp"
+#include "uwr/vector.hpp"
+#include "uwr/allocator/malloc_allocator.hpp"
 
 #include <boost/container/vector.hpp>
 
 #define DONT_COMPARE
 
 template<class T>
-using tested_vector_t = uwr::c_vector<T>;
+using tested_vector_t = uwr::vector<T, uwr::mem::malloc_allocator<T>>;
 template<class T>
 using compare_vector_t = boost::container::vector<T>;
 

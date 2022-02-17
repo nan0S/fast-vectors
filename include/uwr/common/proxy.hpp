@@ -49,23 +49,18 @@ private:
 public:
     UWR_FORCEINLINE copy_assign_range_proxy(InIt first, InIt last, size_type n)
         : first(first), last(last), n(n) {
-        UWR_ASSERT(this->n == static_cast<size_type>(
-                    std::distance(this->first, this->last)));
+        UWR_ASSERT(n == static_cast<size_type>(std::distance(first, last)));
     }
 
     UWR_FORCEINLINE void assign_to_short(T* begin, size_type len) {
-        UWR_ASSERT(len < this->n);
+        UWR_ASSERT(len < n);
 
-        InIt split = std::next(this->first, len);
-        mem::ucopy(
-            mem::copy(begin, this->first, split),
-            split, this->last);
+        InIt split = std::next(first, len);
+        mem::ucopy(mem::copy(begin, first, split), split, last);
     }
 
     UWR_FORCEINLINE void assign_to_long(T* begin, size_type len) {
-        mem::destroy(
-            mem::copy(begin, this->first, this->last),
-            begin + len);
+        mem::destroy(mem::copy(begin, first, last), begin + len);
     }
 
 private:
@@ -84,23 +79,18 @@ private:
 public:
     UWR_FORCEINLINE move_assign_range_proxy(InIt first, InIt last, size_type n)
         : first(first), last(last), n(n) {
-        UWR_ASSERT(this->n == static_cast<size_type>(
-                    std::distance(this->first, this->last)));
+        UWR_ASSERT(n == static_cast<size_type>(std::distance(first, last)));
     }
 
     UWR_FORCEINLINE void assign_to_short(T* begin, size_type len) {
-        UWR_ASSERT(len < this->n);
+        UWR_ASSERT(len < n);
 
-        InIt split = std::next(this->first, len);
-        mem::umove(
-            mem::move(begin, this->first, split),
-            split, this->last);
+        InIt split = std::next(first, len);
+        mem::umove(mem::move(begin, first, split), split, last);
     }
 
     UWR_FORCEINLINE void assign_to_long(T* begin, size_type len) {
-        mem::destroy(
-            mem::move(begin, this->first, this->last),
-            begin + len);
+        mem::destroy(mem::move(begin, first, last), begin + len);
     }
 
 private:
@@ -123,15 +113,11 @@ public:
     UWR_FORCEINLINE void assign_to_short(T* begin, size_type len) {
         UWR_ASSERT(len < n);
 
-        mem::ufill(
-            mem::fill(begin, len, this->value),
-            begin + this->n, this->value);
+        mem::ufill(mem::fill(begin, len, value), begin + n, value);
     }
 
     UWR_FORCEINLINE void assign_to_long(T* begin, size_type len) {
-        mem::destroy(
-            mem::fill(begin, this->n, this->value),
-            begin + len);
+        mem::destroy(mem::fill(begin, n, value), begin + len);
     }
 
 private:
@@ -151,13 +137,12 @@ public:
         : value(value), count(count) {}
 
     UWR_FORCEINLINE void insert_without_spill(T* begin, T* end) {
-        mem::fill(begin, end, this->value);
+        mem::fill(begin, end, value);
     }
 
     UWR_FORCEINLINE T* insert_with_spill(T* position, T* end, T* spill) {
-        T* new_end = mem::umove_and_fill(spill, position, end, this->value);
-        mem::ufill(end, spill, this->value);
-
+        T* new_end = mem::umove_and_fill(spill, position, end, value);
+        mem::ufill(end, spill, value);
         return new_end;
     }
 
@@ -176,22 +161,18 @@ private:
 public:
     UWR_FORCEINLINE insert_copy_range_proxy(InIt first, InIt last, size_type count)
         : first(first), last(last), count(count) {
-        UWR_ASSERT(this->count == static_cast<size_type>(
-                    std::distance(this->first, this->last)));
+        UWR_ASSERT(count == static_cast<size_type>(std::distance(first, last)));
     }
 
     UWR_FORCEINLINE void insert_without_spill(T* begin, T*) {
-        mem::copy(begin, this->first, this->last);
+        mem::copy(begin, first, last);
     }
 
     UWR_FORCEINLINE T* insert_with_spill(T* position, T* end, T* spill) {
-        size_type rest = static_cast<size_type>(
-                std::distance(position, end));
-        InIt split = std::next(this->first, rest);
-        T* new_end = mem::umove_and_copy(spill, position,
-                        end, this->first, split);
-        mem::ucopy(end, split, this->last);
-
+        size_type rest = static_cast<size_type>( std::distance(position, end));
+        InIt split = std::next(first, rest);
+        T* new_end = mem::umove_and_copy(spill, position, end, first, split);
+        mem::ucopy(end, split, last);
         return new_end;
     }
 

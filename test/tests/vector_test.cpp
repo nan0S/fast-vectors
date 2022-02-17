@@ -1,11 +1,11 @@
-#include "uwr/vector_bs.hpp"
+#include "uwr/vector.hpp"
 
 #include <boost/container/vector.hpp>
 
 #define DONT_COMPARE
 
 template<class T>
-using tested_vector_t = uwr::vector_bs<T>;
+using tested_vector_t = uwr::vector<T>;
 template<class T>
 using compare_vector_t = boost::container::vector<T>;
 

@@ -8,7 +8,6 @@
 #include <folly/small_vector.h>
 
 #include "uwr/static_vector.hpp"
-#include "uwr/static_vector_alt.hpp"
 
 #include "test_type/test_type.hpp"
 
@@ -37,14 +36,12 @@ static  bool  DO_BOOST_STATIC_VECTOR_BENCH    =  1;
 static  bool  DO_EASTL_STATIC_VECTOR_BENCH    =  1;
 static  bool  DO_FOLLY_STATIC_VECTOR_BENCH    =  1;
 static  bool  DO_UWR_STATIC_VECTOR_BENCH      =  1;
-static  bool  DO_UWR_STATIC_VECTOR_ALT_BENCH  =  1;
 
 /* turn off some vectors from even compiling */
 #define TURN_ON_BOOST_STATIC_VECTOR_BENCH
 #define TURN_ON_EASTL_STATIC_VECTOR_BENCH
 #define TURN_ON_FOLLY_STATIC_VECTOR_BENCH
 #define TURN_ON_UWR_STATIC_VECTOR_BENCH
-// #define TURN_ON_UWR_STATIC_VECTOR_ALT_BENCH
 
 /* default benchmark type to run */
 static int benchmark_type = bench_type::ALL;
@@ -74,8 +71,6 @@ template<class T>
 using folly_static_vector = folly::small_vector<T, C, folly::small_vector_policy::NoHeap>;
 template<class T>
 using uwr_static_vector = uwr::static_vector<T, C>;
-template<class T>
-using uwr_static_vector_alt = uwr::static_vector_alt<T, C>;
 
 /*
  * seems that eastl vector needs it
@@ -106,7 +101,6 @@ static void ParseCustomOptions(int argc, char** argv) {
         {  "do_eastl_static_vector",    optional_argument,  0,  1    },
         {  "do_folly_static_vector",    optional_argument,  0,  2    },
         {  "do_uwr_static_vector",      optional_argument,  0,  3    },
-        {  "do_uwr_static_vector_alt",  optional_argument,  0,  4    },
         {  "common_iters",              required_argument,  0,  5    },
         {  "int_arg",                   required_argument,  0,  6    },
         {  "int_iters",                 required_argument,  0,  7    },
@@ -130,7 +124,6 @@ static void ParseCustomOptions(int argc, char** argv) {
         "\t--do_eastl_static_vector[=0/1]\n"
         "\t--do_folly_static_vector[=0/1]\n"
         "\t--do_uwr_static_vector[=0/1]\n"
-        "\t--do_uwr_static_vector_alt[=0/1]\n"
         "\t--common_iters=VALUE\n"
         "\t--int_arg=VALUE\n"
         "\t--int_iters=VALUE\n"
@@ -161,7 +154,6 @@ static void ParseCustomOptions(int argc, char** argv) {
             case 1: SetOptVar(DO_EASTL_STATIC_VECTOR_BENCH); break;
             case 2: SetOptVar(DO_FOLLY_STATIC_VECTOR_BENCH); break;
             case 3: SetOptVar(DO_UWR_STATIC_VECTOR_BENCH); break;
-            case 4: SetOptVar(DO_UWR_STATIC_VECTOR_ALT_BENCH); break;
             case 5: SetReqVar(COMMON_ITERS); break;
             case 6: SetReqVar(INT_ARG); break;
             case 7: SetReqVar(INT_ITERS); break;
@@ -240,19 +232,11 @@ std::string get_benchmark_name(const char* insides, bench_type type) {
 #define REGISTER_BENCHMARK_FOR_UWR_STATIC_VECTOR(unit, varname, counter, type, ...)
 #endif
 
-#ifdef TURN_ON_UWR_STATIC_VECTOR_ALT_BENCH
-#define REGISTER_BENCHMARK_FOR_UWR_STATIC_VECTOR_ALT(unit, varname, counter, type, ...) \
-    COND_REGISTER_BENCHMARK_FOR_VECTOR(DO_UWR_STATIC_VECTOR_ALT_BENCH, unit, varname, counter, type, uwr_static_vector_alt, __VA_ARGS__)
-#else
-#define REGISTER_BENCHMARK_FOR_UWR_STATIC_VECTOR_ALT(unit, varname, counter, type, ...)
-#endif
-
 #define REGISTER_BENCHMARK(unit, varname, counter, type, ...) \
     REGISTER_BENCHMARK_FOR_BOOST_STATIC_VECTOR(unit, varname, counter, type, __VA_ARGS__); \
     REGISTER_BENCHMARK_FOR_EASTL_STATIC_VECTOR(unit, varname, counter, type, __VA_ARGS__); \
     REGISTER_BENCHMARK_FOR_FOLLY_STATIC_VECTOR(unit, varname, counter, type, __VA_ARGS__); \
-    REGISTER_BENCHMARK_FOR_UWR_STATIC_VECTOR(unit, varname, counter, type, __VA_ARGS__); \
-    REGISTER_BENCHMARK_FOR_UWR_STATIC_VECTOR_ALT(unit, varname, counter, type, __VA_ARGS__)
+    REGISTER_BENCHMARK_FOR_UWR_STATIC_VECTOR(unit, varname, counter, type, __VA_ARGS__)
 
 static void RegisterBenchmarkForType(bench_type type) {
     std::cout << boost::format("==== Running: %s benchmark. ====\n") % std::to_string(type).c_str();

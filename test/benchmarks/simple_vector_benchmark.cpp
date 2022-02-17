@@ -6,11 +6,8 @@
 #include <benchmark/benchmark.h>
 #include <boost/container/vector.hpp>
 
-#include "uwr/vector_bs.hpp"
-#include "uwr/rvector.h"
-#include "uwr/std_vector.hpp"
-#include "uwr/big_vector.hpp"
-#include "uwr/c_vector.hpp"
+#include "uwr/vector.hpp"
+#include "uwr/allocator/malloc_allocator.hpp"
 
 #include "utils/value.hpp"
 #include "utils/random.hpp"
@@ -54,13 +51,10 @@ static const args_t ERASE_ARG = { 200'000, 10 };
 #define  EMPLACE_ITERS             (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 #define  ERASE_ITERS               (COMMON_ITERS  ==  0  ?  0  :  COMMON_ITERS)
 
-// #define DO_STD_VECTOR_BENCH
-// #define DO_BOOST_VECTOR_BENCH
+#define DO_STD_VECTOR_BENCH
+#define DO_BOOST_VECTOR_BENCH
 #define DO_UWR_VECTOR_BENCH
-#define DO_RVECTOR_BENCH
-#define DO_UWR_STD_VECTOR_BENCH
-// #define DO_BIG_VECTOR_BENCH
-// #define DO_C_VECTOR_BENCH
+#define DO_UWR_C_VECTOR_BENCH
 
 // turn on verbose printing for test_type type
 // #define VERBOSE_FOR_TEST_TYPE
@@ -75,15 +69,9 @@ using boost_options = boost::container::vector_options_t<boost::container::growt
 template<class T>
 using boost_vector = boost::container::vector<T, boost::container::new_allocator<T>, boost_options>; 
 template<class T>
-using rvector_t = rvector<T>;
+using uwr_vector = uwr::vector<T>;
 template<class T>
-using uwr_vector = uwr::vector_bs<T>;
-template<class T>
-using uwr_std_vector = uwr::std_vector<T>;
-template<class T>
-using big_vector = uwr::big_vector<T>;
-template<class T>
-using c_vector = uwr::c_vector<T>;
+using uwr_c_vector = uwr::vector<T, uwr::mem::malloc_allocator<T>>;
 
 /*
  * benchmark push_back
@@ -422,42 +410,18 @@ void BM_erase(State& s) {
 #define REGISTER_BENCHMARK_FOR_UWR_VECTOR(func, unit, varname, type)
 #endif
 
-#ifdef DO_RVECTOR_BENCH
-#define REGISTER_BENCHMARK_FOR_RVECTOR(func, unit, varname, type) \
-    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, type, rvector_t)
+#ifdef DO_UWR_C_VECTOR_BENCH
+#define REGISTER_BENCHMARK_FOR_UWR_C_VECTOR(func, unit, varname, type) \
+    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, type, uwr_c_vector)
 #else
-#define REGISTER_BENCHMARK_FOR_RVECTOR(func, unit, varname, type)
-#endif
-
-#ifdef DO_UWR_STD_VECTOR_BENCH
-#define REGISTER_BENCHMARK_FOR_UWR_STD_VECTOR(func, unit, varname, type) \
-    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, type, uwr_std_vector)
-#else
-#define REGISTER_BENCHMARK_FOR_UWR_STD_VECTOR(func, unit, varname, type)
-#endif
-
-#ifdef DO_BIG_VECTOR_BENCH
-#define REGISTER_BENCHMARK_FOR_BIG_VECTOR(func, unit, varname, type) \
-    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, type, big_vector)
-#else
-#define REGISTER_BENCHMARK_FOR_BIG_VECTOR(func, unit, varname, type)
-#endif
-
-#ifdef DO_C_VECTOR_BENCH
-#define REGISTER_BENCHMARK_FOR_C_VECTOR(func, unit, varname, type) \
-    REGISTER_BENCHMARK_FOR_VECTOR(func, unit, varname, type, c_vector)
-#else
-#define REGISTER_BENCHMARK_FOR_C_VECTOR(func, unit, varname, type)
+#define REGISTER_BENCHMARK_FOR_UWR_C_VECTOR(func, unit, varname, type)
 #endif
 
 #define REGISTER_BENCHMARK_FOR_TYPE(func, unit, varname, type) \
     REGISTER_BENCHMARK_FOR_STD_VECTOR(func, unit, varname, type); \
     REGISTER_BENCHMARK_FOR_BOOST_VECTOR(func, unit, varname, type); \
-    REGISTER_BENCHMARK_FOR_RVECTOR(func, unit, varname, type); \
     REGISTER_BENCHMARK_FOR_UWR_VECTOR(func, unit, varname, type); \
-    REGISTER_BENCHMARK_FOR_UWR_STD_VECTOR(func, unit, varname, type); \
-    REGISTER_BENCHMARK_FOR_BIG_VECTOR(func, unit, varname, type); \
-    REGISTER_BENCHMARK_FOR_C_VECTOR(func, unit, varname, type)
+    REGISTER_BENCHMARK_FOR_UWR_C_VECTOR(func, unit, varname, type)
 
 #define REGISTER_BENCHMARK(func, unit, varname) \
     REGISTER_BENCHMARK_FOR_TYPE(func, unit, varname, T_t); \

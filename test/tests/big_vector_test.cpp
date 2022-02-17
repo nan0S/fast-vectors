@@ -1,11 +1,12 @@
-#include "uwr/big_vector.hpp"
+#include "uwr/vector.hpp"
+#include "uwr/allocator/big_allocator.hpp"
 
 #include <boost/container/vector.hpp>
 
 #define DONT_COMPARE
 
 template<class T>
-using tested_vector_t = uwr::big_vector<T>;
+using tested_vector_t = uwr::vector<T, uwr::mem::big_allocator<T>>;
 template<class T>
 using compare_vector_t = boost::container::vector<T>;
 
