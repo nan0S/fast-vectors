@@ -66,7 +66,7 @@
 *       operators will be eventually called on them. *
 *  Example of non-trivial type:
 *  struct non_trivial {
-*      int a = &this;
+*      void* a = &this;
 *  };
 *  
 *  NOTE: E.g. most containers are trivial. *

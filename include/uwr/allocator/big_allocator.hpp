@@ -80,8 +80,7 @@ constexpr void
 big_allocator<T>::realloc(size_type req) {
     req = fix_capacity(req);
     if (UWR_LIKELY(!!this->m_capacity)) {
-        do_realloc(req,
-                is_trivially_relocatable<T>());
+        do_realloc(req, is_trivially_relocatable<T>());
     }
     else {
         this->m_data = alloc(req);

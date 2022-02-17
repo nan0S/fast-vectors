@@ -173,8 +173,7 @@ constexpr void
 hybrid_allocator<T>::realloc(size_type req) {
     req = fix_capacity(req);
     if (UWR_LIKELY(!!this->m_capacity))
-        this->m_data = do_realloc(req,
-            is_trivially_relocatable<T>());
+        this->m_data = do_realloc(req, is_trivially_relocatable<T>());
     else
         this->m_data = alloc(req);
     this->m_capacity = req;

@@ -39,25 +39,6 @@ TYPED_TEST(StaticVectorTestFixture, IsCapacityConstantAndCorrect) {
     EXPECT_EQ(v.capacity(), C);
 }
 
-TYPED_TEST(StaticVectorTestFixture, PushBackByCopyToFilledVectorCausesException) {
-    typename TestFixture::vector v(C);
-    const auto val = this->GetValue(0);
-
-    EXPECT_ANY_THROW(v.push_back(val));
-}
-
-TYPED_TEST(StaticVectorTestFixture, PushBackByMoveToFilledVectorCausesException) {
-    typename TestFixture::vector v(C);
-
-    EXPECT_ANY_THROW(v.push_back(this->GetValue(0)));
-}
-
-TYPED_TEST(StaticVectorTestFixture, EmplaceBackToFullVectorCausesException) {
-    typename TestFixture::vector v(C);
-
-    EXPECT_ANY_THROW(v.emplace_back(this->GetValue(3)));
-}
-
 int main(int argc, char* argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

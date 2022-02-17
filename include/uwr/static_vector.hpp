@@ -6,6 +6,7 @@
 #include "common/minimal_size_type.hpp"
 #include "common/define.hpp"
 #include "common/proxy.hpp"
+#include "common/type_traits.hpp"
 #if CPP_ABOVE_17
 #include "common/synth_three_way.hpp"
 #endif
@@ -811,3 +812,9 @@ erase_if(uwr::static_vector<T, C>& c, Pred pred) {
 #endif // CPP_ABOVE_17
 
 } // namespace std
+
+template<class T, uwr::len_t C>
+inline constexpr bool
+uwr::mem::is_trivially_relocatable_v<uwr::static_vector<T, C>> =
+   is_trivially_relocatable_v<T>;
+

@@ -69,8 +69,7 @@ template<class T>
 constexpr void
 malloc_allocator<T>::realloc(size_type req) {
     req = fix_capacity(req);
-    this->m_data = do_realloc(req,
-        is_trivially_relocatable<T>());
+    this->m_data = do_realloc(req, is_trivially_relocatable<T>());
     this->m_capacity = req;
 }
 

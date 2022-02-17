@@ -6,6 +6,7 @@
 #include "common/memory.hpp"
 #include "common/define.hpp"
 #include "common/proxy.hpp"
+#include "common/type_traits.hpp"
 #if CPP_ABOVE_17
 #include "common/synth_three_way.hpp"
 #endif
@@ -766,4 +767,10 @@ erase_if(uwr::vector<T, A>& c, Pred pred) {
 
 #endif // CPP_ABOVE_17
 
-} // namespace uwr
+} // namespace std
+
+template<class T, class A>
+inline constexpr bool
+uwr::mem::is_trivially_relocatable_v<uwr::vector<T, A>> =
+   true;
+
