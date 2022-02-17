@@ -1,9 +1,0 @@
-#!/bin/sh
-
-./run-current growth_rate_benchmark \
-    --benchmark_filter="std::string" \
-    --push_only \
-    --common_iters=1 \
-    --string_arg=1700 \
-    --verbose=1 \
-    $@
