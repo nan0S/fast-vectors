@@ -37,7 +37,7 @@ or install library system-wide:
 - `make run-test_name` - compile and run only test named `test_name` (e.g. `make run-simple_test`)
 
 # Example
-`make install`
+`sudo make install`
 ```c
 /* main.cpp */
 
