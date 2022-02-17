@@ -1,13 +1,16 @@
+#include "vector_benchmark_base.hpp"
+
 #include <getopt.h>
 #include <unistd.h>
+
 #include <boost/container/static_vector.hpp>
-#include <static_vector.hpp>
-#include <static_vector_alt.hpp>
-#include <test_type/test_type.hpp>
 #include <EASTL/fixed_vector.h>
 #include <folly/small_vector.h>
 
-#include "vector_benchmark_base.hpp"
+#include "uwr/static_vector.hpp"
+#include "uwr/static_vector_alt.hpp"
+
+#include "test_type/test_type.hpp"
 
 using namespace benchmark;
 

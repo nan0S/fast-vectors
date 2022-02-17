@@ -1,6 +1,8 @@
 #include <benchmark/benchmark.h>
-#include <common/memory.hpp>
-#include <test_type/test_type.hpp>
+
+#include "uwr/common/memory.hpp"
+
+#include "test_type/test_type.hpp"
 
 using namespace benchmark;
 using namespace uwr::mem;

@@ -1,6 +1,8 @@
 #include <benchmark/benchmark.h>
-#include <common/memory.hpp>
-#include <utils/utils.hpp>
+
+#include "uwr/common/memory.hpp"
+
+#include "utils/random.hpp"
 
 using namespace benchmark;
 using namespace uwr::mem;

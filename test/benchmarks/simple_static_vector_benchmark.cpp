@@ -2,12 +2,16 @@
 #include <vector>
 #include <chrono>
 #include <functional>
+
 #include <benchmark/benchmark.h>
-#include <utils/utils.hpp>
-#include <test_type/test_type.hpp>
 #include <boost/container/static_vector.hpp>
-#include <static_vector.hpp>
-#include <static_vector_alt.hpp>
+
+#include "uwr/static_vector.hpp"
+#include "uwr/static_vector_alt.hpp"
+
+#include "utils/value.hpp"
+#include "utils/random.hpp"
+#include "test_type/test_type.hpp"
 
 using namespace benchmark;
 using args_t = std::vector<int64_t>;

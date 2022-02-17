@@ -2,11 +2,12 @@
 
 #include <iostream>
 #include <deque>
-#include <common/define.hpp>
-#include <wrapper/wrapper.hpp>
-#include <common/type_traits.hpp>
 #include <folly/Traits.h>
 #include <boost/type_traits.hpp>
+
+#include "uwr/common/define.hpp"
+#include "uwr/common/type_traits.hpp"
+#include "utils/wrapper.hpp"
 
 #define ON test_type::do_print = true
 #define OFF test_type::do_print = false

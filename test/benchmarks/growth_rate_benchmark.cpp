@@ -1,17 +1,20 @@
+#include "vector_benchmark_base.hpp"
+
 #include <getopt.h>
 #include <unistd.h>
 #include <bits/getopt_ext.h>
-#include <test_type/test_type.hpp>
-#include <identifiers/identifiers.hpp>
-#include <boost/container/vector.hpp>
-#include <rvector.h>
-#include <std_vector.hpp>
-#include <big_vector.hpp>
-#include <c_vector.hpp>
-#include <vector_orig_imp.hpp>
 #include <malloc.h>
 
-#include "vector_benchmark_base.hpp"
+#include <boost/container/vector.hpp>
+
+#include "uwr/rvector.h"
+#include "uwr/std_vector.hpp"
+#include "uwr/big_vector.hpp"
+#include "uwr/c_vector.hpp"
+#include "uwr/vector_orig_imp.hpp"
+
+#include "test_type/test_type.hpp"
+#include "identifiers/identifiers.hpp"
 
 using namespace benchmark;
 
@@ -239,7 +242,7 @@ static constexpr len_t dens[] = { 1, 10, 5, 10, 5, 2, 5, 10, 5, 10 };
 template<template<class> class V, class... Ts>
 void BM_environment_wrapper(State& s, bench_type type, int verbose,
         int num_env_vectors) {
-    int growth_idx = s.range(2);
+    size_t growth_idx = s.range(2);
     assert(growth_idx < sizeof(nums) / sizeof(nums[0]));
 
     len_t num = nums[growth_idx];

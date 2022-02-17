@@ -1,10 +1,13 @@
 #pragma once
 
-#include <gtest/gtest.h>
-#include <common/define.hpp>
-#include <test_type/test_type.hpp>
-#include <utils/utils.hpp>
 #include <list>
+
+#include <gtest/gtest.h>
+
+#include "uwr/common/define.hpp"
+#include "uwr/common/types.hpp"
+#include "test_type/test_type.hpp"
+#include "utils/value.hpp"
 
 template<class V>
 class VectorTestBaseFixture : public ::testing::Test {
@@ -13,11 +16,11 @@ public:
     using value_type = typename vector::value_type;
     using size_type = typename vector::size_type;
 
-    static constexpr size_type C = 10;
+    static constexpr uwr::u64 C = 10;
 
-    static constexpr size_type SMALL_SIZE = 5;
-    static constexpr size_type MEDIUM_SIZE = 100;
-    static constexpr size_type BIG_SIZE = 5000;
+    static constexpr uwr::u64 SMALL_SIZE = 5;
+    static constexpr uwr::u64 MEDIUM_SIZE = 100;
+    static constexpr uwr::u64 BIG_SIZE = 5000;
 
     static_assert(2 * SMALL_SIZE <= C,
             "SMALL_SIZE should be small enough to fit into static_vector of capacity C twice!");
@@ -25,7 +28,7 @@ public:
             "SMALL_SIZE should be more than 2!");
 
     // in ascending order
-    static constexpr size_type ALL_SIZES[] = {
+    static constexpr uwr::u64 ALL_SIZES[] = {
         SMALL_SIZE, MEDIUM_SIZE, BIG_SIZE
     };
 

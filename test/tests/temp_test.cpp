@@ -1,12 +1,16 @@
 #include <bits/stdc++.h>
-#include <static_vector.hpp>
+
 #include <boost/container/vector.hpp>
 #include <boost/container/static_vector.hpp>
-#include <vector.hpp>
-#include <test_type/test_type.hpp>
-#include <utils/utils.hpp>
-#include <rvector.h>
-#include <std_vector.hpp>
+
+#include "uwr/static_vector.hpp"
+#include "uwr/vector.hpp"
+#include "uwr/rvector.h"
+#include "uwr/std_vector.hpp"
+#include "uwr/vector_bs.hpp"
+
+#include "test_type/test_type.hpp"
+#include "utils/value.hpp"
 
 using namespace std;
 
@@ -54,7 +58,7 @@ using T = int;
 // using Vector = rvector<T>;
 using std_vector = std::vector<T>;
 using boost_vector_t = boost_vector<T>;
-using uwr_vector = uwr::vector<T>;
+using uwr_vector = uwr::vector_bs<T>;
 using rvector_t = rvector<T>;
 using uwr_std_vector = uwr::std_vector<T>;
 

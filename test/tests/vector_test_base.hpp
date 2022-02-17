@@ -1,8 +1,8 @@
 #pragma once
 
 #include "vector_test_base_fixture.hpp"
-#include <utils/utils.hpp>
-#include <list>
+
+#include "utils/random.hpp"
 
 TYPED_TEST(VectorTestBaseFixture, DefaultConstructor) {
     typename TestFixture::vector v;

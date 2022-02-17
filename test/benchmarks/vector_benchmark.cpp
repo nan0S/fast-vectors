@@ -1,26 +1,29 @@
+#include "vector_benchmark_base.hpp"
+
 #include <getopt.h>
 #include <unistd.h>
 #include <malloc.h>
-#include <jemalloc/jemalloc.h>
 #include <bits/getopt_ext.h>
-#include <test_type/test_type.hpp>
-#include <identifiers/identifiers.hpp>
-#include <boost/container/vector.hpp>
 #include <vector>
-#include <rvector.h>
-#include <vector_orig.hpp>
-#include <vector_orig_imp.hpp>
-#include <vector_switch.hpp>
-#include <vector_lin.hpp>
-#include <vector_bs.hpp>
-#include <vector_exp.hpp>
-#include <std_vector.hpp>
-#include <big_vector.hpp>
-#include <c_vector.hpp>
+
+#include <jemalloc/jemalloc.h>
+#include <boost/container/vector.hpp>
 #include <EASTL/vector.h>
 #include <folly/FBVector.h>
 
-#include "vector_benchmark_base.hpp"
+#include "uwr/rvector.h"
+#include "uwr/vector_orig.hpp"
+#include "uwr/vector_orig_imp.hpp"
+#include "uwr/vector_switch.hpp"
+#include "uwr/vector_lin.hpp"
+#include "uwr/vector_bs.hpp"
+#include "uwr/vector_exp.hpp"
+#include "uwr/std_vector.hpp"
+#include "uwr/big_vector.hpp"
+#include "uwr/c_vector.hpp"
+
+#include "test_type/test_type.hpp"
+#include "identifiers/identifiers.hpp"
 
 using namespace benchmark;
 
@@ -74,7 +77,7 @@ static  bool  DO_C_VECTOR_BENCH             =  1;
 /* turn off some vectors from even compiling */
 #define TURN_ON_STD_VECTOR_BENCH
 #define TURN_ON_BOOST_VECTOR_BENCH
-#define TURN_ON_EASTL_VECTOR_BENCH
+// #define TURN_ON_EASTL_VECTOR_BENCH
 #define TURN_ON_FOLLY_VECTOR_BENCH
 #define TURN_ON_RVECTOR_BENCH
 // #define TURN_ON_UWR_VECTOR_ORIG_BENCH

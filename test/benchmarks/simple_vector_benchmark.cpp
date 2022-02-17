@@ -1,16 +1,20 @@
 #include <iostream>
 #include <chrono>
 #include <functional>
-#include <benchmark/benchmark.h>
-#include <utils/utils.hpp>
-#include <test_type/test_type.hpp>
-#include <boost/container/vector.hpp>
 #include <vector>
-#include <vector.hpp>
-#include <rvector.h>
-#include <std_vector.hpp>
-#include <big_vector.hpp>
-#include <c_vector.hpp>
+
+#include <benchmark/benchmark.h>
+#include <boost/container/vector.hpp>
+
+#include "uwr/vector_bs.hpp"
+#include "uwr/rvector.h"
+#include "uwr/std_vector.hpp"
+#include "uwr/big_vector.hpp"
+#include "uwr/c_vector.hpp"
+
+#include "utils/value.hpp"
+#include "utils/random.hpp"
+#include "test_type/test_type.hpp"
 
 using namespace benchmark; 
 using args_t = std::vector<int64_t>;
@@ -37,7 +41,6 @@ static const args_t ASSIGN_ARG = { 50'000, 20 };
 static const args_t EMPLACE_ARG = { 200'000, 10 };
 // initial size of vector and number of erases in one iteration
 static const args_t ERASE_ARG = { 200'000, 10 };
-
 
 /* use the same number of iterations in all benchmarks */
 #define COMMON_ITERS 0
@@ -74,7 +77,7 @@ using boost_vector = boost::container::vector<T, boost::container::new_allocator
 template<class T>
 using rvector_t = rvector<T>;
 template<class T>
-using uwr_vector = uwr::vector<T>;
+using uwr_vector = uwr::vector_bs<T>;
 template<class T>
 using uwr_std_vector = uwr::std_vector<T>;
 template<class T>
@@ -481,13 +484,6 @@ int main(int argc, char** argv) {
         return 1;
     RunSpecifiedBenchmarks();
     Shutdown();
-
-    #ifdef UWR_TRACK
-    uwr::mem::counters::print();
-    #endif
-    #ifdef RVECTOR_TRACK
-    mm::counters::print();
-    #endif
 
     return 0;
 }

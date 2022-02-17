@@ -1,76 +1,67 @@
-CXX := g++
-VERSION := -std=c++17
-# check c++20, but write for at least c++17 compatibility
-# VERSION := -std=c++20
-
-# OFLAGS := -Ofast -march=native -flto -fomit-frame-pointer -s -DNDEBUG
-OFLAGS := -Ofast -march=native -flto -DNDEBUG
-TFLAGS := -O0 -march=native
-WFLAGS := -Wall -Wextra
-IFLAGS := -I include -I src -I include/container
-DFLAGS := -g -fno-omit-frame-pointer
-LDFLAGS = -pthread -lgtest -lbenchmark -lEASTL
-CXXFLAGS := $(VERSION) $(WFLAGS) $(IFLAGS) $(DFLAGS)
-
-SRC_DIR := src
-BUILD_DIR := build
-BIN_DIR := bin
-TEST_DIR := test
 INSTALL_DIR := /usr/local/include
 
-SOURCES := $(shell find $(SRC_DIR) -name '*.cpp')
-TSOURCES := $(shell find $(TEST_DIR) -name '*.cpp')
+CXX      := g++
+VERSION  := -std=c++17
+# check c++20, but write for at least c++17 compatibility
+# VERSION  := -std=c++20
+CXXFLAGS    := $(VERSION) -Wall -Wextra
+# BENCH_FLAGS := -Ofast -march=native -flto -DNDEBUG
+BENCH_FLAGS := -O0
+TEST_FLAGS  := -O0
 
-OBJECTS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(SOURCES))
-TARGETS := $(patsubst $(TEST_DIR)/%.cpp,$(BIN_DIR)/%,$(TSOURCES))
+INC := -Isrc -Iinclude
+LIB := -pthread -lgtest -lbenchmark -lEASTL -lfolly -ldl -lfmt
 
-DEPENDS := $(patsubst %.cpp,$(BUILD_DIR)/%.d,$(SOURCES))
-DEPENDS += $(patsubst %.cpp,$(BUILD_DIR)/%.d,$(TSOURCES))
-
-TESTS := $(filter $(BIN_DIR)/tests/%,$(TARGETS))
-BENCHMARKS := $(filter $(BIN_DIR)/benchmarks/%, $(TARGETS))
-TESTS := $(filter-out $(BIN_DIR)/tests/temp_test, $(TESTS)) # custom - filter out scratchpad test
+SRC  	  := $(shell find src -name '*.cpp')
+OBJ 	  := $(patsubst %.cpp, build/%.o, $(SRC))
+TSRC    := $(shell find test -name '*.cpp')
+TARGETS := $(patsubst test/%.cpp, bin/%, $(TSRC))
+DEP     := $(patsubst %.cpp, build/%.d, $(SRC)) + \
+			  $(patsubst %.cpp, build/%.d, $(TSRC))
+TEST    := $(filter bin/tests/%, $(TARGETS))
+TEST    := $(filter-out bin/tests/temp_test, $(TEST)) # filter out scratchpad test
+BENCH   := $(filter bin/benchmarks/%, $(TARGETS))
 
 .PHONY: clean
-.SECONDARY: $(patsubst %.d,%.o,$(DEPENDS)) # do not remove %.o files
+.SECONDARY: $(patsubst %.d,%.o,$(DEP)) # do not remove %.o files
 
 all: $(TARGETS)
 
 run-all: run-benchmarks run-tests
 
-run-benchmarks: $(BENCHMARKS)
-	@for benchmark in $(BENCHMARKS); do \
+run-benchmarks: $(BENCH)
+	@for benchmark in $(BENCH); do \
 		./$$benchmark --benchmark_color=yes --benchmark_counters_tabular=true; \
 		echo; \
 	done
 	
-run-tests: $(TESTS)
-	@for test in $(TESTS); do \
+run-test: $(TEST)
+	@for test in $(TEST); do \
 		./$$test --gtest_color=yes; \
 	done
 
-run-%: $(BIN_DIR)/benchmarks/%
+run-%: bin/benchmarks/%
 	@./$< --benchmark_color=yes --benchmark_counters_tabular=true
-run-%: $(BIN_DIR)/tests/%
+run-%: bin/tests/%
 	@./$< --gtest_color=yes
 
--include $(DEPENDS)
+-include $(DEP)
 
-$(BIN_DIR)/tests/%: $(BUILD_DIR)/$(TEST_DIR)/tests/%.o $(OBJECTS)
+bin/tests/%: build/test/tests/%.o $(OBJ)
 	@mkdir -p $(shell dirname $@)
-	$(CXX) $(CXXFLAGS) $(TFLAGS) -MMD -MP $< $(OBJECTS) -o $@ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $(TEST_FLAGS) -MMD -MP $< $(OBJ) -o $@ $(LIB)
 
-$(BIN_DIR)/benchmarks/%: $(BUILD_DIR)/$(TEST_DIR)/benchmarks/%.o $(OBJECTS)
+bin/benchmarks/%: build/test/benchmarks/%.o $(OBJ)
 	@mkdir -p $(shell dirname $@)
-	$(CXX) $(CXXFLAGS) $(OFLAGS) -MMD -MP $< $(OBJECTS) -o $@ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $(BENCH_FLAGS) -MMD -MP $< $(OBJ) -o $@ $(LIB)
 
-$(BUILD_DIR)/%.o: %.cpp
+build/%.o: %.cpp
 	@mkdir -p $(shell dirname $@)
-	$(CXX) $(CXXFLAGS) $(OFLAGS) -MMD -MP -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(BENCH_FLAGS) -MMD -MP -c $< -o $@ $(INC)
 
-$(BUILD_DIR)/$(TEST_DIR)/tests/%.o: $(TEST_DIR)/tests/%.cpp
+build/test/tests/%.o: test/tests/%.cpp
 	@mkdir -p $(shell dirname $@)
-	$(CXX) $(CXXFLAGS) $(TFLAGS) -MMD -MP -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(TEST_FLAGS) -MMD -MP -c $< -o $@ $(INC)
 
 install:
 	@echo Installing ...
@@ -88,4 +79,4 @@ format:
 	  clang-format -i *.cpp *.hpp *.c *.h)
 
 clean:
-	rm -rf $(BUILD_DIR) $(BIN_DIR)
+	rm -rf bin build compile_commands.json

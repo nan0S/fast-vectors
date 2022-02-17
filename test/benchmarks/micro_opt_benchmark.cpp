@@ -4,9 +4,12 @@
 #include <functional>
 
 #include <benchmark/benchmark.h>
-#include <utils/utils.hpp>
-#include <test_type/test_type.hpp>
-#include <static_vector.hpp>
+
+#include "uwr/static_vector.hpp"
+
+#include "utils/value.hpp"
+#include "utils/random.hpp"
+#include "test_type/test_type.hpp"
 
 using namespace benchmark; 
 

@@ -1,12 +1,12 @@
 #pragma once
 
-#include <vector_orig.hpp>
-#include <vector_orig_imp.hpp>
-#include <vector_switch.hpp>
-#include <vector_lin.hpp>
-#include <vector_bs.hpp>
-#include <vector_exp.hpp>
-#include <rvector.h>
+#include "uwr/vector_orig.hpp"
+#include "uwr/vector_orig_imp.hpp"
+#include "uwr/vector_switch.hpp"
+#include "uwr/vector_lin.hpp"
+#include "uwr/vector_bs.hpp"
+#include "uwr/vector_exp.hpp"
+#include "uwr/rvector.h"
 
 namespace uwr {
 
@@ -55,5 +55,5 @@ struct is_rvector<rvector<T>> {
     static constexpr bool value = true;
 };
 
-}
+} // namespace uwr
 
