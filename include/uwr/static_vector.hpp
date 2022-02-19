@@ -47,8 +47,12 @@ public:
     constexpr static_vector(size_type n, const T& val);
     template<class InIt, class = typename std::iterator_traits<InIt>::value_type>
     constexpr static_vector(InIt first, InIt last);
-    constexpr static_vector(const static_vector& x);
-    constexpr static_vector(static_vector&& x) noexcept;
+    constexpr static_vector(const static_vector& other);
+    template<len_t C_>
+    constexpr static_vector(const static_vector<T, C_>& other);
+    constexpr static_vector(static_vector&& other) noexcept;
+    template<len_t C_>
+    constexpr static_vector(static_vector<T, C_>&& other) noexcept;
     constexpr static_vector(std::initializer_list<T> ilist);
     #if CPP_ABOVE_17
     constexpr
@@ -56,7 +60,11 @@ public:
     ~static_vector();
 
     UWR_FORCEINLINE constexpr static_vector& operator=(const static_vector& other) noexcept;
+    template<len_t C_>
+    UWR_FORCEINLINE constexpr static_vector& operator=(const static_vector<T, C_>& other) noexcept;
     UWR_FORCEINLINE constexpr static_vector& operator=(static_vector&& other) noexcept;
+    template<len_t C_>
+    UWR_FORCEINLINE constexpr static_vector& operator=(static_vector<T, C_>&& other) noexcept;
     UWR_FORCEINLINE constexpr static_vector& operator=(std::initializer_list<T> ilist) noexcept;
 
     UWR_FORCEINLINE constexpr iterator begin() noexcept;
@@ -111,7 +119,8 @@ public:
     constexpr iterator erase(const_iterator pos);
     constexpr iterator erase(const_iterator first, const_iterator last);
 
-    UWR_FORCEINLINE constexpr void swap(static_vector& other);
+    template<len_t C_>
+    UWR_FORCEINLINE constexpr void swap(static_vector<T, C_>& other);
     UWR_FORCEINLINE constexpr void clear() noexcept;
 
     template<class... Args>
@@ -137,7 +146,11 @@ private:
     constexpr void priv_assign(AssignProxy&& proxy);
     template<class InsertProxy>
     constexpr iterator priv_insert(const_iterator pos, InsertProxy&& proxy);
-    constexpr void priv_swap(static_vector& shorter, static_vector& longer) const;
+    template<len_t C1, len_t C2>
+    constexpr void priv_swap(static_vector<T, C1>& shorter, static_vector<T, C2>& longer) const;
+
+    template<class T_, len_t C_>
+    friend class static_vector;
 
 private:
     typename std::aligned_storage<sizeof(T), alignof(T)>::type m_data[C];
@@ -179,8 +192,24 @@ static_vector<T, C>::static_vector(const static_vector& x)
 }
 
 template<class T, len_t C>
+template<len_t C_>
+constexpr
+static_vector<T, C>::static_vector(const static_vector<T, C_>& x)
+    : m_size(x.m_size) {
+    mem::ucopy(data(), x.begin(), x.size());
+}
+
+template<class T, len_t C>
 constexpr
 static_vector<T, C>::static_vector(static_vector&& x) noexcept
+    : m_size(x.m_size) {
+    mem::umove(data(), x.begin(), x.size());
+}
+
+template<class T, len_t C>
+template<len_t C_>
+constexpr
+static_vector<T, C>::static_vector(static_vector<T, C_>&& x) noexcept
     : m_size(x.m_size) {
     mem::umove(data(), x.begin(), x.size());
 }
@@ -202,17 +231,33 @@ static_vector<T, C>::~static_vector() {
 
 template<class T, len_t C>
 constexpr static_vector<T, C>&
-static_vector<T, C>::operator=(const static_vector<T, C>& other) noexcept {
+static_vector<T, C>::operator=(const static_vector& other) noexcept {
     if (UWR_LIKELY(this != &other))
         priv_copy_assign(other.begin(), other.end(), other.m_size);
     return *this;
 }
 
 template<class T, len_t C>
+template<len_t C_>
 constexpr static_vector<T, C>&
-static_vector<T, C>::operator=(static_vector<T, C>&& other) noexcept {
+static_vector<T, C>::operator=(const static_vector<T, C_>& other) noexcept {
+    priv_copy_assign(other.begin(), other.end(), other.m_size);
+    return *this;
+}
+
+template<class T, len_t C>
+constexpr static_vector<T, C>&
+static_vector<T, C>::operator=(static_vector&& other) noexcept {
     if (UWR_LIKELY(this != &other))
         priv_move_assign(other.begin(), other.end(), other.m_size);
+    return *this;
+}
+
+template<class T, len_t C>
+template<len_t C_>
+constexpr static_vector<T, C>&
+static_vector<T, C>::operator=(static_vector<T, C_>&& other) noexcept {
+    priv_move_assign(other.begin(), other.end(), other.m_size);
     return *this;
 }
 
@@ -556,8 +601,9 @@ static_vector<T, C>::erase(const_iterator first, const_iterator last) {
 #endif
 
 template<class T, len_t C>
+template<len_t C_>
 constexpr void
-static_vector<T, C>::swap(static_vector<T, C>& other) {
+static_vector<T, C>::swap(static_vector<T, C_>& other) {
     if (m_size < other.m_size)
         priv_swap(*this, other);
     else
@@ -704,8 +750,9 @@ static_vector<T, C>::priv_insert(const_iterator pos, InsertProxy&& proxy) {
 }
 
 template<class T, len_t C>
+template<len_t C1, len_t C2>
 constexpr void
-static_vector<T, C>::priv_swap(static_vector<T, C>& shorter, static_vector<T, C>& longer) const {
+static_vector<T, C>::priv_swap(static_vector<T, C1>& shorter, static_vector<T, C2>& longer) const {
     T* const s_begin = shorter.begin();
     T* const s_end = shorter.end();
     T* const l_begin = longer.begin();

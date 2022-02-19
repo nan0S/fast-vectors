@@ -3,6 +3,7 @@
 #include <random>
 
 namespace Random {
+
     extern std::mt19937 rng;
 
     template<class T>
@@ -27,7 +28,7 @@ namespace Random {
      */
     template<class T>
     Int<T> rand(T n) {
-        return dist_t<T>{0, n - 1}(rng);
+        return dist_t<T>{0, static_cast<T>(n - 1)}(rng);
     }
     
     /*
@@ -35,7 +36,7 @@ namespace Random {
      */
     template<class T>
     Int<T> rand(T a, T b) {
-        return dist_t<T>{a, b - 1}(rng);
+        return dist_t<T>{a, static_cast<T>(b - 1)}(rng);
     }
 
     /*
@@ -45,5 +46,6 @@ namespace Random {
     N_Int<T> rand(T a, T b) {
         return dist_t<T>{a, b}(rng);
     }
+
 }
 

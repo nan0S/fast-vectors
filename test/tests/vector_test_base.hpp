@@ -1068,7 +1068,7 @@ TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithPointerInMiddleTo
 
     for (const size_type& size : this->GetAllSizes()) {
         auto v = this->GetVectorOfSize(size);
-        const size_type pos = Random::rand<size_type>(1, size - 1);
+        const size_type pos = Random::rand<size_type>(1, size);
         typename TestFixture::value_type a[0];
         
         this->InsertMultipleElementsByRange(v, pos, a, a);
@@ -1080,7 +1080,7 @@ TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithCotinuousIterator
 
     for (const size_type& size : this->GetAllSizes()) {
         auto v = this->GetVectorOfSize(size);
-        const size_type pos = Random::rand<size_type>(1, size - 1);
+        const size_type pos = Random::rand<size_type>(1, size);
         std::vector<typename TestFixture::value_type> stl_vec;
         
         this->InsertMultipleElementsByRange(v, pos,
@@ -1093,7 +1093,8 @@ TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByRangeWithNonContinuousIter
 
     for (const size_type& size : this->GetAllSizes()) {
         auto v = this->GetVectorOfSize(size);
-        const size_type pos = Random::rand<size_type>(1, size - 1);
+        // const size_type pos = Random::rand<size_type>(1, size);
+        const size_type pos = 1;
         std::list<typename TestFixture::value_type> stl_list;
         
         this->InsertMultipleElementsByRange(v, pos,
@@ -1212,7 +1213,7 @@ TYPED_TEST(VectorTestBaseFixture, InsertZeroElementsByInitializerListInMiddleToN
     for (const size_type& size : this->GetAllSizes()) {
         auto v = this->GetVectorOfSize(size);
         std::initializer_list<typename TestFixture::value_type> ilist;
-        const size_type pos = Random::rand<size_type>(1, size - 1);
+        const size_type pos = Random::rand<size_type>(1, size);
         
         this->InsertMultipleElementsByInitializerList(v, pos, ilist);
     }

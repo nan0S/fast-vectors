@@ -5,9 +5,9 @@ CXX      := g++
 # check c++20, but write for at least c++17 compatibility
 VERSION  := -std=c++20
 CXXFLAGS    := $(VERSION) -Wall -Wextra
-BENCH_FLAGS := -O3 -DNDEBUG
-# BENCH_FLAGS := -O0
-TEST_FLAGS  := -O0
+# BENCH_FLAGS := -O3 -DNDEBUG
+BENCH_FLAGS := -O0
+TEST_FLAGS  := -O0 -ggdb -fno-omit-frame-pointer -fno-inline-functions
 
 INC := -Isrc -Iinclude
 LIB := -pthread -lgtest -lbenchmark -lEASTL -lfolly -ldl -lfmt -ljemalloc
