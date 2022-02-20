@@ -772,49 +772,49 @@ uwr::mem::is_trivially_relocatable_v<uwr::static_vector<T, C>> =
 /*
  * non-member operators 
  */
-template<class T, len_t C>
+template<class T, len_t C1, len_t C2>
 UWR_FORCEINLINE constexpr bool
-operator==(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
+operator==(const static_vector<T, C1>& lhs, const static_vector<T, C2>& rhs) {
     return lhs.size() == rhs.size() &&
            std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
-template<class T, len_t C>
+template<class T, len_t C1, len_t C2>
 UWR_FORCEINLINE constexpr bool
-operator!=(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
+operator!=(const static_vector<T, C1>& lhs, const static_vector<T, C2>& rhs) {
     return !(lhs == rhs);
 }
 
-template<class T, len_t C>
+template<class T, len_t C1, len_t C2>
 UWR_FORCEINLINE constexpr bool
-operator<(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
+operator<(const static_vector<T, C1>& lhs, const static_vector<T, C2>& rhs) {
     return std::lexicographical_compare(lhs.begin(), lhs.end(),
                                         rhs.begin(), rhs.end());
 }
 
-template<class T, len_t C>
+template<class T, len_t C1, len_t C2>
 UWR_FORCEINLINE constexpr bool
-operator<=(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
+operator<=(const static_vector<T, C1>& lhs, const static_vector<T, C2>& rhs) {
     return !(rhs < lhs);
 }
 
-template<class T, len_t C>
+template<class T, len_t C1, len_t C2>
 UWR_FORCEINLINE constexpr bool
-operator>(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
+operator>(const static_vector<T, C1>& lhs, const static_vector<T, C2>& rhs) {
     return rhs < lhs;
 }
 
-template<class T, len_t C>
+template<class T, len_t C1, len_t C2>
 UWR_FORCEINLINE constexpr bool
-operator>=(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
+operator>=(const static_vector<T, C1>& lhs, const static_vector<T, C2>& rhs) {
     return !(lhs < rhs);
 }
 
 #if CPP_ABOVE_17
 
-template<class T, len_t C>
+template<class T, len_t C1, len_t C2>
 UWR_FORCEINLINE constexpr auto
-operator<=>(const static_vector<T, C>& lhs, const static_vector<T, C>& rhs) {
+operator<=>(const static_vector<T, C1>& lhs, const static_vector<T, C2>& rhs) {
     return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(),
                                                   rhs.begin(), rhs.end(),
                                                   mem::synth_three_way{});
