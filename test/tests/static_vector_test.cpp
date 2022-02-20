@@ -41,7 +41,7 @@ TYPED_TEST(StaticVectorTestFixture, IsCapacityConstantAndCorrect) {
     EXPECT_EQ(v.capacity(), C);
 }
 
-TYPED_TEST(StaticVectorTestFixture, CopyConstructVectorWithDifferentCapacity) {
+TYPED_TEST(StaticVectorTestFixture, CopyConstructWithDifferentCapacity) {
     auto v = this->GetVectorOfSize(C2);
 
     uwr::static_vector<typename TypeParam::value_type, C2> v2(v);
@@ -51,7 +51,7 @@ TYPED_TEST(StaticVectorTestFixture, CopyConstructVectorWithDifferentCapacity) {
         EXPECT_EQ(v[i], v2[i]);
 }
 
-TYPED_TEST(StaticVectorTestFixture, MoveConstructVectorWithDifferentCapacity) {
+TYPED_TEST(StaticVectorTestFixture, MoveConstructWithDifferentCapacity) {
     auto v = this->GetVectorOfSize(C2);
 
     uwr::static_vector<typename TypeParam::value_type, C2> v2(std::move(v));
@@ -61,7 +61,7 @@ TYPED_TEST(StaticVectorTestFixture, MoveConstructVectorWithDifferentCapacity) {
         EXPECT_EQ(v2[i], this->GetValue(i));
 }
 
-TYPED_TEST(StaticVectorTestFixture, CopyAssignVectorWithDifferentCapacity) {
+TYPED_TEST(StaticVectorTestFixture, CopyAssignWithDifferentCapacity) {
     auto v = this->GetVectorOfSize(C2);
     uwr::static_vector<typename TypeParam::value_type, C2> v2;
 
@@ -72,7 +72,7 @@ TYPED_TEST(StaticVectorTestFixture, CopyAssignVectorWithDifferentCapacity) {
         EXPECT_EQ(v[i], v2[i]);
 }
 
-TYPED_TEST(StaticVectorTestFixture, MoveAssignVectorWithDifferentCapacity) {
+TYPED_TEST(StaticVectorTestFixture, MoveAssignWithDifferentCapacity) {
     auto v = this->GetVectorOfSize(C2);
     uwr::static_vector<typename TypeParam::value_type, C2> v2;
 
@@ -83,7 +83,7 @@ TYPED_TEST(StaticVectorTestFixture, MoveAssignVectorWithDifferentCapacity) {
         EXPECT_EQ(v2[i], this->GetValue(i));
 }
 
-TYPED_TEST(StaticVectorTestFixture, SwapVectorWithDifferentCapacity) {
+TYPED_TEST(StaticVectorTestFixture, SwapWithDifferentCapacity) {
     auto v = this->GetVectorOfSize(C2);
     uwr::static_vector<typename TypeParam::value_type, C2> v2(C2);
     for (typename TestFixture::size_type i = 0; i < C2; ++i)

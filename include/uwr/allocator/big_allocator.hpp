@@ -25,15 +25,15 @@ public:
     UWR_FORCEINLINE constexpr pointer alloc(size_type n) const;
     UWR_FORCEINLINE constexpr void dealloc(pointer data, size_type n) const;
     UWR_FORCEINLINE constexpr void realloc(size_type req);
+    template<class GF>
     UWR_FORCEINLINE constexpr void grow(size_type req);
     UWR_FORCEINLINE constexpr bool expand_or_dealloc_and_alloc_raw(size_type req);
 
 private:
-    UWR_FORCEINLINE constexpr size_type next_capacity(size_type req) const; 
-    constexpr void do_realloc(size_type req, true_type);
-    constexpr void do_realloc(size_type req, false_type);
-    constexpr bool do_expand_or_dealloc_and_alloc_raw(size_type req, true_type);
-    constexpr bool do_expand_or_dealloc_and_alloc_raw(size_type req, false_type);
+    constexpr void realloc(size_type req, true_type);
+    constexpr void realloc(size_type req, false_type);
+    constexpr bool expand_or_dealloc_and_alloc_raw(size_type req, true_type);
+    constexpr bool expand_or_dealloc_and_alloc_raw(size_type req, false_type);
 };
 
 template<class T>
@@ -80,7 +80,7 @@ constexpr void
 big_allocator<T>::realloc(size_type req) {
     req = fix_capacity(req);
     if (UWR_LIKELY(!!this->m_capacity)) {
-        do_realloc(req, is_trivially_relocatable<T>());
+        realloc(req, is_trivially_relocatable<T>());
     }
     else {
         this->m_data = alloc(req);
@@ -90,7 +90,7 @@ big_allocator<T>::realloc(size_type req) {
 
 template<class T>
 constexpr void
-big_allocator<T>::do_realloc(size_type req, true_type) {
+big_allocator<T>::realloc(size_type req, true_type) {
     UWR_ASSERT(req > this->m_capacity);
     UWR_ASSERT(req == fix_capacity(req));
 
@@ -102,7 +102,7 @@ big_allocator<T>::do_realloc(size_type req, true_type) {
 
 template<class T>
 constexpr void
-big_allocator<T>::do_realloc(size_type req, false_type) {
+big_allocator<T>::realloc(size_type req, false_type) {
     UWR_ASSERT(req > this->m_capacity);
     UWR_ASSERT(req == fix_capacity(req));
 
@@ -119,15 +119,10 @@ big_allocator<T>::do_realloc(size_type req, false_type) {
 }
 
 template<class T>
+template<class GF>
 constexpr void
 big_allocator<T>::grow(size_type req) {
-    realloc(next_capacity(req));
-}
-
-template<class T>
-constexpr typename big_allocator<T>::size_type
-big_allocator<T>::next_capacity(size_type req) const {
-    return std::max(2 * this->m_capacity, req);
+    realloc(std::max(GF::num * this->m_capacity / GF::den, req));
 }
 
 template<class T>
@@ -137,7 +132,7 @@ big_allocator<T>::expand_or_dealloc_and_alloc_raw(size_type req) {
 
     req = fix_capacity(req);
     if (UWR_LIKELY(!!this->m_data)) {
-        return do_expand_or_dealloc_and_alloc_raw(req,
+        return expand_or_dealloc_and_alloc_raw(req,
                 is_trivially_relocatable<T>());
     }
     else {
@@ -149,7 +144,7 @@ big_allocator<T>::expand_or_dealloc_and_alloc_raw(size_type req) {
 
 template<class T>
 constexpr bool
-big_allocator<T>::do_expand_or_dealloc_and_alloc_raw(size_type req, true_type) {
+big_allocator<T>::expand_or_dealloc_and_alloc_raw(size_type req, true_type) {
     UWR_ASSERT(req > this->m_capacity);
     UWR_ASSERT(req == fix_capacity(req));
 
@@ -170,7 +165,7 @@ big_allocator<T>::do_expand_or_dealloc_and_alloc_raw(size_type req, true_type) {
 
 template<class T>
 constexpr bool
-big_allocator<T>::do_expand_or_dealloc_and_alloc_raw(size_type req, false_type) {
+big_allocator<T>::expand_or_dealloc_and_alloc_raw(size_type req, false_type) {
     UWR_ASSERT(req > this->m_capacity);
     UWR_ASSERT(req == fix_capacity(req));
 

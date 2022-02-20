@@ -23,13 +23,13 @@ public:
     UWR_FORCEINLINE constexpr pointer alloc(size_type n) const;
     UWR_FORCEINLINE constexpr void dealloc(pointer data, size_type n) const;
     UWR_FORCEINLINE constexpr void realloc(size_type req);
+    template<class GF>
     UWR_FORCEINLINE constexpr void grow(size_type req);
     constexpr bool expand_or_dealloc_and_alloc_raw(size_type req);
 
 private:
-    UWR_FORCEINLINE constexpr T* do_realloc(size_type req, true_type);
-    constexpr T* do_realloc(size_type req, false_type);
-    UWR_FORCEINLINE constexpr size_type next_capacity(size_type req) const;
+    UWR_FORCEINLINE constexpr T* realloc(size_type req, true_type);
+    constexpr T* realloc(size_type req, false_type);
 };
 
 template<class T>
@@ -69,20 +69,20 @@ template<class T>
 constexpr void
 malloc_allocator<T>::realloc(size_type req) {
     req = fix_capacity(req);
-    this->m_data = do_realloc(req, is_trivially_relocatable<T>());
+    this->m_data = realloc(req, is_trivially_relocatable<T>());
     this->m_capacity = req;
 }
 
 template<class T>
 constexpr T*
-malloc_allocator<T>::do_realloc(size_type req, true_type) {
+malloc_allocator<T>::realloc(size_type req, true_type) {
     return (pointer)::realloc(
             (void*)this->m_data, req * sizeof(T));
 }
 
 template<class T>
 constexpr T*
-malloc_allocator<T>::do_realloc(size_type req, false_type) {
+malloc_allocator<T>::realloc(size_type req, false_type) {
     pointer new_data = alloc(req);
     umove_and_destroy(new_data, this->m_data, this->m_size);
     dealloc(this->m_data, this->m_capacity);
@@ -91,15 +91,10 @@ malloc_allocator<T>::do_realloc(size_type req, false_type) {
 }
 
 template<class T>
+template<class GF>
 constexpr void
 malloc_allocator<T>::grow(size_type req) {
-    realloc(next_capacity(req));
-}
-
-template<class T>
-constexpr typename malloc_allocator<T>::size_type
-malloc_allocator<T>::next_capacity(size_type req) const {
-    return std::max(2 * this->m_capacity, req);
+    realloc(std::max(GF::num * this->m_capacity / GF::den, req));
 }
 
 template<class T>

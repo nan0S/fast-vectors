@@ -65,6 +65,7 @@ public:
     pointer alloc(size_type n) const;
     void dealloc(pointer data, size_type n) const;
     void realloc(size_type req);
+    template<class GF>
     void grow(size_type req);
     bool expand_or_dealloc_and_alloc_raw(size_type req);
 

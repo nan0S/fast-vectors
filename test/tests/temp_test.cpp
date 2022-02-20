@@ -38,21 +38,36 @@ using T = int;
 using std_vector = std::vector<T>;
 using boost_vector_t = boost_vector<T>;
 using uwr_vector = uwr::vector<T>;
-using uwr_c_vector = uwr::vector<T, uwr::mem::malloc_allocator<T>>;
+using uwr_c_vector = uwr::vector<T, uwr::default_growth_factor, uwr::mem::malloc_allocator<T>>;
 
 constexpr long ps = 4096;
 
+template<class V>
+void do_push(int times, V& v) {
+   auto lc = v.capacity();
+   cout << lc << endl;
+   for (int i = 0; i < times; ++i)
+   {
+      v.push_back(1);
+      if (lc != v.capacity())
+      {
+         lc = v.capacity();
+         cout << lc << endl;
+      }
+   }
+}
+
 int main() {
-    using uwr::static_vector;
-    {
-       static_vector<test_type, 5> v1(5);
-       cout << test_type::instances << endl;
-       static_vector<test_type, 5> v2(v1);
-       cout << test_type::instances << endl;
-       print(v1);
-       print(v2);
-    }
-    cout << test_type::instances << endl;
+    using GF1 = uwr::growth_factor_2_0;
+    using GF2 = uwr::growth_factor_1_5;
+    using uv1 = uwr::vector<T, GF1>;
+    using uv2 = uwr::vector<T, GF2>;
+
+    uv1 v1(10);
+    do_push(100, v1);
+    uv2& v2 = v1;
+    do_push(200, v2);
+    do_push(200, v1);
 
     return 0;
 }

@@ -100,7 +100,7 @@ using folly_vector = folly::fbvector<T>;
 template<class T>
 using uwr_vector = uwr::vector<T>;
 template<class T>
-using uwr_c_vector = uwr::vector<T, uwr::mem::malloc_allocator<T>>;
+using uwr_c_vector = uwr::vector<T, uwr::default_growth_factor, uwr::mem::malloc_allocator<T>>;
 
 /*
  * seems that eastl vector needs it
