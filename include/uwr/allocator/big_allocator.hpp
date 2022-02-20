@@ -24,14 +24,15 @@ public:
     UWR_FORCEINLINE constexpr size_type fix_capacity(size_type n) const;
     UWR_FORCEINLINE constexpr pointer alloc(size_type n) const;
     UWR_FORCEINLINE constexpr void dealloc(pointer data, size_type n) const;
-    UWR_FORCEINLINE constexpr void realloc(size_type req);
+    UWR_FORCEINLINE constexpr void expand(size_type req);
+    UWR_FORCEINLINE constexpr void shrink(size_type req);
     template<class GF>
     UWR_FORCEINLINE constexpr void grow(size_type req);
     UWR_FORCEINLINE constexpr bool expand_or_dealloc_and_alloc_raw(size_type req);
 
 private:
-    constexpr void realloc(size_type req, true_type);
-    constexpr void realloc(size_type req, false_type);
+    constexpr void expand(size_type req, true_type);
+    constexpr void expand(size_type req, false_type);
     constexpr bool expand_or_dealloc_and_alloc_raw(size_type req, true_type);
     constexpr bool expand_or_dealloc_and_alloc_raw(size_type req, false_type);
 };
@@ -77,10 +78,10 @@ big_allocator<T>::dealloc(pointer data, size_type n) const {
 
 template<class T>
 constexpr void
-big_allocator<T>::realloc(size_type req) {
+big_allocator<T>::expand(size_type req) {
     req = fix_capacity(req);
     if (UWR_LIKELY(!!this->m_capacity)) {
-        realloc(req, is_trivially_relocatable<T>());
+        expand(req, is_trivially_relocatable<T>());
     }
     else {
         this->m_data = alloc(req);
@@ -90,8 +91,13 @@ big_allocator<T>::realloc(size_type req) {
 
 template<class T>
 constexpr void
-big_allocator<T>::realloc(size_type req, true_type) {
-    UWR_ASSERT(req > this->m_capacity);
+big_allocator<T>::shrink(size_type req) {
+    expand(req);
+}
+
+template<class T>
+constexpr void
+big_allocator<T>::expand(size_type req, true_type) {
     UWR_ASSERT(req == fix_capacity(req));
 
     this->m_data = (pointer)mremap((void*)this->m_data,
@@ -102,8 +108,7 @@ big_allocator<T>::realloc(size_type req, true_type) {
 
 template<class T>
 constexpr void
-big_allocator<T>::realloc(size_type req, false_type) {
-    UWR_ASSERT(req > this->m_capacity);
+big_allocator<T>::expand(size_type req, false_type) {
     UWR_ASSERT(req == fix_capacity(req));
 
     pointer new_data = (pointer)mremap(this->m_data,
@@ -122,7 +127,7 @@ template<class T>
 template<class GF>
 constexpr void
 big_allocator<T>::grow(size_type req) {
-    realloc(std::max(GF::num * this->m_capacity / GF::den, req));
+    expand(std::max(GF::num * this->m_capacity / GF::den, req));
 }
 
 template<class T>

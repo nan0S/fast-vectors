@@ -370,13 +370,14 @@ template<class T, class GF, class A>
 constexpr void
 vector<T, GF, A>::reserve(size_type n) noexcept {
     if (UWR_LIKELY(n > capacity()))
-        m_alloc.realloc(n);
+        m_alloc.expand(n);
 }
 
 template<class T, class GF, class A>
 constexpr void
 vector<T, GF, A>::shrink_to_fit() noexcept {
-    // NOTE: now we don't shrink, maybe in the future
+    if (UWR_LIKELY(size() != capacity()))
+        m_alloc.shrink(size());
 }
 
 template<class T, class GF, class A>

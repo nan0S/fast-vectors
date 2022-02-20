@@ -19,7 +19,8 @@ public:
     UWR_FORCEINLINE constexpr size_type fix_capacity(size_type n) const;
     UWR_FORCEINLINE constexpr pointer alloc(size_type n) const;
     UWR_FORCEINLINE constexpr void dealloc(pointer data, size_type n) const;
-    constexpr void realloc(size_type req);
+    constexpr void expand(size_type req);
+    UWR_FORCEINLINE constexpr void shrink(size_type req);
     template<class GF>
     UWR_FORCEINLINE constexpr void grow(size_type req);
     constexpr bool expand_or_dealloc_and_alloc_raw(size_type req);
@@ -60,7 +61,7 @@ std_allocator<T>::dealloc(pointer data, UWR_UNUSED size_type n) const {
 
 template<class T>
 constexpr void
-std_allocator<T>::realloc(size_type req) {
+std_allocator<T>::expand(size_type req) {
     req = fix_capacity(req);
 
     pointer new_data = alloc(req);
@@ -72,10 +73,16 @@ std_allocator<T>::realloc(size_type req) {
 }
 
 template<class T>
+constexpr void
+std_allocator<T>::shrink(size_type req) {
+    expand(req);
+}
+
+template<class T>
 template<class GF>
 constexpr void
 std_allocator<T>::grow(size_type req) {
-    realloc(std::max(GF::num * this->m_capacity / GF::den, req));
+    expand(std::max(GF::num * this->m_capacity / GF::den, req));
 }
 
 template<class T>
