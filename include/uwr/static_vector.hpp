@@ -836,6 +836,12 @@ swap(uwr::static_vector<T, C>& x, uwr::static_vector<T, C>& y) {
     x.swap(y);
 }
 
+template<class T, uwr::len_t C1, uwr::len_t C2>
+constexpr void
+swap(uwr::static_vector<T, C1>& x, uwr::static_vector<T, C2>& y) {
+    x.swap(y);
+}
+
 #if CPP_ABOVE_17
 
 template<class T, uwr::len_t C, class U>

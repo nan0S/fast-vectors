@@ -99,6 +99,22 @@ TYPED_TEST(StaticVectorTestFixture, SwapWithDifferentCapacity) {
        EXPECT_EQ(v2[i], this->GetValue(i));
 }
 
+TYPED_TEST(StaticVectorTestFixture, StdSwapWithDifferentCapacity) {
+    auto v = this->GetVectorOfSize(C2);
+    uwr::static_vector<typename TypeParam::value_type, C2> v2(C2);
+    for (typename TestFixture::size_type i = 0; i < C2; ++i)
+       v2[i] = this->GetValue(C2 - 1 - i);
+
+    std::swap(v, v2);
+
+    EXPECT_EQ(v.size(), C2);
+    EXPECT_EQ(v2.size(), C2);
+    for (typename TestFixture::size_type i = 0; i < C2; ++i)
+       EXPECT_EQ(v[i], this->GetValue(C2 - 1 - i));
+    for (typename TestFixture::size_type i = 0; i < C2; ++i)
+       EXPECT_EQ(v2[i], this->GetValue(i));
+}
+
 TYPED_TEST(StaticVectorTestFixture, OperatorsWithDifferentCapacity) {
     auto v1 = this->GetVectorOfSize(C2);
     uwr::static_vector<typename TypeParam::value_type, C2> v2 = v1;
