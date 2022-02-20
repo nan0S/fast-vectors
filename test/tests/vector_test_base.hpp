@@ -385,12 +385,22 @@ TYPED_TEST(VectorTestBaseFixture, ReserveWithNonEmptyVector) {
 }
 
 TYPED_TEST(VectorTestBaseFixture, ShrinkToFit) {
+    using size_type = typename TestFixture::size_type;
+
     for (const auto& size : this->GetAllSizes()) {
-        typename TestFixture::vector v(size);
+        auto v = this->GetVectorOfSize(size);
+        const auto val = this->GetValue(13);
+        const size_type ins = 2 * size;
+        for (size_type i = 0; i < ins; ++i)
+           v.push_back(val);
 
         v.shrink_to_fit();
 
         EXPECT_GE(v.capacity(), v.size());
+        for (size_type i = 0; i < size; ++i)
+           EXPECT_EQ(v[i], this->GetValue(i));
+        for (size_type i = 0; i < ins; ++i)
+            EXPECT_EQ(v[size + i], val);
     }
 }
 
@@ -1639,21 +1649,6 @@ TYPED_TEST(VectorTestBaseFixture, EraseIfByValueMultipleValuesInOneBlockInMiddle
         }
     }
 }
-
-// TODO: remove
-// TYPED_TEST(VectorTestBaseFixture, EraseIfByValueMultipleValuesInOneBlockFromNonEmptyVector) {
-    // typename TestFixture::vector v {
-        // this->GetValue(0), this->GetValue(2), this->GetValue(2), this->GetValue(2)
-    // };
-    // const auto save = v;
-
-    // auto count = std::erase_if(v, [this](const typename TestFixture::value_type& x){
-        // return x == this->GetValue(2);
-    // });
-
-    // ASSERT_EQ(count, 3);
-    // this->ExpectErasedInAt(v, 1, 3, save);
-// }
 
 TYPED_TEST(VectorTestBaseFixture, EraseIfByValueMultipleValuesScatteredFromNonEmptyVector) {
     typename TestFixture::vector v {

@@ -57,17 +57,19 @@ void do_push(int times, V& v) {
    }
 }
 
-int main() {
-    using GF1 = uwr::growth_factor_2_0;
-    using GF2 = uwr::growth_factor_1_5;
-    using uv1 = uwr::vector<T, GF1>;
-    using uv2 = uwr::vector<T, GF2>;
+template<class V>
+void info(V& v)
+{
+   cout << "cap=" << v.capacity() << ",len=" << v.size() << endl;
+}
 
-    uv1 v1(10);
-    do_push(100, v1);
-    uv2& v2 = v1;
-    do_push(200, v2);
-    do_push(200, v1);
+int main() {
+   uwr_vector v(10);
+   do_push(10, v);
+   info(v);
+   v.shrink_to_fit();
+   info(v);
+
 
     return 0;
 }
