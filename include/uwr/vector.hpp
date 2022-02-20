@@ -741,49 +741,49 @@ uwr::mem::is_trivially_relocatable_v<uwr::vector<T, GF, A>> =
 /*
  * non-member operators 
  */
-template<class T, class GF, class A>
+template<class T, class GF1, class GF2, class A>
 UWR_FORCEINLINE constexpr bool
-operator==(const vector<T, GF, A>& lhs, const vector<T, GF, A>& rhs) {
+operator==(const vector<T, GF1, A>& lhs, const vector<T, GF2, A>& rhs) {
     return lhs.size() == rhs.size() &&
            std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
-template<class T, class GF, class A>
+template<class T, class GF1, class GF2, class A>
 UWR_FORCEINLINE constexpr bool
-operator!=(const vector<T, GF, A>& lhs, const vector<T, GF, A>& rhs) {
+operator!=(const vector<T, GF1, A>& lhs, const vector<T, GF2, A>& rhs) {
     return !(lhs == rhs);
 }
 
-template<class T, class GF, class A>
+template<class T, class GF1, class GF2, class A>
 UWR_FORCEINLINE constexpr bool
-operator<(const vector<T, GF, A>& lhs, const vector<T, GF, A>& rhs) {
+operator<(const vector<T, GF1, A>& lhs, const vector<T, GF2, A>& rhs) {
     return std::lexicographical_compare(lhs.begin(), lhs.end(),
                                         rhs.begin(), rhs.end());
 }
 
-template<class T, class GF, class A>
+template<class T, class GF1, class GF2, class A>
 UWR_FORCEINLINE constexpr bool
-operator<=(const vector<T, GF, A>& lhs, const vector<T, GF, A>& rhs) {
+operator<=(const vector<T, GF1, A>& lhs, const vector<T, GF2, A>& rhs) {
     return !(rhs < lhs);
 }
 
-template<class T, class GF, class A>
+template<class T, class GF1, class GF2, class A>
 UWR_FORCEINLINE constexpr bool
-operator>(const vector<T, GF, A>& lhs, const vector<T, GF, A>& rhs) {
+operator>(const vector<T, GF1, A>& lhs, const vector<T, GF2, A>& rhs) {
     return rhs < lhs;
 }
 
-template<class T, class GF, class A>
+template<class T, class GF1, class GF2, class A>
 UWR_FORCEINLINE constexpr bool
-operator>=(const vector<T, GF, A>& lhs, const vector<T, GF, A>& rhs) {
+operator>=(const vector<T, GF1, A>& lhs, const vector<T, GF2, A>& rhs) {
     return !(lhs < rhs);
 }
 
 #if CPP_ABOVE_17
 
-template<class T, class GF, class A>
+template<class T, class GF1, class GF2, class A>
 UWR_FORCEINLINE constexpr auto
-operator<=>(const vector<T, GF, A>& lhs, const vector<T, GF, A>& rhs) {
+operator<=>(const vector<T, GF1, A>& lhs, const vector<T, GF2, A>& rhs) {
     return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(),
                                                   rhs.begin(), rhs.end(),
                                                   mem::synth_three_way{});

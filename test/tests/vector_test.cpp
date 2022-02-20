@@ -64,6 +64,21 @@ TYPED_TEST(VectorTestFixture, ReferenceAssignWithDifferentGF) {
    (void)v3;
 }
 
+TYPED_TEST(VectorTestFixture, OperatorsWithDifferentGF) {
+   auto v1 = this->GetVectorOfSize(S);
+   gf_vector<typename TypeParam::value_type> v2 = v1;
+
+   EXPECT_TRUE(v1 == v2);
+   EXPECT_FALSE(v1 != v2);
+   EXPECT_TRUE(v1 <= v2);
+   EXPECT_FALSE(v1 < v2);
+   EXPECT_TRUE(v1 >= v2);
+   EXPECT_FALSE(v1 > v2);
+#if CPP_ABOVE_17
+   EXPECT_TRUE((v1 <=> v2) == 0);
+#endif
+}
+
 int main(int argc, char* argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
