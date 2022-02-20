@@ -37,8 +37,8 @@ public:
     template<class InIt, class = typename std::iterator_traits<InIt>::value_type>
     constexpr vector(InIt first, InIt last);
     constexpr vector(const vector& x);
-    template<class GF_>
-    constexpr vector(const vector<T, GF_, A>& x);
+    template<class GF_, class A_>
+    constexpr vector(const vector<T, GF_, A_>& x);
     constexpr vector(vector&& x) noexcept;
     template<class GF_>
     constexpr vector(vector<T, GF_, A>&& x) noexcept;
@@ -49,8 +49,8 @@ public:
     ~vector();
 
     UWR_FORCEINLINE constexpr vector& operator=(const vector& other) noexcept;
-    template<class GF_>
-    UWR_FORCEINLINE constexpr vector& operator=(const vector<T, GF_, A>& other) noexcept;
+    template<class GF_, class A_>
+    UWR_FORCEINLINE constexpr vector& operator=(const vector<T, GF_, A_>& other) noexcept;
     UWR_FORCEINLINE constexpr vector& operator=(vector&& other) noexcept;
     template<class GF_>
     UWR_FORCEINLINE constexpr vector& operator=(vector<T, GF_, A>&& other) noexcept;
@@ -177,9 +177,9 @@ vector<T, GF, A>::vector(const vector& x)
 }
 
 template<class T, class GF, class A>
-template<class GF_>
+template<class GF_, class A_>
 constexpr
-vector<T, GF, A>::vector(const vector<T, GF_, A>& x)
+vector<T, GF, A>::vector(const vector<T, GF_, A_>& x)
     : m_alloc(x.size()) {
     mem::ucopy(data(), x.begin(), x.size());
 }
@@ -219,9 +219,9 @@ vector<T, GF, A>& vector<T, GF, A>::operator=(const vector& other) noexcept {
 }
 
 template<class T, class GF, class A>
-template<class GF_>
+template<class GF_, class A_>
 constexpr
-vector<T, GF, A>& vector<T, GF, A>::operator=(const vector<T, GF_, A>& other) noexcept {
+vector<T, GF, A>& vector<T, GF, A>::operator=(const vector<T, GF_, A_>& other) noexcept {
     if (UWR_LIKELY(this != reinterpret_cast<const vector*>(&other)))
         priv_copy_assign(other.begin(), other.end(), other.size());
     return *this;
@@ -741,49 +741,49 @@ uwr::mem::is_trivially_relocatable_v<uwr::vector<T, GF, A>> =
 /*
  * non-member operators 
  */
-template<class T, class GF1, class GF2, class A>
+template<class T, class GF1, class GF2, class A1, class A2>
 UWR_FORCEINLINE constexpr bool
-operator==(const vector<T, GF1, A>& lhs, const vector<T, GF2, A>& rhs) {
+operator==(const vector<T, GF1, A1>& lhs, const vector<T, GF2, A2>& rhs) {
     return lhs.size() == rhs.size() &&
            std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
-template<class T, class GF1, class GF2, class A>
+template<class T, class GF1, class GF2, class A1, class A2>
 UWR_FORCEINLINE constexpr bool
-operator!=(const vector<T, GF1, A>& lhs, const vector<T, GF2, A>& rhs) {
+operator!=(const vector<T, GF1, A1>& lhs, const vector<T, GF2, A2>& rhs) {
     return !(lhs == rhs);
 }
 
-template<class T, class GF1, class GF2, class A>
+template<class T, class GF1, class GF2, class A1, class A2>
 UWR_FORCEINLINE constexpr bool
-operator<(const vector<T, GF1, A>& lhs, const vector<T, GF2, A>& rhs) {
+operator<(const vector<T, GF1, A1>& lhs, const vector<T, GF2, A2>& rhs) {
     return std::lexicographical_compare(lhs.begin(), lhs.end(),
                                         rhs.begin(), rhs.end());
 }
 
-template<class T, class GF1, class GF2, class A>
+template<class T, class GF1, class GF2, class A1, class A2>
 UWR_FORCEINLINE constexpr bool
-operator<=(const vector<T, GF1, A>& lhs, const vector<T, GF2, A>& rhs) {
+operator<=(const vector<T, GF1, A1>& lhs, const vector<T, GF2, A2>& rhs) {
     return !(rhs < lhs);
 }
 
-template<class T, class GF1, class GF2, class A>
+template<class T, class GF1, class GF2, class A1, class A2>
 UWR_FORCEINLINE constexpr bool
-operator>(const vector<T, GF1, A>& lhs, const vector<T, GF2, A>& rhs) {
+operator>(const vector<T, GF1, A1>& lhs, const vector<T, GF2, A2>& rhs) {
     return rhs < lhs;
 }
 
-template<class T, class GF1, class GF2, class A>
+template<class T, class GF1, class GF2, class A1, class A2>
 UWR_FORCEINLINE constexpr bool
-operator>=(const vector<T, GF1, A>& lhs, const vector<T, GF2, A>& rhs) {
+operator>=(const vector<T, GF1, A1>& lhs, const vector<T, GF2, A2>& rhs) {
     return !(lhs < rhs);
 }
 
 #if CPP_ABOVE_17
 
-template<class T, class GF1, class GF2, class A>
+template<class T, class GF1, class GF2, class A1, class A2>
 UWR_FORCEINLINE constexpr auto
-operator<=>(const vector<T, GF1, A>& lhs, const vector<T, GF2, A>& rhs) {
+operator<=>(const vector<T, GF1, A1>& lhs, const vector<T, GF2, A2>& rhs) {
     return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(),
                                                   rhs.begin(), rhs.end(),
                                                   mem::synth_three_way{});
@@ -802,6 +802,12 @@ namespace std {
 template<class T, class GF, class A>
 constexpr void
 swap(uwr::vector<T, GF, A>& x, uwr::vector<T, GF, A>& y) {
+    x.swap(y);
+}
+
+template<class T, class GF1, class GF2, class A>
+constexpr void
+swap(uwr::vector<T, GF1, A>& x, uwr::vector<T, GF2, A>& y) {
     x.swap(y);
 }
 
