@@ -21,27 +21,27 @@ inline constexpr len_t page_size = 4096;
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Cons_D<T> construct(T* begin, T* end) {
-    std::memset((void*)begin, 0, (end - begin) * sizeof(T));
+   std::memset((void*)begin, 0, (end - begin) * sizeof(T));
 }
 
 template<class T>
 constexpr
 NT_Cons_D<T> construct(T* begin, T* end) {
-    while (begin != end)
-        new (begin++) T;
+   while (begin != end)
+      new (begin++) T;
 }
 
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Cons_D<T> construct(T* begin, len_t n) {
-    std::memset((void*)begin, 0, n * sizeof(T));
+   std::memset((void*)begin, 0, n * sizeof(T));
 }
 
 template<class T>
 constexpr
 NT_Cons_D<T> construct(T* begin, len_t n) {
-    while (n--)
-        new (begin++) T;
+   while (n--)
+      new (begin++) T;
 }
 
 /*
@@ -50,16 +50,16 @@ NT_Cons_D<T> construct(T* begin, len_t n) {
 template<class T>
 constexpr
 void fill(T* begin, T* end, const T& val) {
-    while (begin != end)
-        *begin++ = val;
+   while (begin != end)
+      *begin++ = val;
 }
 
 template<class T>
 constexpr
 T* fill(T* begin, len_t n, const T& val) {
-    while (n--)
-        *begin++ = val;
-    return begin;
+   while (n--)
+      *begin++ = val;
+   return begin;
 }
 
 /*
@@ -68,16 +68,16 @@ T* fill(T* begin, len_t n, const T& val) {
 template<class T>
 constexpr
 void ufill(T* begin, T* end, const T& val) {
-    while (begin != end)
-        new (begin++) T(val);
+   while (begin != end)
+      new (begin++) T(val);
 }
 
 template<class T>
 constexpr
 T* ufill(T* begin, len_t n, const T& val) {
-    while (n--)
-        new (begin++) T(val);
-    return begin;
+   while (n--)
+      new (begin++) T(val);
+   return begin;
 }
 
 /*
@@ -86,56 +86,56 @@ T* ufill(T* begin, len_t n, const T& val) {
 template<class T>
 UWR_FORCEINLINE static constexpr
 T* do_copy(T* dest, const T* begin, const T* end) {
-    len_t n = (end - begin);
-    std::memcpy((void*)dest, (void*)begin, n * sizeof(T));
-    return dest + n;
+   len_t n = (end - begin);
+   std::memcpy((void*)dest, (void*)begin, n * sizeof(T));
+   return dest + n;
 }
 
 template<class T>
 UWR_FORCEINLINE static constexpr
 T* do_copy(T* dest, const T* begin, len_t n) {
-    std::memcpy((void*)dest, (void*)begin, n * sizeof(T));
-    return dest + n;
+   std::memcpy((void*)dest, (void*)begin, n * sizeof(T));
+   return dest + n;
 }
 
 template<class T, class InIt>
 constexpr
 T* copy(T* dest, InIt begin, InIt end) {
-    while (begin != end)
-        *dest++ = *begin++;
-    return dest;
+   while (begin != end)
+      *dest++ = *begin++;
+   return dest;
 }
 
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Copy_A<T, T*> copy(T* dest, T* begin, T* end) {
-    return mem::do_copy(dest, begin, end);
+   return mem::do_copy(dest, begin, end);
 }
 
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Copy_A<T, T*> copy(T* dest, const T* begin, const T* end) {
-    return mem::do_copy(dest, begin, end);
+   return mem::do_copy(dest, begin, end);
 }
 
 template<class T, class InIt>
 constexpr
 T* copy(T* dest, InIt begin, len_t n) {
-    while (n--)
-        *dest++ = *begin++;
-    return dest;
+   while (n--)
+      *dest++ = *begin++;
+   return dest;
 }
 
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Copy_A<T, T*> copy(T* dest, T* begin, len_t n) {
-    return mem::do_copy(dest, begin, n);
+   return mem::do_copy(dest, begin, n);
 }
 
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Copy_A<T, T*> copy(T* dest, const T* begin, len_t n) {
-    return mem::do_copy(dest, begin, n);
+   return mem::do_copy(dest, begin, n);
 }
 
 /*
@@ -144,41 +144,41 @@ T_Copy_A<T, T*> copy(T* dest, const T* begin, len_t n) {
 template<class T, class InIt>
 constexpr
 T* ucopy(T* dest, InIt begin, InIt end) {
-    while (begin != end)
-        new (dest++) T(*begin++);
-    return dest;
+   while (begin != end)
+      new (dest++) T(*begin++);
+   return dest;
 }
 
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Copy_C<T, T*> ucopy(T* dest, T* begin, T* end) {
-    return mem::do_copy(dest, begin, end);
+   return mem::do_copy(dest, begin, end);
 }
 
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Copy_C<T, T*> ucopy(T* dest, const T* begin, const T* end) {
-    return mem::do_copy(dest, begin, end);
+   return mem::do_copy(dest, begin, end);
 }
 
 template<class T, class InIt>
 constexpr
 T* ucopy(T* dest, InIt begin, len_t n) {
-    while (n--)
-        new (dest++) T(*begin++);
-    return dest;
+   while (n--)
+      new (dest++) T(*begin++);
+   return dest;
 }
 
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Copy_C<T, T*> ucopy(T* dest, T* begin, len_t n) {
-    return mem::do_copy(dest, begin, n);
+   return mem::do_copy(dest, begin, n);
 }
 
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Copy_C<T, T*> ucopy(T* dest, const T* begin, len_t n) {
-    return mem::do_copy(dest, begin, n);
+   return mem::do_copy(dest, begin, n);
 }
 
 /*
@@ -187,41 +187,41 @@ T_Copy_C<T, T*> ucopy(T* dest, const T* begin, len_t n) {
 template<class T, class InIt>
 constexpr
 T* move(T* dest, InIt begin, InIt end) {
-    while (begin != end)
-        *dest++ = std::move(*begin++);
-    return dest;
+   while (begin != end)
+      *dest++ = std::move(*begin++);
+   return dest;
 }
 
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Move_A<T, T*> move(T* dest, T* begin, T* end) {
-    return mem::do_copy(dest, begin, end);
+   return mem::do_copy(dest, begin, end);
 }
 
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Move_A<T, T*> move(T* dest, const T* begin, const T* end) {
-    return mem::do_copy(dest, begin, end);
+   return mem::do_copy(dest, begin, end);
 }
 
 template<class T, class InIt>
 constexpr
 T* move(T* dest, InIt begin, len_t n) {
-    while (n--)
-        *dest++ = std::move(*begin++);
-    return dest;
+   while (n--)
+      *dest++ = std::move(*begin++);
+   return dest;
 }
 
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Move_A<T, T*> move(T* dest, T* begin, len_t n) {
-    return mem::do_copy(dest, begin, n);
+   return mem::do_copy(dest, begin, n);
 }
 
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Move_A<T, T*> move(T* dest, const T* begin, len_t n) {
-    return mem::do_copy(dest, begin, n);
+   return mem::do_copy(dest, begin, n);
 }
 
 /*
@@ -230,41 +230,41 @@ T_Move_A<T, T*> move(T* dest, const T* begin, len_t n) {
 template<class T, class InIt>
 constexpr
 T* umove(T* dest, InIt begin, InIt end) {
-    while (begin != end)
-        new (dest++) T(std::move(*begin++));
-    return dest;
+   while (begin != end)
+      new (dest++) T(std::move(*begin++));
+   return dest;
 }
 
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Move_C<T, T*> umove(T* dest, T* begin, T* end) {
-    return mem::do_copy(dest, begin, end);
+   return mem::do_copy(dest, begin, end);
 }
 
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Move_C<T, T*> umove(T* dest, const T* begin, const T* end) {
-    return mem::do_copy(dest, begin, end);
+   return mem::do_copy(dest, begin, end);
 }
 
 template<class T, class InIt>
 constexpr
 T* umove(T* dest, InIt begin, len_t n) {
-    while (n--)
-        new (dest++) T(std::move(*begin++));
-    return dest;
+   while (n--)
+      new (dest++) T(std::move(*begin++));
+   return dest;
 }
 
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Move_C<T, T*> umove(T* dest, T* begin, len_t n) {
-    return mem::do_copy(dest, begin, n);
+   return mem::do_copy(dest, begin, n);
 }
 
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Move_C<T, T*> umove(T* dest, const T* begin, len_t n) {
-    return mem::do_copy(dest, begin, n);
+   return mem::do_copy(dest, begin, n);
 }
 
 /*
@@ -277,7 +277,7 @@ T_Dest<T> destroy_at(T*) {}
 template<class T>
 constexpr
 NT_Dest<T> destroy_at(T* addr) {
-    addr->~T();
+   addr->~T();
 }
 
 /*
@@ -290,22 +290,22 @@ T_Dest<T> destroy(T*, T*) {}
 template<class T>
 constexpr
 NT_Dest<T> destroy(T* begin, T* end) {
-    while (begin != end)
-        mem::destroy_at(begin++);
+   while (begin != end)
+      mem::destroy_at(begin++);
 }
 
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Dest<T, T*> destroy(T* begin, len_t n) {
-    return begin + n;
+   return begin + n;
 }
 
 template<class T>
 constexpr
 NT_Dest<T, T*> destroy(T* begin, len_t n) {
-    while (n--)
-        mem::destroy_at(begin++);
-    return begin;
+   while (n--)
+      mem::destroy_at(begin++);
+   return begin;
 }
 
 /*
@@ -314,31 +314,31 @@ NT_Dest<T, T*> destroy(T* begin, len_t n) {
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Move_C_Dest<T> umove_and_destroy(T* dest, T* begin, T* end) {
-    mem::umove(dest, begin, end);
+   mem::umove(dest, begin, end);
 }
 
 template<class T>
 constexpr
 NT_Move_C_Dest<T> umove_and_destroy(T* dest, T* begin, T* end) {
-    while (begin != end) {
-        new (dest++) T(std::move(*begin));
-        mem::destroy_at(begin++);
-    }
+   while (begin != end) {
+      new (dest++) T(std::move(*begin));
+      mem::destroy_at(begin++);
+   }
 }
 
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Move_C_Dest<T> umove_and_destroy(T* dest, T* begin, len_t n) {
-    mem::umove(dest, begin, n);
+   mem::umove(dest, begin, n);
 }
 
 template<class T>
 constexpr
 NT_Move_C_Dest<T> umove_and_destroy(T* dest, T* begin, len_t n) {
-    while (n--) {
-        new (dest++) T(std::move(*begin));
-        std::destroy_at(begin++);
-    }
+   while (n--) {
+      new (dest++) T(std::move(*begin));
+      std::destroy_at(begin++);
+   }
 }
 
 /*
@@ -347,31 +347,31 @@ NT_Move_C_Dest<T> umove_and_destroy(T* dest, T* begin, len_t n) {
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Move_A_Dest<T> move_and_destroy(T* dest, T* begin, T* end) {
-    mem::move(dest, begin, end);
+   mem::move(dest, begin, end);
 }
 
 template<class T>
 constexpr
 NT_Move_A_Dest<T> move_and_destroy(T* dest, T* begin, T* end) {
-    while (begin != end) {
-        *dest++ = std::move(*begin);
-        mem::destroy_at(begin++);
-    }
+   while (begin != end) {
+      *dest++ = std::move(*begin);
+      mem::destroy_at(begin++);
+   }
 }
 
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Move_A_Dest<T> move_and_destroy(T* dest, T* begin, len_t n) {
-    mem::move(dest, begin, n);
+   mem::move(dest, begin, n);
 }
 
 template<class T>
 constexpr
 NT_Move_A_Dest<T> move_and_destroy(T* dest, T* begin, len_t n) {
-    while (n--) {
-        *dest++ = std::move(*begin);
-        mem::destroy_at(begin++);
-    }
+   while (n--) {
+      *dest++ = std::move(*begin);
+      mem::destroy_at(begin++);
+   }
 }
 
 /*
@@ -381,19 +381,19 @@ template<class T>
 UWR_FORCEINLINE constexpr
 T_Move_C_Copy_A<T, T*> umove_and_fill(T* dest, T* begin, T* end, const T& val) {
    // NOTE: for trivial types it seems umove and fill is faster
-    T* ret = mem::umove(dest, begin, end);
-    mem::fill(begin, end, val);
-    return ret;
+   T* ret = mem::umove(dest, begin, end);
+   mem::fill(begin, end, val);
+   return ret;
 }
 
 template<class T>
 constexpr
 NT_Move_C_Copy_A<T, T*> umove_and_fill(T* dest, T* begin, T* end, const T& val) {
-    while (begin != end) {
-        new (dest++) T(std::move(*begin));
-        *begin++ = val;
-    }
-    return dest;
+   while (begin != end) {
+      new (dest++) T(std::move(*begin));
+      *begin++ = val;
+   }
+   return dest;
 }
 
 /*
@@ -402,19 +402,19 @@ NT_Move_C_Copy_A<T, T*> umove_and_fill(T* dest, T* begin, T* end, const T& val) 
 template<class T, class InIt>
 UWR_FORCEINLINE constexpr
 T_Move_C_Copy_A<T, T*> umove_and_copy(T* dest, T* begin, T* end, InIt first, InIt split) {
-    T* ret = mem::umove(dest, begin, end);
-    mem::copy(begin, first, split);
-    return ret;
+   T* ret = mem::umove(dest, begin, end);
+   mem::copy(begin, first, split);
+   return ret;
 }
 
 template<class T, class InIt>
 UWR_FORCEINLINE constexpr
 NT_Move_C_Copy_A<T, T*> umove_and_copy(T* dest, T* begin, T* end, InIt first, InIt) {
-    while (begin != end) {
-        new (dest++) T(std::move(*begin));
-        *begin++ = *first++;
-    }
-    return dest;
+   while (begin != end) {
+      new (dest++) T(std::move(*begin));
+      *begin++ = *first++;
+   }
+   return dest;
 }
 
 /*
@@ -423,16 +423,15 @@ NT_Move_C_Copy_A<T, T*> umove_and_copy(T* dest, T* begin, T* end, InIt first, In
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Move_A<T> move_backward(T* dest, T* begin, T* end) {
-    len_t n = end - begin;
-    std::memmove((void*)(dest - n), (void*)begin,
-            n * sizeof(T));
+   len_t n = end - begin;
+   std::memmove((void*)(dest - n), (void*)begin, n * sizeof(T));
 }
 
 template<class T>
 constexpr
 NT_Move_A<T> move_backward(T* dest, T* begin, T* end) {
-    while (begin != end)
-        *(--dest) = std::move(*(--end));
+   while (begin != end)
+      *(--dest) = std::move(*(--end));
 }
 
 /*
@@ -443,16 +442,15 @@ NT_Move_A<T> move_backward(T* dest, T* begin, T* end) {
 template<class T>
 UWR_FORCEINLINE constexpr
 T_Move<T> shiftr(T* dest, T* begin, T* end) {
-    std::memmove((void*)dest, (void*)begin,
-            (end - begin) * sizeof(T));
+   std::memmove((void*)dest, (void*)begin, (end - begin) * sizeof(T));
 }
 
 template<class T>
 UWR_FORCEINLINE constexpr
 NT_Move<T> shiftr(T* dest, T* begin, T* end) {
-    T* seg = end - (dest - begin);
-    mem::umove(end, seg, end);
-    mem::move_backward(end, begin, seg);
+   T* seg = end - (dest - begin);
+   mem::umove(end, seg, end);
+   mem::move_backward(end, begin, seg);
 }
 
 /*
@@ -463,7 +461,7 @@ NT_Move<T> shiftr(T* dest, T* begin, T* end) {
 template<class T>
 UWR_FORCEINLINE constexpr
 T* shiftl(T* dest, T* begin, T* end) {
-    return mem::move(dest, begin, end);
+   return mem::move(dest, begin, end);
 }
 
 /*
@@ -476,25 +474,25 @@ T* shiftl(T* dest, T* begin, T* end) {
 template<class T, class V, class... Args>
 UWR_FORCEINLINE constexpr
 T create(V&& x, Args&&... args) {
-    return T(std::forward<V>(x), std::forward<Args>(args)...);
+   return T(std::forward<V>(x), std::forward<Args>(args)...);
 }
 
 template<class T>
 UWR_FORCEINLINE constexpr
 const T& create(const T& x) {
-    return x;
+   return x;
 }
 
 template<class T>
 UWR_FORCEINLINE constexpr
 T&& create(T&& x) {
-    return std::forward<T>(x);
+   return std::forward<T>(x);
 }
 
 template<class T>
 UWR_FORCEINLINE constexpr
 T create() {
-    return T();
+   return T();
 }
 
 } // namespace uwr::mem

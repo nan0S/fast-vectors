@@ -26,9 +26,9 @@ using boost_static_vector = boost::container::static_vector<T, C>;
 
 template<class Container>
 void print(const Container& c) {
-    for (const auto& x : c)
-        cout << x << " ";
-    cout << endl;
+   for (const auto& x : c)
+      cout << x << " ";
+   cout << endl;
 }
 
 // using T = std::string;
@@ -48,12 +48,12 @@ void do_push(int times, V& v) {
    cout << lc << endl;
    for (int i = 0; i < times; ++i)
    {
-      v.push_back(1);
-      if (lc != v.capacity())
-      {
-         lc = v.capacity();
-         cout << lc << endl;
-      }
+     v.push_back(1);
+     if (lc != v.capacity())
+     {
+       lc = v.capacity();
+       cout << lc << endl;
+     }
    }
 }
 
@@ -71,5 +71,5 @@ int main() {
    info(v);
 
 
-    return 0;
+   return 0;
 }

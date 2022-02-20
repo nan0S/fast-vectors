@@ -2,5 +2,5 @@
 
 template<class T>
 struct wrapper {
-    T obj;
+   T obj;
 };

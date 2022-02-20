@@ -9,7 +9,7 @@ namespace uwr::mem {
 
 template<uwr::u64 C>
 struct minimal_size_type {
-    using type = typename std::conditional_t<
+   using type = typename std::conditional_t<
       C <= std::numeric_limits<uwr::u8>::max(),
       uwr::u8,
       typename std::conditional_t<

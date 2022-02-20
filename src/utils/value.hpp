@@ -9,7 +9,7 @@
  */
 template<class T>
 T get_value(int id) {
-    return id;
+   return id;
 }
 
 template<>
@@ -21,11 +21,11 @@ std::array<int, 100> get_value(int id);
 
 template<class V>
 V get_container(int size) {
-    using T = typename V::value_type;
-    V v;
-    v.reserve(size);
-    for (int i = 0; i < size; ++i)
-        v.emplace_back(get_value<T>(i));
-    return v;
+   using T = typename V::value_type;
+   V v;
+   v.reserve(size);
+   for (int i = 0; i < size; ++i)
+      v.emplace_back(get_value<T>(i));
+   return v;
 }
 

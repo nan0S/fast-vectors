@@ -16,18 +16,18 @@ using non_trivial_type_t = test_type;
  */
 template<class T>
 void BM_destroy_range(State& s) {
-    int n = s.range(0);
+   int n = s.range(0);
 
-    for (auto _ : s) {
-        T t[n];
-        DoNotOptimize((void*)t);
+   for (auto _ : s) {
+      T t[n];
+      DoNotOptimize((void*)t);
 
-        destroy(t, t + n);
+      destroy(t, t + n);
 
-        ClobberMemory();
-    }
+      ClobberMemory();
+   }
 
-    s.counters["1"];
+   s.counters["1"];
 }
 
 /*
@@ -35,28 +35,28 @@ void BM_destroy_range(State& s) {
  */
 template<class T>
 void BM_destroy_n(State& s) {
-    int n = s.range(0);
+   int n = s.range(0);
 
-    for (auto _ : s) {
-        T t[n];
-        DoNotOptimize((void*)t);
+   for (auto _ : s) {
+      T t[n];
+      DoNotOptimize((void*)t);
 
-        destroy(t, n);
+      destroy(t, n);
 
-        ClobberMemory();
-    }
+      ClobberMemory();
+   }
 
-    s.counters["2"];
+   s.counters["2"];
 }
 
 BENCHMARK_TEMPLATE(BM_destroy_range, trivial_type_t)
-    ->Range(RANGE);
+   ->Range(RANGE);
 BENCHMARK_TEMPLATE(BM_destroy_range, non_trivial_type_t)
-    ->Range(RANGE);
+   ->Range(RANGE);
 
 BENCHMARK_TEMPLATE(BM_destroy_n, trivial_type_t)
-    ->Range(RANGE);
+   ->Range(RANGE);
 BENCHMARK_TEMPLATE(BM_destroy_n, non_trivial_type_t)
-    ->Range(RANGE);
+   ->Range(RANGE);
 
 BENCHMARK_MAIN();

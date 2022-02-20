@@ -15,20 +15,20 @@ using trivial_type_t = int;
  */
 template<class T>
 void BM_memmove(State& s) {
-    Random::seed(321);
-    int n = s.range(0);
+   Random::seed(321);
+   int n = s.range(0);
 
-    for (auto _ : s) {
-        T t[n];
-        DoNotOptimize((void*)t);
-        
-        int shift = Random::rand(n) + 1;
-        std::memmove(t, t + shift, (n - shift) * sizeof(T));
+   for (auto _ : s) {
+      T t[n];
+      DoNotOptimize((void*)t);
 
-        ClobberMemory();
-    }
+      int shift = Random::rand(n) + 1;
+      std::memmove(t, t + shift, (n - shift) * sizeof(T));
 
-    s.counters["1"];
+      ClobberMemory();
+   }
+
+   s.counters["1"];
 }
 
 /*
@@ -36,26 +36,26 @@ void BM_memmove(State& s) {
  */
 template<class T>
 void BM_move(State& s) {
-    Random::seed(321);
-    int n = s.range(0);
+   Random::seed(321);
+   int n = s.range(0);
 
-    for (auto _ : s) {
-        T t[n];
-        DoNotOptimize((void*)t);
+   for (auto _ : s) {
+      T t[n];
+      DoNotOptimize((void*)t);
 
-        int shift = Random::rand(n) + 1;
-        std::move(t + shift, t + n, t);
+      int shift = Random::rand(n) + 1;
+      std::move(t + shift, t + n, t);
 
-        ClobberMemory();
-    }
+      ClobberMemory();
+   }
 
-    s.counters["2"];
+   s.counters["2"];
 }
 
 BENCHMARK_TEMPLATE(BM_memmove, trivial_type_t)
-    ->Range(RANGE);
+   ->Range(RANGE);
 
 BENCHMARK_TEMPLATE(BM_move, trivial_type_t)
-    ->Range(RANGE);
+   ->Range(RANGE);
 
 BENCHMARK_MAIN();

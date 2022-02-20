@@ -17,18 +17,18 @@ using non_trivial_type_t = test_type;
  */
 template<class T>
 void BM_ufill_range(State& s) {
-    int n = s.range(0);
+   int n = s.range(0);
 
-    for (auto _ : s) {
-        char t[n * sizeof(T)];
-        DoNotOptimize((void*)t);
+   for (auto _ : s) {
+      char t[n * sizeof(T)];
+      DoNotOptimize((void*)t);
 
-        ufill((T*)t, (T*)t + n, get_value<T>(13));
+      ufill((T*)t, (T*)t + n, get_value<T>(13));
 
-        ClobberMemory();
-    }
+      ClobberMemory();
+   }
 
-    s.counters["1"];
+   s.counters["1"];
 }
 
 /*
@@ -36,28 +36,28 @@ void BM_ufill_range(State& s) {
  */
 template<class T>
 void BM_ufill_n(State& s) {
-    int n = s.range(0);
+   int n = s.range(0);
 
-    for (auto _ : s) {
-        char t[n * sizeof(T)];
-        DoNotOptimize((void*)t);
+   for (auto _ : s) {
+      char t[n * sizeof(T)];
+      DoNotOptimize((void*)t);
 
-        ufill((T*)t, n, get_value<T>(13));
+      ufill((T*)t, n, get_value<T>(13));
 
-        ClobberMemory();
-    }
+      ClobberMemory();
+   }
 
-    s.counters["2"];
+   s.counters["2"];
 }
 
 BENCHMARK_TEMPLATE(BM_ufill_range, trivial_type_t)
-    ->Range(RANGE);
+   ->Range(RANGE);
 BENCHMARK_TEMPLATE(BM_ufill_range, non_trivial_type_t)
-    ->Range(RANGE);
+   ->Range(RANGE);
 
 BENCHMARK_TEMPLATE(BM_ufill_n, trivial_type_t)
-    ->Range(RANGE);
+   ->Range(RANGE);
 BENCHMARK_TEMPLATE(BM_ufill_n, non_trivial_type_t)
-    ->Range(RANGE);
+   ->Range(RANGE);
 
 BENCHMARK_MAIN();
