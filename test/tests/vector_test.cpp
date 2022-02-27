@@ -6,14 +6,14 @@
 #define DONT_COMPARE
 
 template<class T>
-using tested_vector_t = uwr::vector<T>;
+using tested_vector_t = uwr::vector<T, uwr::gf_2_0>;
 template<class T>
 using compare_vector_t = boost::container::vector<T>;
 
 template<class T>
-using gf_vector = uwr::vector<T, uwr::growth_factor_1_5>;
+using gf_vector = uwr::vector<T, uwr::gf_1_5>;
 template<class T>
-using gf_alloc_vector = uwr::vector<T, uwr::growth_factor_1_5, uwr::mem::malloc_allocator<T>>;
+using gf_alloc_vector = uwr::vector<T, uwr::gf_1_5, uwr::mem::malloc_allocator<T>>;
 
 static constexpr uwr::mem::len_t S = 5; 
 
@@ -63,16 +63,6 @@ TYPED_TEST(VectorTestFixture, StdSwapWithDifferentGF) {
    gf_vector<typename TypeParam::value_type> v2;
 
    std::swap(v, v2);
-}
-
-TYPED_TEST(VectorTestFixture, ReferenceAssignWithDifferentGF) {
-   auto v = this->GetVectorOfSize(S);
-
-   gf_vector<typename TypeParam::value_type>& v2 = v;
-   const gf_vector<typename TypeParam::value_type>& v3 = v;
-
-   (void)v2;
-   (void)v3;
 }
 
 TYPED_TEST(VectorTestFixture, OperatorsWithDifferentGF) {

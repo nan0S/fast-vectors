@@ -6,7 +6,7 @@
 #define DONT_COMPARE
 
 template<class T>
-using tested_vector_t = uwr::vector<T, uwr::default_growth_factor, uwr::mem::std_allocator<T>>;
+using tested_vector_t = uwr::vector<T, uwr::gf_default, uwr::mem::std_allocator<T>>;
 template<class T>
 using compare_vector_t = boost::container::vector<T>;
 

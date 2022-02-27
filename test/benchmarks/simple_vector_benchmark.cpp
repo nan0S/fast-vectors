@@ -71,7 +71,7 @@ using boost_vector = boost::container::vector<T, boost::container::new_allocator
 template<class T>
 using uwr_vector = uwr::vector<T>;
 template<class T>
-using uwr_c_vector = uwr::vector<T, uwr::default_growth_factor, uwr::mem::malloc_allocator<T>>;
+using uwr_c_vector = uwr::vector<T, uwr::gf_default, uwr::mem::malloc_allocator<T>>;
 
 /*
  * benchmark push_back

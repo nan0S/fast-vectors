@@ -38,7 +38,7 @@ using T = int;
 using std_vector = std::vector<T>;
 using boost_vector_t = boost_vector<T>;
 using uwr_vector = uwr::vector<T>;
-using uwr_c_vector = uwr::vector<T, uwr::default_growth_factor, uwr::mem::malloc_allocator<T>>;
+using uwr_c_vector = uwr::vector<T, uwr::gf_default, uwr::mem::malloc_allocator<T>>;
 
 constexpr long ps = 4096;
 
@@ -48,7 +48,7 @@ void do_push(int times, V& v) {
    cout << lc << endl;
    for (int i = 0; i < times; ++i)
    {
-     v.push_back(1);
+     // v.push_back(1);
      if (lc != v.capacity())
      {
        lc = v.capacity();
@@ -64,11 +64,17 @@ void info(V& v)
 }
 
 int main() {
-   uwr_vector v(10);
-   do_push(10, v);
-   info(v);
-   v.shrink_to_fit();
-   info(v);
+   uwr_vector v(16);
+   // v.emplace_back<uwr::gf_2_0>(1);
+   // v.insert<uwr::gf_1_5>(v.begin(), 1, 1);
+   // v.emplace_back(1);
+   print(v);
+   cout << v.capacity() << endl;
+
+   // do_push(10, v);
+   // info(v);
+   // v.shrink_to_fit();
+   // info(v);
 
 
    return 0;
