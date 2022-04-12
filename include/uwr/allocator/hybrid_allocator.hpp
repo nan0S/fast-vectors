@@ -279,7 +279,6 @@ hybrid_allocator<T>::shrink(size_type req, true_type) {
                                 this->m_capacity * sizeof(T),
                                 req * sizeof(T),
                                 MREMAP_MAYMOVE);
-
       } break;
       default: /* impossible */
          UWR_ASSERT(false);
