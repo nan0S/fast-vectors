@@ -263,12 +263,12 @@ hybrid_allocator<T>::shrink(size_type req) {
 template<class T>
 constexpr typename hybrid_allocator<T>::pointer
 hybrid_allocator<T>::shrink(size_type req, true_type) {
-   u8 cond = is_big_size(this->m_capacity) | is_big_size(req) << 1;
+   u8 cond = is_big_size(req)<<1 | is_big_size(this->m_capacity);
    switch (cond) {
       case 0b00: { /* both are small sizes */
          return (pointer)::realloc((void*)this->m_data, req * sizeof(T));
       } break;
-      case 0b10: { /* new size is small, old is big */
+      case 0b01: { /* new size is small, old is big */
          pointer new_data = small_alloc(req);
          umove_and_destroy(new_data, this->m_data, this->m_size);
          big_dealloc(this->m_data, this->m_capacity);
