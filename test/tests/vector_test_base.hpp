@@ -391,7 +391,7 @@ TYPED_TEST(VectorTestBaseFixture, ShrinkToFit) {
    for (const auto& size : this->GetAllSizes()) {
       auto v = this->GetVectorOfSize(size);
       const auto val = this->GetValue(13);
-      const size_type ins = 2 * size;
+      const size_type ins = size;
       for (size_type i = 0; i < ins; ++i)
          v.push_back(val);
 
