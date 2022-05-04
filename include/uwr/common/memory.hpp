@@ -86,16 +86,13 @@ T* ufill(T* begin, len_t n, const T& val) {
 template<class T>
 UWR_FORCEINLINE static constexpr
 T* do_copy(T* dest, const T* begin, const T* end) {
-   len_t n = (end - begin);
-   std::memcpy((void*)dest, (void*)begin, n * sizeof(T));
-   return dest + n;
+   return std::copy(begin, end, dest);
 }
 
 template<class T>
 UWR_FORCEINLINE static constexpr
 T* do_copy(T* dest, const T* begin, len_t n) {
-   std::memcpy((void*)dest, (void*)begin, n * sizeof(T));
-   return dest + n;
+   return std::copy_n(begin, n, dest);
 }
 
 template<class T, class InIt>
